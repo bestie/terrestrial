@@ -23,6 +23,7 @@ class Mapper
           assoc_name,
           datastore[assoc.fetch(:relation_name)]
             .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+            .lazy
             .map { |row|
               load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
             }
@@ -32,7 +33,6 @@ class Mapper
 
     belongs_to_associations = Hash[
       relation.fetch(:belongs_to, []).map { |assoc_name, assoc|
-       require "pry"; binding.pry
        [
           assoc_name,
           datastore[assoc.fetch(:relation_name)]

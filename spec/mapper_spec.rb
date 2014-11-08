@@ -123,26 +123,37 @@ RSpec.describe "Object mapping" do
     end
 
     it "maps the raw data from the store into domain objects" do
-      expect(user_query.fetch(0).id).to eq("user/1")
-      expect(user_query.fetch(0).first_name).to eq("Stephen")
+      expect(user_query.first.id).to eq("user/1")
+      expect(user_query.first.first_name).to eq("Stephen")
     end
 
     it "handles has_many associations" do
-      expect(user_query.fetch(0).posts.first.subject)
+      expect(user_query.first.posts.first.subject)
         .to eq("Object mapping")
     end
 
     it "handles nested has_many associations" do
       expect(
-        user_query.fetch(0)
-          .posts.fetch(0)
-          .comments.fetch(0)
+        user_query.first
+          .posts.first
+          .comments.first
           .body
       ).to eq("Trololol")
     end
 
+    describe "lazy loading" do
+      let(:post_factory) { double(:post_factory, call: nil) }
+
+      it "loads has many associations lazily" do
+        posts = user_query.first.posts
+
+        expect(post_factory).not_to have_received(:call)
+      end
+    end
+
     it "maps belongs to assocations" do
-      expect(user_query.fetch(0).posts.fetch(0).author.id).to eq("user/1")
+      expect(user_query.first.posts.first.author.id)
+        .to eq("user/1")
     end
   end
 end
