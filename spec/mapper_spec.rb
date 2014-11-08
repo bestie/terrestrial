@@ -5,8 +5,8 @@ require "mapper"
 RSpec.describe "Object mapping" do
 
   User = Struct.new(:id, :first_name, :last_name, :email, :posts)
-  Post = Struct.new(:id, :author_id, :subject, :body, :comments)
-  Comment = Struct.new(:id, :post_id, :commenter_id, :body)
+  Post = Struct.new(:id, :author, :subject, :body, :comments)
+  Comment = Struct.new(:id, :post, :commenter, :body)
 
   describe "Straight trivial mapping" do
     subject(:mapper) {
@@ -53,6 +53,12 @@ RSpec.describe "Object mapping" do
               foreign_key: :post_id,
             },
           },
+          belongs_to: {
+            author: {
+              relation_name: :users,
+              foreign_key: :author_id,
+            }
+          }
         },
         comments: {
           factory: comment_factory,
@@ -133,6 +139,10 @@ RSpec.describe "Object mapping" do
           .comments.fetch(0)
           .body
       ).to eq("Trololol")
+    end
+
+    it "maps belongs to assocations" do
+      expect(user_query.fetch(0).posts.fetch(0).author.id).to eq("user/1")
     end
   end
 end

@@ -30,7 +30,26 @@ class Mapper
       }
     ]
 
-    relation.fetch(:factory).call(row.merge(has_many_associations))
+    belongs_to_associations = Hash[
+      relation.fetch(:belongs_to, []).map { |assoc_name, assoc|
+       require "pry"; binding.pry
+       [
+          assoc_name,
+          datastore[assoc.fetch(:relation_name)]
+            .where(:id => row.fetch(assoc.fetch(:foreign_key)))
+            .map { |row|
+              load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
+            }
+            .fetch(0)
+        ]
+      }
+    ]
+
+    relation.fetch(:factory).call(
+      row
+        .merge(has_many_associations)
+        .merge(belongs_to_associations)
+    )
   end
 
   class StructFactory
