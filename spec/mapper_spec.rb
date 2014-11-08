@@ -57,12 +57,18 @@ RSpec.describe "Object mapping" do
             author: {
               relation_name: :users,
               foreign_key: :author_id,
-            }
-          }
+            },
+          },
         },
         comments: {
           factory: comment_factory,
-        }
+          belongs_to: {
+            commenter: {
+              relation_name: :users,
+              foreign_key: :commenter_id,
+            },
+          },
+        },
       }
     }
 
@@ -154,6 +160,11 @@ RSpec.describe "Object mapping" do
     it "maps belongs to assocations" do
       expect(user_query.first.posts.first.author.id)
         .to eq("user/1")
+    end
+
+    it "maps deeply nested belongs to assocations" do
+      expect(user_query.first.posts.first.comments.first.commenter.id)
+        .to eq("user/2")
     end
   end
 end
