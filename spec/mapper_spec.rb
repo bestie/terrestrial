@@ -4,8 +4,9 @@ require "mapper"
 
 RSpec.describe "Object mapping" do
 
-  User = Struct.new(:id, :first_name, :last_name, :email, :received_messages)
-  Message = Struct.new(:id, :sender_id, :recipient_id, :subject, :body)
+  User = Struct.new(:id, :first_name, :last_name, :email, :posts)
+  Post = Struct.new(:id, :author_id, :subject, :body, :comments)
+  Comment = Struct.new(:id, :post_id, :commenter_id, :body)
 
   describe "Straight trivial mapping" do
     subject(:mapper) {
@@ -23,8 +24,11 @@ RSpec.describe "Object mapping" do
             user_1_data,
             user_2_data,
           ],
-          messages: [
-            message_1_data,
+          posts: [
+            post_1_data,
+          ],
+          comments: [
+            comment_1_data,
           ],
         }
       )
@@ -34,18 +38,25 @@ RSpec.describe "Object mapping" do
       {
         users: {
           factory: user_factory,
-          # columns: [],
           has_many: {
-            received_messages: {
-              relation_name: :messages,
-              foreign_key: :recipient_id,
+            posts: {
+              relation_name: :posts,
+              foreign_key: :author_id,
             },
           },
         },
-        messages: {
-          factory: message_factory,
-          # columns: [],
+        posts: {
+          factory: post_factory,
+          has_many: {
+            comments: {
+              relation_name: :comments,
+              foreign_key: :commenter_id,
+            },
+          },
         },
+        comments: {
+          factory: comment_factory,
+        }
       }
     }
 
@@ -53,8 +64,12 @@ RSpec.describe "Object mapping" do
       Mapper::StructFactory.new(User)
     }
 
-    let(:message_factory){
-      Mapper::StructFactory.new(Message)
+    let(:post_factory){
+      Mapper::StructFactory.new(Post)
+    }
+
+    let(:comment_factory){
+      Mapper::StructFactory.new(Comment)
     }
 
     let(:user_1_data) {
@@ -75,13 +90,21 @@ RSpec.describe "Object mapping" do
       }
     }
 
-    let(:message_1_data) {
+    let(:post_1_data) {
       {
-        id: "message/1",
-        recipient_id: "user/1",
-        sender_id: "user/2",
+        id: "post/1",
+        author_id: "user/1",
         subject: "Object mapping",
         body: "It is often tricky",
+      }
+    }
+
+    let(:comment_1_data) {
+      {
+        id: "comment/1",
+        post_id: "post/1",
+        commenter_id: "user/2",
+        body: "Trololol",
       }
     }
 
@@ -99,8 +122,13 @@ RSpec.describe "Object mapping" do
     end
 
     it "handles has_many associations" do
-      expect(user_query.fetch(0).received_messages.first.subject)
+      expect(user_query.fetch(0).posts.first.subject)
         .to eq("Object mapping")
+    end
+
+    it "handles nested has_many associations" do
+      expect(user_query.fetch(0).posts.first.comments.body)
+        .to eq("Trololol")
     end
   end
 end
