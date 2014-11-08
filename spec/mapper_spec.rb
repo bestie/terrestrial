@@ -65,6 +65,12 @@ RSpec.describe "Object mapping" do
               foreign_key: :author_id,
             },
           },
+          # TODO: maybe combine associations like this
+          # has_many_through: {
+          #   categories_posted_in: {
+          #     through_association: [ :posts, :categories ]
+          #   }
+          # }
         },
         posts: {
           factory: post_factory,
@@ -249,6 +255,11 @@ RSpec.describe "Object mapping" do
 
       expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
         .to match_array(["post/1", "post/2"])
+    end
+
+    xit "combines has many through associations" do
+      expect(user_query.first.categories_posted_in.map(&:id))
+        .to match_array(["category/1", "category/2"])
     end
   end
 end
