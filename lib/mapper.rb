@@ -45,9 +45,28 @@ class Mapper
       }
     ]
 
+    has_many_through_assocations = Hash[
+      relation.fetch(:has_many_through, []).map { |assoc_name, assoc|
+       [
+          assoc_name,
+          datastore[assoc.fetch(:relation_name)]
+            .where(
+              :id => datastore[assoc.fetch(:through_relation_name)]
+                      .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+                      .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
+            )
+            .lazy
+            .map { |row|
+              load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
+            }
+        ]
+      }
+    ]
+
     relation.fetch(:factory).call(
       row
         .merge(has_many_associations)
+        .merge(has_many_through_assocations)
         .merge(belongs_to_associations)
     )
   end
@@ -105,7 +124,11 @@ class Mapper
       def equality_filter(criteria)
         @rows.select { |row|
           criteria.all? { |k, v|
-            row.fetch(k) == v
+            if v.is_a?(Enumerable)
+              v.include?(row.fetch(k))
+            else
+              row.fetch(k) == v
+            end
           }
         }
       end
