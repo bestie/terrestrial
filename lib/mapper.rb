@@ -19,7 +19,7 @@ class Mapper
   def load(relation, row)
     has_many_associations = Hash[
       relation.fetch(:has_many, []).map { |assoc_name, assoc|
-        [
+       [
           assoc_name,
           datastore[assoc.fetch(:relation_name)]
             .where(assoc.fetch(:foreign_key) => row.fetch(:id))

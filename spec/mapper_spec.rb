@@ -50,7 +50,7 @@ RSpec.describe "Object mapping" do
           has_many: {
             comments: {
               relation_name: :comments,
-              foreign_key: :commenter_id,
+              foreign_key: :post_id,
             },
           },
         },
@@ -127,8 +127,12 @@ RSpec.describe "Object mapping" do
     end
 
     it "handles nested has_many associations" do
-      expect(user_query.fetch(0).posts.first.comments.body)
-        .to eq("Trololol")
+      expect(
+        user_query.fetch(0)
+          .posts.fetch(0)
+          .comments.fetch(0)
+          .body
+      ).to eq("Trololol")
     end
   end
 end
