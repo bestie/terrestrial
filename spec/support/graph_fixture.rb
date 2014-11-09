@@ -57,6 +57,12 @@ module SequelMapper
     let(:relation_mappings) {
       {
         users: {
+          columns: [
+            :id,
+            :first_name,
+            :last_name,
+            :email,
+          ],
           factory: user_factory,
           has_many: {
             posts: {
@@ -72,6 +78,12 @@ module SequelMapper
           # }
         },
         posts: {
+          columns: [
+            :id,
+            :author_id,
+            :subject,
+            :body,
+          ],
           factory: post_factory,
           has_many: {
             comments: {
@@ -95,6 +107,12 @@ module SequelMapper
           },
         },
         comments: {
+          columns: [
+            :id,
+            :post_id,
+            :commenter_id,
+            :body,
+          ],
           factory: comment_factory,
           belongs_to: {
             commenter: {
@@ -104,6 +122,10 @@ module SequelMapper
           },
         },
         categories: {
+          columns: [
+            :id,
+            :name,
+          ],
           factory: category_factory,
           has_many_through: {
             posts: {

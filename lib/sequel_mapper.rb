@@ -12,10 +12,40 @@ module SequelMapper
     def where(criteria)
       datastore[top_level_namespace]
         .where(criteria)
-        .map { |row| load(relation_mappings.fetch(:users), row) }
+        .map { |row|
+          load(
+            relation_mappings.fetch(top_level_namespace),
+            row,
+          )
+        }
+    end
+
+    def save(graph_root)
+      datastore[top_level_namespace]
+        .where(id: graph_root.id)
+        .update(
+          dump(
+            relation_mappings.fetch(top_level_namespace),
+            graph_root,
+          )
+        )
     end
 
     private
+
+    def dump(relation, row)
+      row.to_h.select { |field_name, _v|
+        relation.fetch(:columns).include?(field_name)
+      }
+    end
+
+    def associations_types
+      %i(
+        has_many
+        has_many_through
+        belongs_to
+      )
+    end
 
     def load(relation, row)
       has_many_associations = Hash[
