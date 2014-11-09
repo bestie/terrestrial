@@ -127,6 +127,28 @@ RSpec.describe "Graph persistence" do
     end
   end
 
+  context "remove an object form a has many association" do
+    let(:post) { user.posts.first }
+
+    it "removes the object from the graph" do
+      user.posts.remove(post)
+
+      expect(user.posts.map(&:id)).not_to include(post.id)
+    end
+
+    it "removes the object from the datastore on save" do
+      user.posts.remove(post)
+      graph.save(user)
+
+      expect(datastore).not_to have_persisted(
+        :posts,
+        hash_including(
+          id: post.id,
+        )
+      )
+    end
+  end
+
   RSpec::Matchers.define :have_persisted do |relation_name, data|
     match do |datastore|
       datastore[relation_name].find { |record|

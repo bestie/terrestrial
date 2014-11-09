@@ -49,6 +49,12 @@ class SequelMapper::MockSequel
       matching_rows.each(&block)
     end
 
+    def delete
+      matching_rows.each do |row_to_delete|
+        rows.delete(row_to_delete)
+      end
+    end
+
     def insert(rows)
       Array(rows).each do |row|
         canonical.rows.push(row)

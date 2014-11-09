@@ -45,6 +45,12 @@ module SequelMapper
         object.public_send(assoc_name).each do |assoc_object|
           dump(assoc_config.fetch(:relation_name), assoc_object)
         end
+
+        object.public_send(assoc_name).removed_nodes.each do |removed_node|
+          datastore[assoc_config.fetch(:relation_name)]
+            .where(id: removed_node.id)
+            .delete
+        end
       end
 
       datastore[relation_name].where(id: object.id).update(row)
@@ -55,12 +61,14 @@ module SequelMapper
         relation.fetch(:has_many, []).map { |assoc_name, assoc|
          [
             assoc_name,
-            datastore[assoc.fetch(:relation_name)]
-              .where(assoc.fetch(:foreign_key) => row.fetch(:id))
-              .lazy
-              .map { |row|
-                load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
-              }
+            AssociationProxy.new(
+              datastore[assoc.fetch(:relation_name)]
+                .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+                .lazy
+                .map { |row|
+                  load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
+                }
+            )
           ]
         }
       ]
@@ -108,6 +116,40 @@ module SequelMapper
           )
         )
       }
+    end
+  end
+
+  class AssociationProxy
+    def initialize(assoc_enum)
+      @assoc_enum = assoc_enum
+      @removed_nodes = []
+    end
+
+    attr_reader :assoc_enum, :removed_nodes
+    private     :assoc_enum
+
+    include Enumerable
+    def each(&block)
+      assoc_enum.rewind
+      while true
+        node = assoc_enum.next
+        next if removed?(node)
+        block.call(node) if block
+      end
+      self
+    rescue StopIteration
+      self
+    end
+
+    def remove(node)
+      @removed_nodes << node
+      self
+    end
+
+    private
+
+    def removed?(node)
+      @removed_nodes.include?(node)
     end
   end
 
