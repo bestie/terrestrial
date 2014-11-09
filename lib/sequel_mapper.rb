@@ -53,6 +53,14 @@ module SequelMapper
         end
       end
 
+      relation.fetch(:has_many_through, []).each do |assoc_name, assoc_config|
+        object.public_send(assoc_name).removed_nodes.each do |removed_node|
+          datastore[assoc_config.fetch(:through_relation_name)]
+            .where(assoc_config.fetch(:association_foreign_key) => removed_node.id)
+            .delete
+        end
+      end
+
       datastore[relation_name].where(id: object.id).update(row)
     end
 
@@ -91,16 +99,18 @@ module SequelMapper
         relation.fetch(:has_many_through, []).map { |assoc_name, assoc|
          [
             assoc_name,
-            datastore[assoc.fetch(:relation_name)]
-              .where(
-                :id => datastore[assoc.fetch(:through_relation_name)]
-                        .where(assoc.fetch(:foreign_key) => row.fetch(:id))
-                        .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
-              )
-              .lazy
-              .map { |row|
-                load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
-              }
+            AssociationProxy.new(
+              datastore[assoc.fetch(:relation_name)]
+                .where(
+                  :id => datastore[assoc.fetch(:through_relation_name)]
+                          .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+                          .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
+                )
+                .lazy
+                .map { |row|
+                  load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
+                }
+            )
           ]
         }
       ]

@@ -149,6 +149,31 @@ RSpec.describe "Graph persistence" do
     end
   end
 
+  context "modify a many to many relationhip" do
+    let(:post)     { user.posts.first }
+
+    it "mutates the graph" do
+      category = post.categories.first
+      post.categories.remove(category)
+
+      expect(post.categories.map(&:id)).not_to include(category.id)
+    end
+
+    it "persists the change" do
+      category = post.categories.first
+      post.categories.remove(category)
+      graph.save(user)
+
+      expect(datastore).not_to have_persisted(
+        :categories_to_posts,
+        {
+          post_id: post.id,
+          category_id: category.id,
+        }
+      )
+    end
+  end
+
   RSpec::Matchers.define :have_persisted do |relation_name, data|
     match do |datastore|
       datastore[relation_name].find { |record|
