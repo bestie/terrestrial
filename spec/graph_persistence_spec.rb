@@ -67,6 +67,32 @@ RSpec.describe "Graph persistence" do
     end
   end
 
+  context "modify deeply nested has many associated object" do
+    let(:comment) {
+      user.posts.first.comments.to_a.last
+      .tap { |c| p c.body }
+    }
+
+    let(:modified_comment_body) { "body moving, body moving" }
+
+    it "saves the associated object" do
+      comment.body = modified_comment_body
+      graph.save(user)
+
+      expect(datastore).to have_persisted(
+        :comments,
+        hash_including(
+          {
+            id: "comment/2",
+            post_id: "post/1",
+            commenter_id: "user/1",
+            body: modified_comment_body,
+          }
+        )
+      )
+    end
+  end
+ 
   RSpec::Matchers.define :have_persisted do |relation_name, data|
     match do |datastore|
       datastore[relation_name].find { |record|
