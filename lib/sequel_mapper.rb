@@ -21,30 +21,29 @@ module SequelMapper
     end
 
     def save(graph_root)
-      datastore[top_level_namespace]
-        .where(id: graph_root.id)
-        .update(
-          dump(
-            relation_mappings.fetch(top_level_namespace),
-            graph_root,
-          )
-        )
+      dump(top_level_namespace, graph_root)
     end
 
     private
 
-    def dump(relation, row)
-      row.to_h.select { |field_name, _v|
-        relation.fetch(:columns).include?(field_name)
-      }
+    def identity_map
+      @identity_map ||= {}
     end
 
-    def associations_types
-      %i(
-        has_many
-        has_many_through
-        belongs_to
-      )
+    def dump(relation_name, object)
+      relation = relation_mappings.fetch(relation_name)
+
+      row = object.to_h.select { |field_name, _v|
+        relation.fetch(:columns).include?(field_name)
+      }
+
+      datastore[relation_name].where(id: object.id).update(row)
+
+      relation.fetch(:has_many, []).each do |assoc_name, assoc_config|
+        object.public_send(assoc_name).each do |assoc_object|
+          dump(assoc_config.fetch(:relation_name), assoc_object)
+        end
+      end
     end
 
     def load(relation, row)
@@ -94,12 +93,17 @@ module SequelMapper
         }
       ]
 
-      relation.fetch(:factory).call(
-        row
-          .merge(has_many_associations)
-          .merge(has_many_through_assocations)
-          .merge(belongs_to_associations)
-      )
+      identity_map.fetch(row.fetch(:id)) {
+        identity_map.store(
+          row.fetch(:id),
+          relation.fetch(:factory).call(
+            row
+              .merge(has_many_associations)
+              .merge(has_many_through_assocations)
+              .merge(belongs_to_associations)
+          )
+        )
+      }
     end
   end
 

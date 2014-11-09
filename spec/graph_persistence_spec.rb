@@ -34,7 +34,7 @@ RSpec.describe "Graph persistence" do
       )
     end
 
-    it "doesn't send columns to the database that are not in the schema" do
+    it "doesn't send associated objects to the database as columns" do
       user.email = modified_email
       graph.save(user)
 
@@ -42,6 +42,26 @@ RSpec.describe "Graph persistence" do
         :users,
         hash_including(
           posts: anything,
+        )
+      )
+    end
+  end
+
+  context "modify shallow has many associated object" do
+    let(:post) { user.posts.first }
+    let(:modified_post_body) { "modified ur body" }
+
+    it "saves the associated object" do
+      post.body = modified_post_body
+      graph.save(user)
+
+      expect(datastore).to have_persisted(
+        :posts,
+        hash_including(
+          id: post.id,
+          subject: post.subject,
+          author_id: post.author.id,
+          body: modified_post_body,
         )
       )
     end
