@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper"
+require "sequel_mapper/association_proxy"
 
 RSpec.describe SequelMapper::AssociationProxy do
   let(:proxy) {
@@ -20,33 +20,41 @@ RSpec.describe SequelMapper::AssociationProxy do
 
   describe "#to_a" do
     it "is equivalent to the original enumeration" do
-      expect(proxy.to_a).to eq(data_set.to_a)
+      expect(proxy.map(&id)).to eq(data_set.to_a)
     end
   end
 
   describe "#each" do
-    it "returns self" do
-      expect(proxy.each).to be(proxy)
-    end
-
-    it "yeilds each element to the block" do
-      yielded = []
-
-      proxy.each do |element|
-        yielded.push(element)
+    context "when called with a block" do
+      it "returns self" do
+        expect(proxy.each(&id)).to eq(proxy)
       end
 
-      expect(yielded).to eq(data_set.to_a)
-    end
+      it "yields each element to the block" do
+        yielded = []
 
-    context "when calling each more than once" do
-      before do
-        proxy.each { |x| nil }
-        proxy.each { |x| nil }
+        proxy.each do |element|
+          yielded.push(element)
+        end
+
+        expect(yielded).to eq(data_set.to_a)
       end
 
-      it "rewinds the enumeration on each call" do
-        expect(proxy.map(&id)).to eq(data_set.to_a)
+      context "when calling each more than once" do
+        before do
+          proxy.each { |x| nil }
+          proxy.each { |x| nil }
+        end
+
+        it "rewinds the enumeration on each call" do
+          expect(proxy.map(&id)).to eq(data_set.to_a)
+        end
+      end
+    end
+
+    context "when called without a block" do
+      it "returns an enumerator" do
+        expect(proxy.each).to be_a(Enumerator)
       end
     end
   end
@@ -63,6 +71,24 @@ RSpec.describe SequelMapper::AssociationProxy do
 
       it "skips that element in the enumeration" do
         expect(proxy.map(&id)).to eq([0,1,2,4,5,6,7,8,9])
+      end
+    end
+  end
+
+  describe "#push" do
+    context "after pushing another element into the enumeration" do
+      before do
+        proxy.push(new_value)
+      end
+
+      let(:new_value) { double(:new_value) }
+
+      it "does not alter the other elements" do
+        expect(proxy.map(&id)[0..-2]).to eq([0,1,2,3,4,5,6,7,8,9])
+      end
+
+      it "appends the element to the enumeration" do
+        expect(proxy.map(&id).last).to eq(new_value)
       end
     end
   end

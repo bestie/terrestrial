@@ -1,3 +1,5 @@
+require "sequel_mapper/association_proxy"
+
 module SequelMapper
   class Graph
     def initialize(datastore:, top_level_namespace:, relation_mappings:)
@@ -54,6 +56,15 @@ module SequelMapper
       end
 
       relation.fetch(:has_many_through, []).each do |assoc_name, assoc_config|
+        object.public_send(assoc_name).added_nodes.each do |added_node|
+          datastore[assoc_config.fetch(:through_relation_name)]
+            .insert(
+              assoc_config.fetch(:foreign_key) => object.id,
+              assoc_config.fetch(:association_foreign_key) => added_node.id,
+            )
+          # TODO: this needs a dump? and dump should upsert.
+        end
+
         object.public_send(assoc_name).removed_nodes.each do |removed_node|
           datastore[assoc_config.fetch(:through_relation_name)]
             .where(assoc_config.fetch(:association_foreign_key) => removed_node.id)
@@ -126,40 +137,6 @@ module SequelMapper
           )
         )
       }
-    end
-  end
-
-  class AssociationProxy
-    def initialize(assoc_enum)
-      @assoc_enum = assoc_enum
-      @removed_nodes = []
-    end
-
-    attr_reader :assoc_enum, :removed_nodes
-    private     :assoc_enum
-
-    include Enumerable
-    def each(&block)
-      assoc_enum.rewind
-      while true
-        node = assoc_enum.next
-        next if removed?(node)
-        block.call(node) if block
-      end
-      self
-    rescue StopIteration
-      self
-    end
-
-    def remove(node)
-      @removed_nodes << node
-      self
-    end
-
-    private
-
-    def removed?(node)
-      @removed_nodes.include?(node)
     end
   end
 

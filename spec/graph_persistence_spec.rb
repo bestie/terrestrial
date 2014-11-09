@@ -152,25 +152,52 @@ RSpec.describe "Graph persistence" do
   context "modify a many to many relationhip" do
     let(:post)     { user.posts.first }
 
-    it "mutates the graph" do
-      category = post.categories.first
-      post.categories.remove(category)
+    context "remove a node" do
+      it "mutates the graph" do
+        category = post.categories.first
+        post.categories.remove(category)
 
-      expect(post.categories.map(&:id)).not_to include(category.id)
+        expect(post.categories.map(&:id)).not_to include(category.id)
+      end
+
+      it "persists the change" do
+        category = post.categories.first
+        post.categories.remove(category)
+        graph.save(user)
+
+        expect(datastore).not_to have_persisted(
+          :categories_to_posts,
+          {
+            post_id: post.id,
+            category_id: category.id,
+          }
+        )
+      end
     end
 
-    it "persists the change" do
-      category = post.categories.first
-      post.categories.remove(category)
-      graph.save(user)
+    context "add a node" do
+      let(:post_with_one_category) { user.posts.to_a.last }
+      let(:new_category) { user.posts.first.categories.to_a.first }
 
-      expect(datastore).not_to have_persisted(
-        :categories_to_posts,
-        {
-          post_id: post.id,
-          category_id: category.id,
-        }
-      )
+      it "mutates the graph" do
+        post_with_one_category.categories.push(new_category)
+
+        expect(post_with_one_category.categories.map(&:id))
+          .to match_array(["category/1", "category/2"])
+      end
+
+      it "persists the change" do
+        post_with_one_category.categories.push(new_category)
+        graph.save(user)
+
+        expect(datastore).to have_persisted(
+          :categories_to_posts,
+          {
+            post_id: post_with_one_category.id,
+            category_id: new_category.id,
+          }
+        )
+      end
     end
   end
 

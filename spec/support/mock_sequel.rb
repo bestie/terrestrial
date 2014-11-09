@@ -55,10 +55,8 @@ class SequelMapper::MockSequel
       end
     end
 
-    def insert(rows)
-      Array(rows).each do |row|
-        canonical.rows.push(row)
-      end
+    def insert(new_row)
+      rows.push(new_row)
     end
 
     def update(attrs)
