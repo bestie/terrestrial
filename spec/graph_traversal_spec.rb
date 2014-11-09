@@ -57,6 +57,13 @@ RSpec.describe "Graph traversal" do
         .to eq("user/1")
     end
 
+    describe "identity map" do
+      it "always gives the returns the same object for a given id" do
+        expect(user_query.first.posts.first.author)
+          .to be(user_query.first)
+      end
+    end
+
     it "maps deeply nested belongs to assocations" do
       expect(user_query.first.posts.first.comments.first.commenter.id)
         .to eq("user/2")
