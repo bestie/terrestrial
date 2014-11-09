@@ -37,13 +37,17 @@ module SequelMapper
         relation.fetch(:columns).include?(field_name)
       }
 
-      datastore[relation_name].where(id: object.id).update(row)
+      relation.fetch(:belongs_to, []).each do |assoc_name, assoc_config|
+        row[assoc_config.fetch(:foreign_key)] = object.public_send(assoc_name).id
+      end
 
       relation.fetch(:has_many, []).each do |assoc_name, assoc_config|
         object.public_send(assoc_name).each do |assoc_object|
           dump(assoc_config.fetch(:relation_name), assoc_object)
         end
       end
+
+      datastore[relation_name].where(id: object.id).update(row)
     end
 
     def load(relation, row)

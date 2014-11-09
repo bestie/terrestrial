@@ -70,7 +70,6 @@ RSpec.describe "Graph persistence" do
   context "modify deeply nested has many associated object" do
     let(:comment) {
       user.posts.first.comments.to_a.last
-      .tap { |c| p c.body }
     }
 
     let(:modified_comment_body) { "body moving, body moving" }
@@ -92,7 +91,42 @@ RSpec.describe "Graph persistence" do
       )
     end
   end
- 
+
+  context "modify the foreign_key of an object" do
+    let(:original_author) { user }
+    let(:new_author)      { graph.where(id: "user/2").first }
+    let(:post)            { original_author.posts.first }
+
+    it "persists the change in ownership" do
+      post.author = new_author
+      graph.save(user)
+
+      expect(datastore).to have_persisted(
+        :posts,
+        hash_including(
+          id: post.id,
+          author_id: new_author.id,
+        )
+      )
+    end
+
+    it "removes the object form the original graph" do
+      post.author = new_author
+      graph.save(user)
+
+      expect(original_author.posts.to_a.map(&:id))
+        .not_to include("posts/1")
+    end
+
+    it "adds the object to the appropriate graph" do
+      post.author = new_author
+      graph.save(user)
+
+      expect(new_author.posts.to_a.map(&:id))
+        .to include("post/1")
+    end
+  end
+
   RSpec::Matchers.define :have_persisted do |relation_name, data|
     match do |datastore|
       datastore[relation_name].find { |record|
