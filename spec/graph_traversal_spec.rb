@@ -1,17 +1,18 @@
 require "spec_helper"
 
-require "mapper"
+require "sequel_mapper"
+require "support/mock_sequel"
 
-RSpec.describe "Object mapping" do
+RSpec.describe "Graph traversal" do
 
   User = Struct.new(:id, :first_name, :last_name, :email, :posts)
   Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
   Comment = Struct.new(:id, :post, :commenter, :body)
   Category = Struct.new(:id, :name, :posts)
 
-  describe "Straight trivial mapping" do
-    subject(:mapper) {
-      Mapper.new(
+  describe "assocaitions" do
+    subject(:graph) {
+      SequelMapper::Graph.new(
         top_level_namespace: :users,
         datastore: datastore,
         relation_mappings: relation_mappings,
@@ -19,7 +20,7 @@ RSpec.describe "Object mapping" do
     }
 
     let(:datastore) {
-      Mapper::MockSequel.new(
+      SequelMapper::MockSequel.new(
         {
           users: [
             user_1_data,
@@ -119,19 +120,19 @@ RSpec.describe "Object mapping" do
     }
 
     let(:user_factory){
-      Mapper::StructFactory.new(User)
+      SequelMapper::StructFactory.new(User)
     }
 
     let(:post_factory){
-      Mapper::StructFactory.new(Post)
+      SequelMapper::StructFactory.new(Post)
     }
 
     let(:comment_factory){
-      Mapper::StructFactory.new(Comment)
+      SequelMapper::StructFactory.new(Comment)
     }
 
     let(:category_factory){
-      Mapper::StructFactory.new(Category)
+      SequelMapper::StructFactory.new(Category)
     }
 
     let(:user_1_data) {
@@ -203,7 +204,7 @@ RSpec.describe "Object mapping" do
     }
 
     let(:user_query) {
-      mapper.where(id: "user/1")
+      graph.where(id: "user/1")
     }
 
     it "finds data via the storage adapter" do
