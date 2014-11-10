@@ -199,6 +199,31 @@ RSpec.describe "Graph persistence" do
         )
       end
     end
+
+    context "modify a node" do
+      let(:category) { user.posts.first.categories.first }
+      let(:modified_category_name) { "modified category" }
+
+      it "mutates the graph" do
+        category.name = modified_category_name
+
+        expect(post.categories.first.name)
+          .to eq(modified_category_name)
+      end
+
+      it "persists the change" do
+        category.name = modified_category_name
+        graph.save(user)
+
+        expect(datastore).to have_persisted(
+          :categories,
+          {
+            id: category.id,
+            name: modified_category_name,
+          }
+        )
+      end
+    end
   end
 
   RSpec::Matchers.define :have_persisted do |relation_name, data|

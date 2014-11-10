@@ -56,13 +56,16 @@ module SequelMapper
       end
 
       relation.fetch(:has_many_through, []).each do |assoc_name, assoc_config|
+        object.public_send(assoc_name).each do |assoc_object|
+          dump(assoc_config.fetch(:relation_name), assoc_object)
+        end
+
         object.public_send(assoc_name).added_nodes.each do |added_node|
           datastore[assoc_config.fetch(:through_relation_name)]
             .insert(
               assoc_config.fetch(:foreign_key) => object.id,
               assoc_config.fetch(:association_foreign_key) => added_node.id,
             )
-          # TODO: this needs a dump? and dump should upsert.
         end
 
         object.public_send(assoc_name).removed_nodes.each do |removed_node|
