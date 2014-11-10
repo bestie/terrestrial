@@ -23,6 +23,7 @@ module SequelMapper
     end
 
     def save(graph_root)
+      @persisted_objects = []
       dump(top_level_namespace, graph_root)
     end
 
@@ -33,6 +34,9 @@ module SequelMapper
     end
 
     def dump(relation_name, object)
+      return if @persisted_objects.include?(object)
+      @persisted_objects.push(object)
+
       relation = relation_mappings.fetch(relation_name)
 
       row = object.to_h.select { |field_name, _v|
