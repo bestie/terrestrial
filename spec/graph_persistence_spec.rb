@@ -127,7 +127,46 @@ RSpec.describe "Graph persistence" do
     end
   end
 
-  context "remove an object form a has many association" do
+  context "add a node to a has many assocation" do
+    let(:new_post_attrs) {
+      {
+        id: "posts/neu",
+        author: user,
+        subject: "I am new",
+        body: "new body",
+        comments: [],
+        categories: [],
+      }
+    }
+
+    let(:new_post) {
+      SequelMapper::StructFactory.new(
+        SequelMapper::GraphFixture::Post
+      ).call(new_post_attrs)
+    }
+
+    it "adds the object to the graph" do
+      user.posts.push(new_post)
+
+      expect(user.posts).to include(new_post)
+    end
+
+    it "persists the object" do
+      user.posts.push(new_post)
+      graph.save(user)
+
+      expect(datastore).to have_persisted(
+        :posts,
+        hash_including(
+          id: "posts/neu",
+          author_id: user.id,
+          subject: "I am new",
+        )
+      )
+    end
+  end
+
+  context "remove an object from a has many association" do
     let(:post) { user.posts.first }
 
     it "removes the object from the graph" do

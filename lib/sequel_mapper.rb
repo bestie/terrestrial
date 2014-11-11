@@ -52,6 +52,7 @@ module SequelMapper
           dump(assoc_config.fetch(:relation_name), assoc_object)
         end
 
+        next unless object.public_send(assoc_name).respond_to?(:removed_nodes)
         object.public_send(assoc_name).removed_nodes.each do |removed_node|
           datastore[assoc_config.fetch(:relation_name)]
             .where(id: removed_node.id)
@@ -64,6 +65,7 @@ module SequelMapper
           dump(assoc_config.fetch(:relation_name), assoc_object)
         end
 
+        next unless object.public_send(assoc_name).respond_to?(:added_nodes)
         object.public_send(assoc_name).added_nodes.each do |added_node|
           datastore[assoc_config.fetch(:through_relation_name)]
             .insert(
@@ -79,7 +81,14 @@ module SequelMapper
         end
       end
 
-      datastore[relation_name].where(id: object.id).update(row)
+      existing = datastore[relation_name]
+        .where(id: object.id)
+
+      if existing.empty?
+        datastore[relation_name].insert(row)
+      else
+        existing.update(row)
+      end
     end
 
     def load(relation, row)

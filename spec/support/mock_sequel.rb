@@ -69,6 +69,10 @@ class SequelMapper::MockSequel
       end
     end
 
+    def empty?
+      matching_rows.empty?
+    end
+
     private
 
     def matching_rows
