@@ -1,4 +1,5 @@
 require "support/mock_sequel"
+require "sequel_mapper/struct_factory"
 
 module SequelMapper
   module GraphFixture
