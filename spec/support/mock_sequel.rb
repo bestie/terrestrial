@@ -1,10 +1,10 @@
 class SequelMapper::MockSequel
-  def initialize(relation_data)
-    @relations = Hash[
-      relation_data.map { |table_name, rows|
-        [table_name, Relation.new(rows)]
-      }
-    ]
+  def initialize(relations)
+    @relations = {}
+
+    relations.each do |table_name|
+      @relations[table_name] = Relation.new(self, [])
+    end
   end
 
   attr_reader :relations

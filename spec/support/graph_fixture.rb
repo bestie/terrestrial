@@ -19,41 +19,54 @@ module SequelMapper
     Category = Struct.new(:id, :name, :posts)
 
     let(:datastore) {
-      SequelMapper::MockSequel.new(
-        {
-          users: [
-            user_1_data,
-            user_2_data,
-            user_3_data,
-          ],
-          posts: [
-            post_1_data,
-            post_2_data,
-          ],
-          comments: [
-            comment_1_data,
-            comment_2_data,
-          ],
-          categories: [
-            category_1_data,
-            category_2_data,
-          ],
-          categories_to_posts: [
-            {
-              post_id: post_1_data.fetch(:id),
-              category_id: category_1_data.fetch(:id),
-            },
-            {
-              post_id: post_1_data.fetch(:id),
-              category_id: category_2_data.fetch(:id),
-            },
-            {
-              post_id: post_2_data.fetch(:id),
-              category_id: category_2_data.fetch(:id),
-            },
-          ],
+      SequelMapper::MockSequel.new(tables.keys)
+        .tap { |datastore|
+          load_fixture_data(datastore)
         }
-      )
+    }
+
+    def load_fixture_data(datastore)
+      tables.each do |table, rows|
+        rows.each do |row|
+          datastore[table].insert(row)
+        end
+      end
+    end
+
+    let(:tables) {
+      {
+        users: [
+          user_1_data,
+          user_2_data,
+          user_3_data,
+        ],
+        posts: [
+          post_1_data,
+          post_2_data,
+        ],
+        comments: [
+          comment_1_data,
+          comment_2_data,
+        ],
+        categories: [
+          category_1_data,
+          category_2_data,
+        ],
+        categories_to_posts: [
+          {
+            post_id: post_1_data.fetch(:id),
+            category_id: category_1_data.fetch(:id),
+          },
+          {
+            post_id: post_1_data.fetch(:id),
+            category_id: category_2_data.fetch(:id),
+          },
+          {
+            post_id: post_2_data.fetch(:id),
+            category_id: category_2_data.fetch(:id),
+          },
+        ],
+      }
     }
 
     let(:relation_mappings) {
