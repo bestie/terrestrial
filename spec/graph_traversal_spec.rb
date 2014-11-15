@@ -58,8 +58,8 @@ RSpec.describe "Graph traversal" do
     end
 
     describe "identity map" do
-      it "always gives the returns the same object for a given id" do
-        expect(user_query.first.posts.first.author)
+      it "always returns (a proxy of) the same object for a given id" do
+        expect(user_query.first.posts.first.author.__getobj__)
           .to be(user_query.first)
       end
     end

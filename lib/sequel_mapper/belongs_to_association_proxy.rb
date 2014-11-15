@@ -12,6 +12,11 @@ class BelongsToAssociationProxy < SimpleDelegator
     super
   end
 
+  def __getobj__
+    __load_object__
+    super
+  end
+
   private
 
   def __load_object__

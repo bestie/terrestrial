@@ -9,6 +9,18 @@ RSpec.describe BelongsToAssociationProxy do
   let(:proxied_object)  { double(:proxied_object, name: name) }
   let(:name)            { double(:name) }
 
+  describe "#__getobj__" do
+    it "loads the object" do
+      proxy.__getobj__
+
+      expect(object_loader).to have_received(:call)
+    end
+
+    it "returns the proxied object" do
+      expect(proxy.__getobj__).to be(proxied_object)
+    end
+  end
+
   context "when no method is called on it" do
     it "does not call the loader" do
       proxy
