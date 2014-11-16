@@ -13,10 +13,11 @@ module SequelMapper
       }
     end
 
-    User = Struct.new(:id, :first_name, :last_name, :email, :posts)
+    User = Struct.new(:id, :first_name, :last_name, :email, :posts, :toots)
     Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
     Comment = Struct.new(:id, :post, :commenter, :body)
     Category = Struct.new(:id, :name, :posts)
+    Toot = Struct.new(:id, :tooter, :body, :tooted_at)
 
     let(:datastore) {
       SequelMapper::MockSequel.new(tables.keys)
@@ -66,6 +67,12 @@ module SequelMapper
             category_id: category_2_data.fetch(:id),
           },
         ],
+        toots: [
+          # Toot ordering is inconsistent for scope testing.
+          toot_2_data,
+          toot_1_data,
+          toot_3_data,
+        ],
       }
     }
 
@@ -83,6 +90,14 @@ module SequelMapper
             posts: {
               relation_name: :posts,
               foreign_key: :author_id,
+            },
+            toots: {
+              relation_name: :toots,
+              foreign_key: :tooter_id,
+              order_by: {
+                columns: [:tooted_at],
+                direction: :desc,
+              },
             },
           },
           # TODO: maybe combine associations like this
@@ -150,7 +165,22 @@ module SequelMapper
               association_foreign_key: :post_id,
             }
           },
-        }
+        },
+        toots: {
+          columns: [
+            :id,
+            :tooter_id,
+            :body,
+            :tooted_at,
+          ],
+          factory: toot_factory,
+          belongs_to: {
+            tooter: {
+              relation_name: :users,
+              foreign_key: :tooter_id,
+            },
+          },
+        },
       }
     }
 
@@ -168,6 +198,10 @@ module SequelMapper
 
     let(:category_factory){
       SequelMapper::StructFactory.new(Category)
+    }
+
+    let(:toot_factory){
+      SequelMapper::StructFactory.new(Toot)
     }
 
     let(:user_1_data) {
@@ -244,6 +278,39 @@ module SequelMapper
       {
         id: "category/2",
         name: "bad",
+      }
+    }
+
+    let(:category_3_data) {
+      {
+        id: "category/3",
+        name: "ugly",
+      }
+    }
+
+    let(:toot_1_data) {
+      {
+        id: "toot/1",
+        tooter_id: "user/1",
+        body: "Armistice toots",
+        tooted_at: Time.parse("2014-11-11 11:11:00 UTC").iso8601,
+      }
+    }
+    let(:toot_2_data) {
+      {
+        id: "toot/2",
+        tooter_id: "user/1",
+        body: "Tooting every second",
+        tooted_at: Time.parse("2014-11-11 11:11:01 UTC").iso8601,
+      }
+    }
+
+    let(:toot_3_data) {
+      {
+        id: "toot/3",
+        tooter_id: "user/1",
+        body: "Join me in a minutes' toots",
+        tooted_at: Time.parse("2014-11-11 11:11:02 UTC").iso8601,
       }
     }
   end

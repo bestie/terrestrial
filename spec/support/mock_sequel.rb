@@ -95,12 +95,15 @@ class SequelMapper::MockSequel
     private     :database, :all_rows, :applied_query
 
     def where(criteria, &block)
-      query = Query.new(criteria: criteria, &block)
-      self.class.new(all_rows, applied_query: query)
+      new_with_query(Query.new(criteria: criteria, &block))
     end
 
     def order(columns)
-      self.class.new(all_rows, applied_query: query)
+      new_with_query(applied_query.order(columns))
+    end
+
+    def reverse
+      @applied_query = @applied_query.reverse
     end
 
     def to_a
@@ -159,12 +162,15 @@ class SequelMapper::MockSequel
     end
 
     def apply_sort(rows, order_columns, reverse_order)
-      rows
       sorted_rows = rows.sort_by{ |row|
         order_columns.map { |col| row.fetch(col) }
       }
 
-      reverse_order ? sorted_rows.reverse : sorted_rows
+      if reverse_order
+        sorted_rows.reverse
+      else
+        sorted_rows
+      end
     end
 
     def equality_filter(rows, criteria)
@@ -177,6 +183,12 @@ class SequelMapper::MockSequel
           end
         }
       }
+    end
+
+    private
+
+    def new_with_query(query)
+      self.class.new(database, all_rows, applied_query: query)
     end
   end
 end

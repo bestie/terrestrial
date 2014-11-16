@@ -102,6 +102,11 @@ module SequelMapper
         relation.fetch(:has_many, []).map { |assoc_name, assoc|
           data_enum = datastore[assoc.fetch(:relation_name)]
             .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+            .order(assoc.fetch(:order_by, {}).fetch(:columns, []))
+
+          if assoc.fetch(:order_by, {}).fetch(:direction, :asc) == :desc
+            data_enum.reverse
+          end
 
          [
             assoc_name,
