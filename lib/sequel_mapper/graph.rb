@@ -1,4 +1,5 @@
 require "sequel_mapper/association_proxy"
+require "sequel_mapper/belongs_to_association_proxy"
 
 module SequelMapper
   class Graph
@@ -92,13 +93,20 @@ module SequelMapper
     end
 
     def load(relation, row)
+      previously_loaded_object = identity_map.fetch(row.fetch(:id), false)
+      return previously_loaded_object if previously_loaded_object
+
+      puts "****************LOADING #{row.fetch(:id)}"
+
       has_many_associations = Hash[
         relation.fetch(:has_many, []).map { |assoc_name, assoc|
+          data_enum = datastore[assoc.fetch(:relation_name)]
+            .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+
          [
             assoc_name,
             AssociationProxy.new(
-              datastore[assoc.fetch(:relation_name)]
-                .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+              data_enum
                 .lazy
                 .map { |row|
                   load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
@@ -112,12 +120,15 @@ module SequelMapper
         relation.fetch(:belongs_to, []).map { |assoc_name, assoc|
          [
             assoc_name,
-            datastore[assoc.fetch(:relation_name)]
-              .where(:id => row.fetch(assoc.fetch(:foreign_key)))
-              .map { |row|
-                load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
-              }
-              .fetch(0)
+            BelongsToAssociationProxy.new(
+              datastore[assoc.fetch(:relation_name)]
+                .where(:id => row.fetch(assoc.fetch(:foreign_key)))
+                .lazy
+                .map { |row|
+                  load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
+                }
+                .public_method(:first)
+            )
           ]
         }
       ]
@@ -127,10 +138,12 @@ module SequelMapper
          [
             assoc_name,
             AssociationProxy.new(
+              # TODO: optimize this with joins
               datastore[assoc.fetch(:relation_name)]
                 .where(
                   :id => datastore[assoc.fetch(:through_relation_name)]
                           .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+                          .lazy
                           .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
                 )
                 .lazy
@@ -142,16 +155,13 @@ module SequelMapper
         }
       ]
 
-      identity_map.fetch(row.fetch(:id)) {
-        identity_map.store(
-          row.fetch(:id),
-          relation.fetch(:factory).call(
-            row
-              .merge(has_many_associations)
-              .merge(has_many_through_assocations)
-              .merge(belongs_to_associations)
-          )
-        )
+      relation.fetch(:factory).call(
+        row
+          .merge(has_many_associations)
+          .merge(has_many_through_assocations)
+          .merge(belongs_to_associations)
+      ).tap { |object|
+        identity_map.store(row.fetch(:id), object)
       }
     end
   end
