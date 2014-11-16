@@ -5,6 +5,8 @@ class SequelMapper::MockSequel
     relations.each do |table_name|
       @relations[table_name] = Relation.new(self, [])
     end
+
+    @reads, @writes, @deletes = 0, 0, 0
   end
 
   attr_reader :relations
@@ -12,6 +14,30 @@ class SequelMapper::MockSequel
 
   def [](table_name)
     @relations.fetch(table_name)
+  end
+
+  def log_read
+    @reads += 1
+  end
+
+  def log_write
+    @writes += 1
+  end
+
+  def log_delete
+    @deletes += 1
+  end
+
+  def read_count
+    @reads
+  end
+
+  def write_count
+    @writes
+  end
+
+  def delete_count
+    @deletes
   end
 
   class Query
@@ -59,13 +85,14 @@ class SequelMapper::MockSequel
   class Relation
     include Enumerable
 
-    def initialize(all_rows, applied_query: Query.new)
+    def initialize(database, all_rows, applied_query: Query.new)
+      @database = database
       @all_rows = all_rows
       @applied_query = applied_query
     end
 
-    attr_reader :all_rows, :applied_query
-    private     :all_rows, :applied_query
+    attr_reader :database, :all_rows, :applied_query
+    private     :database, :all_rows, :applied_query
 
     def where(criteria, &block)
       query = Query.new(criteria: criteria, &block)
@@ -77,24 +104,35 @@ class SequelMapper::MockSequel
     end
 
     def to_a
+      database.log_read
+
       matching_rows
     end
 
     def each(&block)
+      puts "iterating over #{matching_rows}"
+      database.log_read
+
       matching_rows.each(&block)
     end
 
     def delete
+      database.log_delete
+
       matching_rows.each do |row_to_delete|
         all_rows.delete(row_to_delete)
       end
     end
 
     def insert(new_row)
+      database.log_write
+
       all_rows.push(new_row)
     end
 
     def update(attrs)
+      database.log_write
+
       # No need to get the rows from the canonical relation as the hashes can
       # just be mutated in plaace.
       matching_rows.each do |row|
@@ -105,6 +143,8 @@ class SequelMapper::MockSequel
     end
 
     def empty?
+      database.log_read
+
       matching_rows.empty?
     end
 
