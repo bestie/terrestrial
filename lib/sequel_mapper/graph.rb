@@ -1,5 +1,6 @@
 require "sequel_mapper/association_proxy"
 require "sequel_mapper/belongs_to_association_proxy"
+require "sequel_mapper/queryable_association_proxy"
 
 module SequelMapper
   class Graph
@@ -111,11 +112,12 @@ module SequelMapper
          [
             assoc_name,
             AssociationProxy.new(
-              data_enum
-                .lazy
-                .map { |row|
+              QueryableAssociationProxy.new(
+                data_enum,
+                ->(row) {
                   load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
-                }
+                },
+              )
             )
           ]
         }
@@ -144,17 +146,18 @@ module SequelMapper
             assoc_name,
             AssociationProxy.new(
               # TODO: optimize this with joins
-              datastore[assoc.fetch(:relation_name)]
-                .where(
-                  :id => datastore[assoc.fetch(:through_relation_name)]
-                          .where(assoc.fetch(:foreign_key) => row.fetch(:id))
-                          .lazy
-                          .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
-                )
-                .lazy
-                .map { |row|
+              QueryableAssociationProxy.new(
+                datastore[assoc.fetch(:relation_name)]
+                  .where(
+                    :id => datastore[assoc.fetch(:through_relation_name)]
+                            .where(assoc.fetch(:foreign_key) => row.fetch(:id))
+                            .lazy
+                            .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
+                  ),
+                ->(row) {
                   load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
-                }
+                },
+              )
             )
           ]
         }

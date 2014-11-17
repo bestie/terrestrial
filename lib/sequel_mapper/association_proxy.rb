@@ -1,3 +1,5 @@
+require "forwardable"
+
 module SequelMapper
   class AssociationProxy
     def initialize(assoc_enum)
@@ -36,6 +38,11 @@ module SequelMapper
 
     def push(node)
       @added_nodes.push(node)
+    end
+
+    def where(criteria)
+      @assoc_enum.where(criteria)
+      self
     end
 
     private
