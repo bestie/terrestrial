@@ -34,11 +34,11 @@ RSpec.describe "Querying" do
     end
 
     it "sends the query directly to the datastore" do
-      user.posts
-        .where(query_criteria)
-        .map(&:id)
-
-      expect(query_counter.read_count).to eq(2)
+      expect {
+        user.posts
+          .where(query_criteria)
+          .map(&:id)
+      }.to change { query_counter.read_count }.by(2)
 
       # TODO: this is a quick hack to assert that no superfluous records where
       #       loaded. Figure out a better way to check efficiency
