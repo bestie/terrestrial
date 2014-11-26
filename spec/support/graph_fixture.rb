@@ -1,5 +1,6 @@
 require "support/mock_sequel"
 require "sequel_mapper/struct_factory"
+require "support/query_counter"
 
 module SequelMapper
   module GraphFixture
@@ -19,15 +20,28 @@ module SequelMapper
     Category = Struct.new(:id, :name, :posts)
     Toot = Struct.new(:id, :tooter, :body, :tooted_at)
 
+    let(:query_counter) {
+      QueryCounter.new
+    }
+
     let(:datastore) {
-      SequelMapper::MockSequel.new(tables.keys)
-        .tap { |datastore|
-          load_fixture_data(datastore)
-        }
+      DB.tap { |db|
+        load_fixture_data(db)
+        db.loggers << query_counter
+      }
     }
 
     def load_fixture_data(datastore)
       tables.each do |table, rows|
+
+        datastore.drop_table?(table)
+
+        datastore.create_table(table) do
+          rows.first.keys.each do |column|
+            String column
+          end
+        end
+
         rows.each do |row|
           datastore[table].insert(row)
         end

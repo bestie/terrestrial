@@ -1,4 +1,14 @@
 require "pry"
+require "sequel"
+require "logger"
+
+`psql postgres --command "CREATE DATABASE $PGDATABASE;"`
+
+DB = Sequel.postgres(
+  host: ENV.fetch("PGHOST"),
+  user: ENV.fetch("PGUSER"),
+  database: ENV.fetch("PGDATABASE"),
+)
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

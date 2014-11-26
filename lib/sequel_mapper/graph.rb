@@ -103,10 +103,13 @@ module SequelMapper
         relation.fetch(:has_many, []).map { |assoc_name, assoc|
           data_enum = datastore[assoc.fetch(:relation_name)]
             .where(assoc.fetch(:foreign_key) => row.fetch(:id))
-            .order(assoc.fetch(:order_by, {}).fetch(:columns, []))
 
-          if assoc.fetch(:order_by, {}).fetch(:direction, :asc) == :desc
-            data_enum.reverse
+          if assoc.fetch(:order_by, false)
+            data_enum = data_enum.order(assoc.fetch(:order_by, {}).fetch(:columns, []))
+
+            if assoc.fetch(:order_by).fetch(:direction, :asc) == :desc
+              data_enum = data_enum.reverse
+            end
           end
 
          [
@@ -145,15 +148,10 @@ module SequelMapper
          [
             assoc_name,
             AssociationProxy.new(
-              # TODO: optimize this with joins
               QueryableAssociationProxy.new(
                 datastore[assoc.fetch(:relation_name)]
-                  .where(
-                    :id => datastore[assoc.fetch(:through_relation_name)]
-                            .where(assoc.fetch(:foreign_key) => row.fetch(:id))
-                            .lazy
-                            .map { |row| row.fetch(assoc.fetch(:association_foreign_key)) }
-                  ),
+                  .join(assoc.fetch(:through_relation_name), assoc.fetch(:association_foreign_key) => :id)
+                  .where(assoc.fetch(:foreign_key) => row.fetch(:id)),
                 ->(row) {
                   load(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
                 },
