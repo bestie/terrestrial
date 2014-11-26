@@ -97,7 +97,7 @@ module SequelMapper
       previously_loaded_object = identity_map.fetch(row.fetch(:id), false)
       return previously_loaded_object if previously_loaded_object
 
-      puts "****************LOADING #{row.fetch(:id)}"
+      # puts "****************LOADING #{row.fetch(:id)}"
 
       has_many_associations = Hash[
         relation.fetch(:has_many, []).map { |assoc_name, assoc|
