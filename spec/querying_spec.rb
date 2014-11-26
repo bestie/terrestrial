@@ -38,7 +38,7 @@ RSpec.describe "Querying" do
         .where(query_criteria)
         .map(&:id)
 
-      expect(datastore.read_count).to eq(2)
+      expect(query_counter.read_count).to eq(2)
 
       # TODO: this is a quick hack to assert that no superfluous records where
       #       loaded. Figure out a better way to check efficiency

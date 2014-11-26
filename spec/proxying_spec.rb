@@ -30,7 +30,7 @@ RSpec.describe "Proxying associations" do
         it "only performs one read" do
           user
 
-          expect(datastore.read_count).to eq(1)
+          expect(query_counter.read_count).to eq(1)
         end
       end
 
@@ -40,7 +40,7 @@ RSpec.describe "Proxying associations" do
         it "does no additional reads" do
           expect{
             user.posts
-          }.to change { datastore.read_count }.by(0)
+          }.to change { query_counter.read_count }.by(0)
         end
       end
 
@@ -50,7 +50,7 @@ RSpec.describe "Proxying associations" do
         it "does a single additional read for the assocation collection" do
           expect {
             user.posts.map(&identity)
-          }.to change { datastore.read_count }.by(1)
+          }.to change { query_counter.read_count }.by(1)
         end
       end
 
@@ -62,20 +62,19 @@ RSpec.describe "Proxying associations" do
         it "does no additional reads" do
           expect {
             post.categories
-          }.to change { datastore.read_count }.by(0)
+          }.to change { query_counter.read_count }.by(0)
         end
       end
 
       context "when iterating over a many to many assocation" do
-        before { category_count }
+        let(:category_count) { 3 }
 
-        let(:categories) { user.posts.first.categories }
-        let(:category_count) { categories.count }
+        it "does 1 read" do
+          post = user.posts.first
 
-        it "does 2n+1 reads" do
           expect {
-            categories.map(&identity)
-          }.to change { datastore.read_count }.by( 2*category_count + 1 )
+            post.categories.map(&:name).to_a
+          }.to change { query_counter.read_count }.by(1)
         end
       end
     end

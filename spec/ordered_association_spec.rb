@@ -22,8 +22,8 @@ RSpec.describe "Ordered associations" do
     it "enumerates the objects in order specified in the config" do
       user.toots.to_a
 
-      expect(user.toots.to_a)
-        .to eq(user.toots.to_a.sort_by { |t| t.tooted_at }.reverse)
+      expect(user.toots.map(&:id).to_a)
+        .to eq(user.toots.to_a.sort_by { |t| t.tooted_at }.map(&:id).reverse)
     end
   end
 end
