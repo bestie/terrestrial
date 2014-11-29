@@ -76,10 +76,5 @@ RSpec.describe "Graph traversal" do
       expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
         .to match_array(["post/1", "post/2"])
     end
-
-    xit "combines has many through associations" do
-      expect(user_query.first.categories_posted_in.map(&:id))
-        .to match_array(["category/1", "category/2"])
-    end
   end
 end
