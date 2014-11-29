@@ -1,15 +1,15 @@
 require "spec_helper"
 
 require "sequel_mapper"
-require "support/graph_fixture"
+require "support/database_fixture"
 
 RSpec.describe "Querying" do
-  include SequelMapper::GraphFixture
+  include SequelMapper::DatabaseFixture
 
-  subject(:graph) { mapper_fixture }
+  subject(:mapper) { mapper_fixture }
 
   let(:user) {
-    graph.where(id: "user/1").first
+    mapper.where(id: "user/1").first
   }
 
   let(:query_criteria) {
@@ -36,7 +36,7 @@ RSpec.describe "Querying" do
 
       # TODO: this is a quick hack to assert that no superfluous records where
       #       loaded. Figure out a better way to check efficiency
-      expect(graph.send(:identity_map).values.map(&:id)).to match_array([
+      expect(mapper.send(:identity_map).values.map(&:id)).to match_array([
         "user/1",
         "post/2",
       ])

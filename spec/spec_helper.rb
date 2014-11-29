@@ -1,14 +1,5 @@
 require "pry"
-require "sequel"
-require "logger"
-
-`psql postgres --command "CREATE DATABASE $PGDATABASE;"`
-
-DB = Sequel.postgres(
-  host: ENV.fetch("PGHOST"),
-  user: ENV.fetch("PGUSER"),
-  database: ENV.fetch("PGDATABASE"),
-)
+require "support/sequel_test_support"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -36,4 +27,8 @@ RSpec.configure do |config|
   # config.order = :random
 
   # Kernel.srand config.seed
+
+  config.before(:suite) do
+    SequelMapper::SequelTestSupport.create_database
+  end
 end

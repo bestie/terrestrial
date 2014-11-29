@@ -1,16 +1,16 @@
 require "spec_helper"
 
 require "sequel_mapper"
-require "support/graph_fixture"
+require "support/database_fixture"
 
 RSpec.describe "Ordered associations" do
-  include SequelMapper::GraphFixture
+  include SequelMapper::DatabaseFixture
 
   context "of type `has_many`" do
-    subject(:graph) { mapper_fixture }
+    subject(:mapper) { mapper_fixture }
 
     let(:user) {
-      graph.where(id: "user/1").first
+      mapper.where(id: "user/1").first
     }
 
     it "enumerates the objects in order specified in the config" do

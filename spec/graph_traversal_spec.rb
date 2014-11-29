@@ -1,16 +1,16 @@
 require "spec_helper"
 
 require "sequel_mapper"
-require "support/graph_fixture"
+require "support/database_fixture"
 
 RSpec.describe "Graph traversal" do
-  include SequelMapper::GraphFixture
+  include SequelMapper::DatabaseFixture
 
   describe "assocaitions" do
-    subject(:graph) { mapper_fixture }
+    subject(:mapper) { mapper_fixture }
 
     let(:user_query) {
-      graph.where(id: "user/1")
+      mapper.where(id: "user/1")
     }
 
     it "finds data via the storage adapter" do

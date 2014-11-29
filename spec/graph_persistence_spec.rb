@@ -1,15 +1,15 @@
 require "spec_helper"
 
 require "sequel_mapper"
-require "support/graph_fixture"
+require "support/database_fixture"
 
 RSpec.describe "Graph persistence" do
-  include SequelMapper::GraphFixture
+  include SequelMapper::DatabaseFixture
 
-  subject(:graph) { mapper_fixture }
+  subject(:mapper) { mapper_fixture }
 
   let(:user) {
-    graph.where(id: "user/1").fetch(0)
+    mapper.where(id: "user/1").fetch(0)
   }
 
   context "without accessing associations" do
@@ -17,7 +17,7 @@ RSpec.describe "Graph persistence" do
 
     it "saves the root object" do
       user.email = modified_email
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).to have_persisted(
         :users,
@@ -30,7 +30,7 @@ RSpec.describe "Graph persistence" do
 
     it "doesn't send associated objects to the database as columns" do
       user.email = modified_email
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).not_to have_persisted(
         :users,
@@ -47,7 +47,7 @@ RSpec.describe "Graph persistence" do
 
     it "saves the associated object" do
       post.body = modified_post_body
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).to have_persisted(
         :posts,
@@ -70,7 +70,7 @@ RSpec.describe "Graph persistence" do
 
     it "saves the associated object" do
       comment.body = modified_comment_body
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).to have_persisted(
         :comments,
@@ -88,12 +88,12 @@ RSpec.describe "Graph persistence" do
 
   context "modify the foreign_key of an object" do
     let(:original_author) { user }
-    let(:new_author)      { graph.where(id: "user/2").first }
+    let(:new_author)      { mapper.where(id: "user/2").first }
     let(:post)            { original_author.posts.first }
 
     it "persists the change in ownership" do
       post.author = new_author
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).to have_persisted(
         :posts,
@@ -104,9 +104,9 @@ RSpec.describe "Graph persistence" do
       )
     end
 
-    it "removes the object form the original graph" do
+    it "removes the object from the original graph" do
       post.author = new_author
-      graph.save(user)
+      mapper.save(user)
 
       expect(original_author.posts.to_a.map(&:id))
         .not_to include("posts/1")
@@ -114,7 +114,7 @@ RSpec.describe "Graph persistence" do
 
     it "adds the object to the appropriate graph" do
       post.author = new_author
-      graph.save(user)
+      mapper.save(user)
 
       expect(new_author.posts.to_a.map(&:id))
         .to include("post/1")
@@ -135,7 +135,7 @@ RSpec.describe "Graph persistence" do
 
     let(:new_post) {
       SequelMapper::StructFactory.new(
-        SequelMapper::GraphFixture::Post
+        SequelMapper::DatabaseFixture::Post
       ).call(new_post_attrs)
     }
 
@@ -147,7 +147,7 @@ RSpec.describe "Graph persistence" do
 
     it "persists the object" do
       user.posts.push(new_post)
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).to have_persisted(
         :posts,
@@ -171,7 +171,7 @@ RSpec.describe "Graph persistence" do
 
     it "removes the object from the datastore on save" do
       user.posts.remove(post)
-      graph.save(user)
+      mapper.save(user)
 
       expect(datastore).not_to have_persisted(
         :posts,
@@ -196,7 +196,7 @@ RSpec.describe "Graph persistence" do
       it "persists the change" do
         category = post.categories.first
         post.categories.remove(category)
-        graph.save(user)
+        mapper.save(user)
 
         expect(datastore).not_to have_persisted(
           :categories_to_posts,
@@ -221,7 +221,7 @@ RSpec.describe "Graph persistence" do
 
       it "persists the change" do
         post_with_one_category.categories.push(new_category)
-        graph.save(user)
+        mapper.save(user)
 
         expect(datastore).to have_persisted(
           :categories_to_posts,
@@ -246,7 +246,7 @@ RSpec.describe "Graph persistence" do
 
       it "persists the change" do
         category.name = modified_category_name
-        graph.save(user)
+        mapper.save(user)
 
         expect(datastore).to have_persisted(
           :categories,

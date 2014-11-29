@@ -2,7 +2,7 @@ module SequelMapper
   extend self
 
   def mapper(datastore:, top_level_namespace:, relation_mappings:)
-    Graph.new(
+    Mapper.new(
       datastore: datastore,
       top_level_namespace: top_level_namespace,
       relation_mappings: relation_mappings,
@@ -10,4 +10,4 @@ module SequelMapper
   end
 end
 
-require "sequel_mapper/graph"
+require "sequel_mapper/mapper"

@@ -3,7 +3,7 @@ require "sequel_mapper/belongs_to_association_proxy"
 require "sequel_mapper/queryable_association_proxy"
 
 module SequelMapper
-  class Graph
+  class Mapper
     def initialize(datastore:, top_level_namespace:, relation_mappings:)
       @top_level_namespace = top_level_namespace
       @datastore = datastore

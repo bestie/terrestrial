@@ -1,9 +1,9 @@
 require "support/mock_sequel"
 require "sequel_mapper/struct_factory"
-require "support/query_counter"
 
 module SequelMapper
-  module GraphFixture
+  module DatabaseFixture
+    include SequelTestSupport
 
     # A little hack so these let blocks from an RSpec example don't have
     # to change
@@ -21,11 +21,11 @@ module SequelMapper
     Toot = Struct.new(:id, :tooter, :body, :tooted_at)
 
     let(:query_counter) {
-      QueryCounter.new
+      SequelTestSupport::QueryCounter.new
     }
 
     let(:datastore) {
-      DB.tap { |db|
+      db_connection.tap { |db|
         load_fixture_data(db)
         db.loggers << query_counter
       }
