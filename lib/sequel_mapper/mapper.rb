@@ -77,17 +77,16 @@ module SequelMapper
           end
         end
 
-        if collection.respond_to?(:added_nodes)
-          collection.added_nodes.each do |assoc_object|
-            dump(assoc_config.fetch(:relation_name), assoc_object)
-          end
-        end
-
         next unless collection.respond_to?(:removed_nodes)
         collection.removed_nodes.each do |removed_node|
           datastore[assoc_config.fetch(:relation_name)]
             .where(id: removed_node.id)
             .delete
+        end
+
+        # TODO: while these nodes are not persisted twice they are dumped twice
+        collection.added_nodes.each do |assoc_object|
+          dump(assoc_config.fetch(:relation_name), assoc_object)
         end
       end
 
