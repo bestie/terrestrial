@@ -6,13 +6,7 @@ require "support/graph_fixture"
 RSpec.describe "Querying" do
   include SequelMapper::GraphFixture
 
-  subject(:graph) {
-    SequelMapper::Graph.new(
-      top_level_namespace: :users,
-      datastore: datastore,
-      relation_mappings: relation_mappings,
-    )
-  }
+  subject(:graph) { mapper_fixture }
 
   let(:user) {
     graph.where(id: "user/1").first

@@ -7,13 +7,7 @@ RSpec.describe "Graph traversal" do
   include SequelMapper::GraphFixture
 
   describe "assocaitions" do
-    subject(:graph) {
-      SequelMapper::Graph.new(
-        top_level_namespace: :users,
-        datastore: datastore,
-        relation_mappings: relation_mappings,
-      )
-    }
+    subject(:graph) { mapper_fixture }
 
     let(:user_query) {
       graph.where(id: "user/1")

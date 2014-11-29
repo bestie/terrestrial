@@ -31,6 +31,14 @@ module SequelMapper
       }
     }
 
+    def mapper_fixture
+      SequelMapper::Graph.new(
+        top_level_namespace: :users,
+        datastore: datastore,
+        relation_mappings: relation_mappings,
+      )
+    end
+
     def load_fixture_data(datastore)
       tables.each do |table, rows|
 

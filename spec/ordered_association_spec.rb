@@ -7,13 +7,7 @@ RSpec.describe "Ordered associations" do
   include SequelMapper::GraphFixture
 
   context "of type `has_many`" do
-    subject(:graph) {
-      SequelMapper::Graph.new(
-        top_level_namespace: :users,
-        datastore: datastore,
-        relation_mappings: relation_mappings,
-      )
-    }
+    subject(:graph) { mapper_fixture }
 
     let(:user) {
       graph.where(id: "user/1").first
