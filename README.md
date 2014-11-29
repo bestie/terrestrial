@@ -80,3 +80,20 @@ So go on, persist those POROs, they don't even have to know about it.
 
   # And then access the comments and so on ...
 ```
+
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'sequel_mapper'
+```
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install sequel_mapper
+

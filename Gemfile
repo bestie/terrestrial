@@ -1,6 +1,4 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem "rspec"
-gem "pry"
-gem "sequel"
-gem "pg"
+# Specify your gem's dependencies in sequel_mapper.gemspec
+gemspec
