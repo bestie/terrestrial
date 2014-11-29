@@ -43,7 +43,7 @@ So go on, persist those POROs, they don't even have to know about it.
     database: ENV.fetch("PGDATABASE"),
   )
 
-  user_mapper = SequelMapper::Graph.new(
+  user_mapper = SequelMapper.mapper(
     top_level_namespace: :users,
     datastore: DB,
     config: mapper_config, # Config omitted
