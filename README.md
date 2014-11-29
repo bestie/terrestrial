@@ -4,12 +4,12 @@
 
 ## What it is
 
-It's a data mapper that allows you to map rows from a database into a graph of
-plain ruby objects with arbitrary depth. The graph can then be manipulated and
-persisted back into the database.
+SequelMapper is a data mapper that pulls rows out of your database and maps
+them into a graph of plain Ruby objects. The graph can then be modifed and
+persisted back into the database as a whole.
 
 The main feature is that it fully supports all the kinds of data associations
-that you are used to with ActiveRecord.
+that you are used to with ActiveRecord but for your POROs.
 
 It is built on top of Jeremy Evans' Sequel library.
 
@@ -29,12 +29,25 @@ So go on, persist those POROs, they don't even have to know about it.
 
 ```ruby
   # Let's say you have some domain objects
+
   User = Struct.new(:id, :first_name, :last_name, :email, :posts)
   Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
   Comment = Struct.new(:id, :post, :commenter, :body)
   Category = Struct.new(:id, :name, :posts)
 
-  # And a database with some tables that look similar
+  # And a relational database with some tables that look similar
+
+  DB = Sequel.postgres(
+    host: ENV.fetch("PGHOST"),
+    user: ENV.fetch("PGUSER"),
+    database: ENV.fetch("PGDATABASE"),
+  )
+
+  user_mapper = SequelMapper::Graph.new(
+    top_level_namespace: :users,
+    datastore: DB,
+    config: mapper_config, # Config omitted
+  )
 
   # Then this may appeal to you
 
