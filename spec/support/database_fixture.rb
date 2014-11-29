@@ -14,91 +14,92 @@ module SequelMapper
       }
     end
 
+    # TODO: perhaps split this file up
+
+    # Domain objects (POROs)
     User = Struct.new(:id, :first_name, :last_name, :email, :posts, :toots)
     Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
     Comment = Struct.new(:id, :post, :commenter, :body)
     Category = Struct.new(:id, :name, :posts)
     Toot = Struct.new(:id, :tooter, :body, :tooted_at)
 
-    let(:query_counter) {
-      SequelTestSupport::QueryCounter.new
+    # A factory per Struct
+    # The factories serve two purposes
+    #   1. Decouple the mapper from the actual class it instantiates so this can be changed at will
+    #   2. The mapper has a hash of symbols => values and Stucts take positional arguments
+    let(:user_factory){
+      SequelMapper::StructFactory.new(User)
+    }
+
+    let(:post_factory){
+      SequelMapper::StructFactory.new(Post)
+    }
+
+    let(:comment_factory){
+      SequelMapper::StructFactory.new(Comment)
+    }
+
+    let(:category_factory){
+      SequelMapper::StructFactory.new(Category)
+    }
+
+    let(:toot_factory){
+      SequelMapper::StructFactory.new(Toot)
     }
 
     let(:datastore) {
       db_connection.tap { |db|
+        # When using the standard fixutres we need the fixture data loaded
+        # before the connection should be used
         load_fixture_data(db)
+
+        # The query_counter will let us make assertions about how efficiently
+        # the database is being used
         db.loggers << query_counter
       }
+    }
+
+    let(:query_counter) {
+      SequelTestSupport::QueryCounter.new
     }
 
     def mapper_fixture
       SequelMapper.mapper(
         top_level_namespace: :users,
         datastore: datastore,
-        relation_mappings: relation_mappings,
+        mappings: mapper_config,
       )
     end
 
     def load_fixture_data(datastore)
-      tables.each do |table, rows|
+      fixture_tables_hash.each do |table_name, rows|
 
-        datastore.drop_table?(table)
+        datastore.drop_table?(table_name)
 
-        datastore.create_table(table) do
+        datastore.create_table(table_name) do
+          # Create each column as a string type.
+          # This will suffice for current tests.
           rows.first.keys.each do |column|
             String column
           end
         end
 
         rows.each do |row|
-          datastore[table].insert(row)
+          datastore[table_name].insert(row)
         end
       end
     end
 
-    let(:tables) {
-      {
-        users: [
-          user_1_data,
-          user_2_data,
-          user_3_data,
-        ],
-        posts: [
-          post_1_data,
-          post_2_data,
-        ],
-        comments: [
-          comment_1_data,
-          comment_2_data,
-        ],
-        categories: [
-          category_1_data,
-          category_2_data,
-        ],
-        categories_to_posts: [
-          {
-            post_id: post_1_data.fetch(:id),
-            category_id: category_1_data.fetch(:id),
-          },
-          {
-            post_id: post_1_data.fetch(:id),
-            category_id: category_2_data.fetch(:id),
-          },
-          {
-            post_id: post_2_data.fetch(:id),
-            category_id: category_2_data.fetch(:id),
-          },
-        ],
-        toots: [
-          # Toot ordering is inconsistent for scope testing.
-          toot_2_data,
-          toot_1_data,
-          toot_3_data,
-        ],
-      }
-    }
+    # This is a sample of the kind of config SequelMapper needs.
+    # For the moment this must be written manually but could be generated from
+    # the schema. Automatic config generation is absolutley part of the
+    # project roadmap.
+    #
+    # Config must include an entry for each table with columns and
+    # associations. Associations need not be two way but are setup
+    # symmetrically here for illustrative purposes.
 
-    let(:relation_mappings) {
+    let(:mapper_config) {
       {
         users: {
           columns: [
@@ -206,24 +207,49 @@ module SequelMapper
       }
     }
 
-    let(:user_factory){
-      SequelMapper::StructFactory.new(User)
-    }
 
-    let(:post_factory){
-      SequelMapper::StructFactory.new(Post)
-    }
-
-    let(:comment_factory){
-      SequelMapper::StructFactory.new(Comment)
-    }
-
-    let(:category_factory){
-      SequelMapper::StructFactory.new(Category)
-    }
-
-    let(:toot_factory){
-      SequelMapper::StructFactory.new(Toot)
+    # This hash represents the data structure that will be written to
+    # the database.
+    let(:fixture_tables_hash) {
+      {
+        users: [
+          user_1_data,
+          user_2_data,
+          user_3_data,
+        ],
+        posts: [
+          post_1_data,
+          post_2_data,
+        ],
+        comments: [
+          comment_1_data,
+          comment_2_data,
+        ],
+        categories: [
+          category_1_data,
+          category_2_data,
+        ],
+        categories_to_posts: [
+          {
+            post_id: post_1_data.fetch(:id),
+            category_id: category_1_data.fetch(:id),
+          },
+          {
+            post_id: post_1_data.fetch(:id),
+            category_id: category_2_data.fetch(:id),
+          },
+          {
+            post_id: post_2_data.fetch(:id),
+            category_id: category_2_data.fetch(:id),
+          },
+        ],
+        toots: [
+          # Toot ordering is inconsistent for scope testing.
+          toot_2_data,
+          toot_1_data,
+          toot_3_data,
+        ],
+      }
     }
 
     let(:user_1_data) {

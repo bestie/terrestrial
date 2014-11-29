@@ -4,10 +4,10 @@ require "sequel_mapper/queryable_association_proxy"
 
 module SequelMapper
   class Mapper
-    def initialize(datastore:, top_level_namespace:, relation_mappings:)
+    def initialize(datastore:, top_level_namespace:, mappings:)
       @top_level_namespace = top_level_namespace
       @datastore = datastore
-      @relation_mappings = relation_mappings
+      @relation_mappings = mappings
     end
 
     attr_reader :top_level_namespace, :datastore, :relation_mappings
