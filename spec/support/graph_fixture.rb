@@ -32,7 +32,7 @@ module SequelMapper
     }
 
     def mapper_fixture
-      SequelMapper::Graph.new(
+      SequelMapper.mapper(
         top_level_namespace: :users,
         datastore: datastore,
         relation_mappings: relation_mappings,
