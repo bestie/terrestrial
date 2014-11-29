@@ -182,11 +182,19 @@ module SequelMapper
 
       has_many_through_assocations = Hash[
         relation.fetch(:has_many_through, []).map { |assoc_name, assoc|
+
+          # TODO: qualify column names with table name to avoid potential
+          #       ambiguity
+          assoc_value_columns = relation_mappings
+            .fetch(assoc.fetch(:relation_name))
+            .fetch(:columns)
+
          [
             assoc_name,
             AssociationProxy.new(
               QueryableAssociationProxy.new(
                 datastore[assoc.fetch(:relation_name)]
+                  .select(*assoc_value_columns)
                   .join(assoc.fetch(:through_relation_name), assoc.fetch(:association_foreign_key) => :id)
                   .where(assoc.fetch(:foreign_key) => row.fetch(:id)),
                 ->(row) {

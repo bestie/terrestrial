@@ -97,6 +97,21 @@ RSpec.describe "Graph persistence" do
     end
   end
 
+  context "when modifying a many to many association" do
+    let(:post) { user.posts.first }
+    let(:category) { post.categories.first }
+
+    before do
+      category.name = "UPDATED"
+    end
+
+    it "performs 1 write" do
+        expect {
+          mapper.save(user)
+        }.to change { query_counter.update_count }.by(1)
+    end
+  end
+
   after do |ex|
     query_counter.show_queries if ex.exception
   end
