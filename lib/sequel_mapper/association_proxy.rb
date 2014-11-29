@@ -14,6 +14,7 @@ module SequelMapper
     include Enumerable
     def each(&block)
       enum = Enumerator.new do |yielder|
+        @loaded = true
         assoc_enum.each do |element|
           yielder.yield(element) unless removed?(element)
         end
@@ -43,6 +44,10 @@ module SequelMapper
     def where(criteria)
       @assoc_enum.where(criteria)
       self
+    end
+
+    def loaded?
+      !!@loaded
     end
 
     private

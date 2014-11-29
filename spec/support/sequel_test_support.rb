@@ -27,6 +27,16 @@ module SequelMapper
         }
       end
 
+      def update_count
+        @info.count { |query|
+          /\A\([0-9\.]+s\) UPDATE/i === query
+        }
+      end
+
+      def show_queries
+        puts @info.join("\n")
+      end
+
       def info(message)
         @info.push(message)
       end

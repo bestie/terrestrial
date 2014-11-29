@@ -168,6 +168,10 @@ module SequelMapper
           ],
           factory: comment_factory,
           belongs_to: {
+            post: {
+              relation_name: :posts,
+              foreign_key: :post_id,
+            },
             commenter: {
               relation_name: :users,
               foreign_key: :commenter_id,
