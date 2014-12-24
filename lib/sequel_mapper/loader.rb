@@ -20,7 +20,40 @@ module SequelMapper
 
       # puts "****************LOADING #{row.fetch(:id)}"
 
-      has_many_associations = Hash[
+      relation.fetch(:factory).call(
+        row
+          .merge(has_many_associations(relation_mappings, relation, row))
+          .merge(has_many_through_associations(relation_mappings, relation, row))
+          .merge(belongs_to_associations(relation_mappings, relation, row))
+      ).tap { |object|
+        identity_map.store(row.fetch(:id), object)
+        dirty_map.store(row.fetch(:id), row)
+      }
+    end
+
+    private
+
+    def belongs_to_associations(relation_mappings, relation, row)
+      Hash[
+        relation.fetch(:belongs_to, []).map { |assoc_name, assoc|
+         [
+            assoc_name,
+            BelongsToAssociationProxy.new(
+              datastore[assoc.fetch(:relation_name)]
+                .where(:id => row.fetch(assoc.fetch(:foreign_key)))
+                .lazy
+                .map { |row|
+                  call(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
+                }
+                .public_method(:first)
+            )
+          ]
+        }
+      ]
+    end
+
+    def has_many_associations(relation_mappings, relation, row)
+      Hash[
         relation.fetch(:has_many, []).map { |assoc_name, assoc|
           data_enum = datastore[assoc.fetch(:relation_name)]
             .where(assoc.fetch(:foreign_key) => row.fetch(:id))
@@ -46,25 +79,10 @@ module SequelMapper
           ]
         }
       ]
+    end
 
-      belongs_to_associations = Hash[
-        relation.fetch(:belongs_to, []).map { |assoc_name, assoc|
-         [
-            assoc_name,
-            BelongsToAssociationProxy.new(
-              datastore[assoc.fetch(:relation_name)]
-                .where(:id => row.fetch(assoc.fetch(:foreign_key)))
-                .lazy
-                .map { |row|
-                  call(relation_mappings.fetch(assoc.fetch(:relation_name)), row)
-                }
-                .public_method(:first)
-            )
-          ]
-        }
-      ]
-
-      has_many_through_assocations = Hash[
+    def has_many_through_associations(relation_mappings, relation, row)
+      Hash[
         relation.fetch(:has_many_through, []).map { |assoc_name, assoc|
 
           # TODO: qualify column names with table name to avoid potential
@@ -89,16 +107,6 @@ module SequelMapper
           ]
         }
       ]
-
-      relation.fetch(:factory).call(
-        row
-          .merge(has_many_associations)
-          .merge(has_many_through_assocations)
-          .merge(belongs_to_associations)
-      ).tap { |object|
-        identity_map.store(row.fetch(:id), object)
-        dirty_map.store(row.fetch(:id), row)
-      }
     end
   end
 end
