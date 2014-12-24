@@ -105,7 +105,6 @@ RSpec.describe SequelMapper::AssociationProxy do
         proxy.map(&id)
       end
 
-      # TODO: This seems like a bug :(
       it "is loaded" do
         expect(proxy.loaded?).to be(true)
       end
