@@ -1,6 +1,3 @@
-require "sequel_mapper/association_proxy"
-require "sequel_mapper/belongs_to_association_proxy"
-require "sequel_mapper/queryable_association_proxy"
 require "sequel_mapper/loader"
 require "sequel_mapper/dumper"
 
@@ -47,7 +44,7 @@ module SequelMapper
     end
 
     def load(relation, row)
-      Loader.new(datastore, relation_mappings, identity_map, dirty_map)
+      Loader.new(relation_mappings, identity_map, dirty_map)
         .call(relation, row)
     end
   end

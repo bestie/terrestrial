@@ -99,112 +99,145 @@ module SequelMapper
     # associations. Associations need not be two way but are setup
     # symmetrically here for illustrative purposes.
 
+    require "sequel_mapper/mapping"
+    require "sequel_mapper/identity_map"
+    require "sequel_mapper/associations"
+
+    def mapping(**args)
+      Mapping.new(**args)
+    end
+
+    def belongs_to(**args)
+      Associations::BelongsTo.new(datastore: datastore, **args)
+    end
+
+    def has_many(**args)
+      Associations::HasMany.new(datastore: datastore, **args)
+    end
+
+    def has_many_through(**args)
+      Associations::HasManyThrough.new(datastore: datastore, **args)
+    end
+
     let(:mapper_config) {
-      {
-        users: {
-          fields: [
-            :id,
-            :first_name,
-            :last_name,
-            :email,
-          ],
-          factory: user_factory,
-          has_many: {
-            posts: {
-              relation_name: :posts,
-              foreign_key: :author_id,
+      mappings = {}
+
+      mappings[:users] = mapping(
+        relation_name: :users,
+        fields: [
+          :id,
+          :first_name,
+          :last_name,
+          :email,
+        ],
+        factory: user_factory,
+        associations: {
+          posts: has_many(
+            mappings: mappings,
+            mapping: :posts,
+            key: :id,
+            foreign_key: :author_id,
+          ),
+          toots: has_many(
+            mappings: mappings,
+            mapping: :toots,
+            key: :id,
+            foreign_key: :tooter_id,
+            order_by: {
+              fields: [:tooted_at],
+              direction: :desc,
             },
-            toots: {
-              relation_name: :toots,
-              foreign_key: :tooter_id,
-              order_by: {
-                fields: [:tooted_at],
-                direction: :desc,
-              },
-            },
-          },
-          # TODO: maybe combine associations like this
-          # has_many_through: {
-          #   categories_posted_in: {
-          #     through_association: [ :posts, :categories ]
-          #   }
-          # }
+          ),
         },
-        posts: {
-          fields: [
-            :id,
-            :subject,
-            :body,
-          ],
-          factory: post_factory,
-          has_many: {
-            comments: {
-              relation_name: :comments,
-              foreign_key: :post_id,
-            },
-          },
-          has_many_through: {
-            categories: {
-              through_relation_name: :categories_to_posts,
-              relation_name: :categories,
-              foreign_key: :post_id,
-              association_foreign_key: :category_id,
-            }
-          },
-          belongs_to: {
-            author: {
-              relation_name: :users,
-              foreign_key: :author_id,
-            },
-          },
+      )
+
+      mappings[:posts] = mapping(
+        relation_name: :posts,
+        fields: [
+          :id,
+          :subject,
+          :body,
+        ],
+        factory: post_factory,
+        associations: {
+          comments: has_many(
+            mappings: mappings,
+            mapping: :comments,
+            key: :id,
+            foreign_key: :post_id,
+          ),
+          categories: has_many_through(
+            mappings: mappings,
+            mapping: :categories,
+            through_relation_name: :categories_to_posts,
+            foreign_key: :post_id,
+            association_foreign_key: :category_id,
+          ),
+          author: belongs_to(
+            mappings: mappings,
+            mapping: :users,
+            foreign_key: :author_id,
+          ),
+        }
+      )
+
+      mappings[:comments] = mapping(
+        relation_name: :comments,
+        fields: [
+          :id,
+          :body,
+        ],
+        factory: comment_factory,
+        associations: {
+          post: belongs_to(
+            mappings: mappings,
+            mapping: :posts,
+            foreign_key: :post_id,
+          ),
+          commenter: belongs_to(
+            mappings: mappings,
+            mapping: :users,
+            foreign_key: :commenter_id,
+          ),
         },
-        comments: {
-          fields: [
-            :id,
-            :body,
-          ],
-          factory: comment_factory,
-          belongs_to: {
-            post: {
-              relation_name: :posts,
-              foreign_key: :post_id,
-            },
-            commenter: {
-              relation_name: :users,
-              foreign_key: :commenter_id,
-            },
-          },
+      )
+
+      mappings[:categories] = mapping(
+        relation_name: :categories,
+        fields: [
+          :id,
+          :name,
+        ],
+        factory: category_factory,
+        associations: {
+          posts: has_many_through(
+            mappings: mappings,
+            mapping: :posts,
+            through_relation_name: :categories_to_posts,
+            foreign_key: :category_id,
+            association_foreign_key: :post_id,
+          ),
         },
-        categories: {
-          fields: [
-            :id,
-            :name,
-          ],
-          factory: category_factory,
-          has_many_through: {
-            posts: {
-              through_relation_name: :categories_to_posts,
-              relation_name: :posts,
-              foreign_key: :category_id,
-              association_foreign_key: :post_id,
-            }
-          },
+      )
+
+      mappings[:toots] = mapping(
+        relation_name: :toots,
+        fields: [
+          :id,
+          :body,
+          :tooted_at,
+        ],
+        factory: toot_factory,
+        associations: {
+          tooter: belongs_to(
+            mappings: mappings,
+            mapping: :users,
+            foreign_key: :tooter_id,
+          ),
         },
-        toots: {
-          fields: [
-            :id,
-            :body,
-            :tooted_at,
-          ],
-          factory: toot_factory,
-          belongs_to: {
-            tooter: {
-              relation_name: :users,
-              foreign_key: :tooter_id,
-            },
-          },
-        },
-      }
+      )
+
+      mappings
     }
 
 
