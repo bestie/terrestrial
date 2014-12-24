@@ -7,6 +7,16 @@ module SequelMapper
       @dirty_map = dirty_map
     end
 
+    def call(relation, row)
+      ensure_loaded_once(row) {
+        relation.fetch(:factory).call(
+          row.merge(associations(relation_mappings, relation, row))
+        )
+      }
+    end
+
+    private
+
     attr_reader(
       :datastore,
       :relation_mappings,
@@ -14,24 +24,22 @@ module SequelMapper
       :dirty_map,
     )
 
-    def call(relation, row)
-      previously_loaded_object = identity_map.fetch(row.fetch(:id), false)
-      return previously_loaded_object if previously_loaded_object
-
-      # puts "****************LOADING #{row.fetch(:id)}"
-
-      relation.fetch(:factory).call(
-        row
-          .merge(has_many_associations(relation_mappings, relation, row))
-          .merge(has_many_through_associations(relation_mappings, relation, row))
-          .merge(belongs_to_associations(relation_mappings, relation, row))
-      ).tap { |object|
-        identity_map.store(row.fetch(:id), object)
-        dirty_map.store(row.fetch(:id), row)
-      }
+    def ensure_loaded_once(row, &block)
+      identity_map.fetch(row.fetch(:id), false) or block.call.tap { |object|
+          register(object, row)
+        }
     end
 
-    private
+    def associations(relation_mappings, relation, row)
+      {}.merge(has_many_associations(relation_mappings, relation, row))
+        .merge(has_many_through_associations(relation_mappings, relation, row))
+        .merge(belongs_to_associations(relation_mappings, relation, row))
+    end
+
+    def register(object, row)
+      identity_map.store(row.fetch(:id), object)
+      dirty_map.store(row.fetch(:id), row)
+    end
 
     def belongs_to_associations(relation_mappings, relation, row)
       Hash[
