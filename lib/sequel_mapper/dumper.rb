@@ -7,6 +7,19 @@ module SequelMapper
       @persisted_objects = []
     end
 
+    def call(relation_name, object)
+      ensure_persisted_once(object) {
+        relation = relation_mappings.fetch(relation_name)
+        row = object_to_row(relation, object)
+
+        dump_associations(datastore, relation, object, row)
+
+        write_if_dirty(relation_name, row)
+      }
+    end
+
+    private
+
     attr_reader(
       :datastore,
       :relation_mappings,
@@ -14,21 +27,67 @@ module SequelMapper
       :persisted_objects,
     )
 
-    def call(relation_name, object)
-      return if persisted_objects.include?(object)
+    def ensure_persisted_once(object, &block)
+      if already_persisted?(object)
+        object
+      else
+        block.call.tap {
+          register(object)
+        }
+      end
+    end
+
+    def dump_associations(datastore, relation, object, row)
+      dump_belongs_to(relation, object, row)
+      dump_has_many(datastore, relation, object)
+      dump_has_many_through(datastore, relation, object)
+    end
+
+    def object_to_row(relation, object)
+      object.to_h.select { |field_name, _v|
+        relation.fetch(:columns).include?(field_name)
+      }
+    end
+
+    def write_if_dirty(relation_name, row)
+      upsert_record(relation_name, row) if row_dirty?(row)
+    end
+
+    def row_dirty?(row)
+      loaded_row = dirty_map.fetch(row.fetch(:id), :not_found_therefore_dirty)
+
+      row != loaded_row
+    end
+
+    def already_persisted?(object)
+      persisted_objects.include?(object)
+    end
+
+    def register(object)
       persisted_objects.push(object)
+    end
 
-      relation = relation_mappings.fetch(relation_name)
+    def upsert_record(relation_name, row)
+      existing = datastore[relation_name]
+        .where(id: row.fetch(:id))
 
-      row = object_to_row(relation, object)
+      if existing.empty?
+        datastore[relation_name].insert(row)
+      else
+        existing.update(row)
+      end
+    end
 
+    def dump_belongs_to(relation, object, row)
       # TODO: dirty tracking (for update efficiency) only works for objects
       #       that belong to another when the association is defined in both
       #       directions
       relation.fetch(:belongs_to, []).each do |assoc_name, assoc_config|
         row[assoc_config.fetch(:foreign_key)] = object.public_send(assoc_name).id
       end
+    end
 
+    def dump_has_many(datastore, relation, object)
       relation.fetch(:has_many, []).each do |assoc_name, assoc_config|
         collection = object.public_send(assoc_name)
         collection_loaded = collection.respond_to?(:loaded?) ?
@@ -52,7 +111,9 @@ module SequelMapper
           call(assoc_config.fetch(:relation_name), assoc_object)
         end
       end
+    end
 
+    def dump_has_many_through(datastore, relation, object)
       relation.fetch(:has_many_through, []).each do |assoc_name, assoc_config|
         collection = object.public_send(assoc_name)
         collection_loaded = collection.respond_to?(:loaded?) ?
@@ -79,31 +140,6 @@ module SequelMapper
             .delete
         end
       end
-
-      if row_dirty?(row)
-        existing = datastore[relation_name]
-          .where(id: object.id)
-
-        if existing.empty?
-          datastore[relation_name].insert(row)
-        else
-          existing.update(row)
-        end
-      end
-    end
-
-    private
-
-    def row_dirty?(row)
-      loaded_row = dirty_map.fetch(row.fetch(:id), :not_found_therefore_dirty)
-
-      row != loaded_row
-    end
-
-    def object_to_row(relation, object)
-      object.to_h.select { |field_name, _v|
-        relation.fetch(:columns).include?(field_name)
-      }
     end
   end
 end
