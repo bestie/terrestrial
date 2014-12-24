@@ -67,7 +67,7 @@ module SequelMapper
             .where(assoc.fetch(:foreign_key) => row.fetch(:id))
 
           if assoc.fetch(:order_by, false)
-            data_enum = data_enum.order(assoc.fetch(:order_by, {}).fetch(:columns, []))
+            data_enum = data_enum.order(assoc.fetch(:order_by, {}).fetch(:fields, []))
 
             if assoc.fetch(:order_by).fetch(:direction, :asc) == :desc
               data_enum = data_enum.reverse
@@ -97,7 +97,7 @@ module SequelMapper
           #       ambiguity
           assoc_value_columns = relation_mappings
             .fetch(assoc.fetch(:relation_name))
-            .fetch(:columns)
+            .fetch(:fields)
 
          [
             assoc_name,

@@ -102,7 +102,7 @@ module SequelMapper
     let(:mapper_config) {
       {
         users: {
-          columns: [
+          fields: [
             :id,
             :first_name,
             :last_name,
@@ -118,7 +118,7 @@ module SequelMapper
               relation_name: :toots,
               foreign_key: :tooter_id,
               order_by: {
-                columns: [:tooted_at],
+                fields: [:tooted_at],
                 direction: :desc,
               },
             },
@@ -131,7 +131,7 @@ module SequelMapper
           # }
         },
         posts: {
-          columns: [
+          fields: [
             :id,
             :subject,
             :body,
@@ -159,7 +159,7 @@ module SequelMapper
           },
         },
         comments: {
-          columns: [
+          fields: [
             :id,
             :body,
           ],
@@ -176,7 +176,7 @@ module SequelMapper
           },
         },
         categories: {
-          columns: [
+          fields: [
             :id,
             :name,
           ],
@@ -191,7 +191,7 @@ module SequelMapper
           },
         },
         toots: {
-          columns: [
+          fields: [
             :id,
             :body,
             :tooted_at,

@@ -46,7 +46,7 @@ module SequelMapper
     end
 
     def serialize(relation, object)
-      Serializer.new(relation.fetch(:columns), object).to_h
+      Serializer.new(relation.fetch(:fields), object).to_h
     end
 
     def write_if_dirty(relation_name, row)
