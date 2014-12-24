@@ -1,3 +1,5 @@
+require "sequel_mapper/serializer"
+
 module SequelMapper
   class Dumper
     def initialize(datastore, relation_mappings, dirty_map)
@@ -10,7 +12,7 @@ module SequelMapper
     def call(relation_name, object)
       ensure_persisted_once(object) {
         relation = relation_mappings.fetch(relation_name)
-        row = object_to_row(relation, object)
+        row = serialize(relation, object)
 
         dump_associations(datastore, relation, object, row)
 
@@ -43,10 +45,8 @@ module SequelMapper
       dump_has_many_through(datastore, relation, object)
     end
 
-    def object_to_row(relation, object)
-      object.to_h.select { |field_name, _v|
-        relation.fetch(:columns).include?(field_name)
-      }
+    def serialize(relation, object)
+      Serializer.new(relation.fetch(:columns), object).to_h
     end
 
     def write_if_dirty(relation_name, row)

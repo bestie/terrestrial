@@ -133,7 +133,6 @@ module SequelMapper
         posts: {
           columns: [
             :id,
-            :author_id,
             :subject,
             :body,
           ],
@@ -162,8 +161,6 @@ module SequelMapper
         comments: {
           columns: [
             :id,
-            :post_id,
-            :commenter_id,
             :body,
           ],
           factory: comment_factory,
@@ -196,7 +193,6 @@ module SequelMapper
         toots: {
           columns: [
             :id,
-            :tooter_id,
             :body,
             :tooted_at,
           ],
