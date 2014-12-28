@@ -104,7 +104,9 @@ module SequelMapper
     require "sequel_mapper/associations"
 
     def mapping(**args)
-      Mapping.new(**args)
+      IdentityMap.new(
+        Mapping.new(**args)
+      )
     end
 
     def belongs_to(**args)
