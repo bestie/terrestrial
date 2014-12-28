@@ -1,26 +1,19 @@
-require "sequel_mapper/loader"
 require "sequel_mapper/dumper"
 
 module SequelMapper
   class Mapper
-    def initialize(datastore:, top_level_namespace:, mappings:)
-      @top_level_namespace = top_level_namespace
+    def initialize(datastore:, mapping:)
       @datastore = datastore
-      @relation_mappings = mappings
+      @mapping = mapping
     end
 
-    attr_reader :top_level_namespace, :datastore, :relation_mappings
-    private     :top_level_namespace, :datastore, :relation_mappings
+    attr_reader :datastore, :mapping
+    private     :datastore, :mapping
 
     def where(criteria)
       datastore[top_level_namespace]
         .where(criteria)
-        .map { |row|
-          load(
-            relation_mappings.fetch(top_level_namespace),
-            row,
-          )
-        }
+        .map { |row| mapping.load(row) }
     end
 
     def save(graph_root)
@@ -29,6 +22,10 @@ module SequelMapper
     end
 
     private
+
+    def top_level_namespace
+      mapping.relation_name
+    end
 
     def identity_map
       @identity_map ||= {}
@@ -41,11 +38,6 @@ module SequelMapper
     def dump(namespace, graph_root)
       Dumper.new(datastore, relation_mappings, dirty_map)
         .call(namespace, graph_root)
-    end
-
-    def load(relation, row)
-      Loader.new(relation_mappings, identity_map, dirty_map)
-        .call(relation, row)
     end
   end
 end

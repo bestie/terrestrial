@@ -4,8 +4,7 @@ module SequelMapper
   def mapper(datastore:, top_level_namespace:, mappings:)
     Mapper.new(
       datastore: datastore,
-      top_level_namespace: top_level_namespace,
-      mappings: mappings,
+      mapping: mappings[top_level_namespace],
     )
   end
 end
