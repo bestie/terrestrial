@@ -3,7 +3,7 @@ require "forwardable"
 module SequelMapper
   class IdentityMap
     extend Forwardable
-    def_delegators :mapping, :relation_name, :factory, :fields
+    def_delegators :mapping, :relation_name, :factory, :fields, :dump
 
     def initialize(mapping, identity_map = {})
       @mapping = mapping
