@@ -74,9 +74,8 @@ module SequelMapper
           datastore[relation_name]
             .where(:id => row.fetch(foreign_key))
             .lazy
-            .map { |row|
-              mapping.load(row)
-            }
+            .map { |row| dirty_map.store(row.fetch(:id), row) }
+            .map { |row| mapping.load(row) }
             .public_method(:first)
         )
       end
@@ -113,9 +112,8 @@ module SequelMapper
         AssociationProxy.new(
           data_enum
             .lazy
-            .map { |row|
-              mapping.load(row)
-            }
+            .map { |row| dirty_map.store(row.fetch(:id), row) }
+            .map { |row| mapping.load(row) }
         )
       end
 
@@ -162,9 +160,8 @@ module SequelMapper
             .join(through_relation_name, association_foreign_key => :id)
             .where(foreign_key => row.fetch(:id))
             .lazy
-            .map { |row|
-              mapping.load(row)
-            }
+            .map { |row| dirty_map.store(row.fetch(:id), row) }
+            .map { |row| mapping.load(row) }
         )
       end
 
