@@ -147,6 +147,7 @@ RSpec.describe "Graph persistence" do
 
     it "persists the object" do
       user.posts.push(new_post)
+
       mapper.save(user)
 
       expect(datastore).to have_persisted(

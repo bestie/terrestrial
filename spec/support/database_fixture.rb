@@ -68,6 +68,7 @@ module SequelMapper
         top_level_namespace: :users,
         datastore: datastore,
         mappings: mapper_config,
+        dirty_map: dirty_map,
       )
     end
 
@@ -103,6 +104,10 @@ module SequelMapper
     require "sequel_mapper/identity_map"
     require "sequel_mapper/associations"
 
+    def dirty_map
+      @dirty_map ||= {}
+    end
+
     def mapping(**args)
       IdentityMap.new(
         Mapping.new(**args)
@@ -110,15 +115,15 @@ module SequelMapper
     end
 
     def belongs_to(**args)
-      Associations::BelongsTo.new(datastore: datastore, **args)
+      Associations::BelongsTo.new(datastore: datastore, dirty_map: dirty_map, **args)
     end
 
     def has_many(**args)
-      Associations::HasMany.new(datastore: datastore, **args)
+      Associations::HasMany.new(datastore: datastore, dirty_map: dirty_map, **args)
     end
 
     def has_many_through(**args)
-      Associations::HasManyThrough.new(datastore: datastore, **args)
+      Associations::HasManyThrough.new(datastore: datastore, dirty_map: dirty_map, **args)
     end
 
     let(:mapper_config) {

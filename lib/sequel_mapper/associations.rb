@@ -6,20 +6,25 @@ module SequelMapper
     class Association
       include MapperMethods
 
-      def initialize(datastore:, mappings:, mapping:)
+      def initialize(datastore:, mappings:, mapping:, dirty_map:)
         @datastore = datastore
         @mappings = mappings
         @mapping_name = mapping
+        @dirty_map = dirty_map
       end
 
-      attr_reader :datastore, :mapping
+      attr_reader :datastore, :mapping, :dirty_map
 
       def load(_row)
         raise NotImplementedError
       end
 
-      def dump(collection)
+      def dump(_source_object, _collection)
         raise NotImplementedError
+      end
+
+      def foreign_key_field(_label, _object)
+        {}
       end
 
       private
@@ -28,15 +33,33 @@ module SequelMapper
         @mappings.fetch(@mapping_name)
       end
 
-      def if_loaded?(assocaited_object_or_proxy, &loaded_callback)
-        if assocaited_object_or_proxy.respond_to?(:loaded?)
-          return unless assocaited_object_or_proxy.loaded?
+      def loaded?(collection)
+        if collection.respond_to?(:loaded?)
+          collection.loaded?
+        else
+          true
         end
+      end
 
-        loaded_callback.call(assocaited_object_or_proxy)
+      def added_nodes(collection)
+        collection.respond_to?(:added_nodes) ? collection.added_nodes : collection
+      end
+
+      def removed_nodes(collection)
+        collection.respond_to?(:removed_nodes) ? collection.removed_nodes : []
+      end
+
+      def nodes_to_persist(collection)
+        if loaded?(collection)
+          collection
+        else
+          added_nodes(collection)
+        end
       end
     end
 
+    # Association loads the correct associated row from the database,
+    # constructs the correct proxy delegating to the RowMapper
     class BelongsTo < Association
       def initialize(foreign_key:, **args)
         @foreign_key = foreign_key
@@ -58,12 +81,18 @@ module SequelMapper
         )
       end
 
-      def dump(object_proxy)
-        unless_already_persisted(object_proxy) do |object|
-          if_loaded?(object) do
+      def dump(_source_object, object)
+        unless_already_persisted(object) do |object|
+          if loaded?(object)
             upsert_if_dirty(mapping.dump(object))
           end
         end
+      end
+
+      def foreign_key_field(name, object)
+        {
+          foreign_key => object.public_send(name).public_send(:id)
+        }
       end
     end
 
@@ -90,14 +119,29 @@ module SequelMapper
         )
       end
 
-      def dump(collection_proxy)
-        unless_already_persisted(collection_proxy) do |collection_proxy|
-          if_loaded?(collection_proxy) do
-            collection_proxy.each do |object|
-              upsert_if_dirty(mapping.dump(object))
-            end
-          end
+      def dump(_source_object, collection)
+        unless_already_persisted(collection) do |collection_proxy|
+          persist_nodes(collection)
+          remove_deleted_nodes(collection_proxy)
         end
+      end
+
+      private
+
+      def persist_nodes(collection)
+        nodes_to_persist(collection).each do |object|
+          upsert_if_dirty(mapping.dump(object))
+        end
+      end
+
+      def remove_deleted_nodes(collection)
+        removed_nodes(collection).each do |node|
+          delete_node(node)
+        end
+      end
+
+      def delete_node(node)
+        relation.where(id: node.id).delete
       end
     end
 
@@ -124,21 +168,44 @@ module SequelMapper
         )
       end
 
-      def dump(collection)
+      def dump(source_object, collection)
         unless_already_persisted(collection) do |collection|
-          if_loaded?(collection) do
-            collection.each do |object|
-              upsert_if_dirty(mapping.dump(object))
-            end
-          end
+          persist_nodes(collection)
+          associate_new_nodes(source_object, collection)
+          dissociate_removed_nodes(source_object, collection)
         end
       end
-# 
-#         private
-# 
-#         def value_columns
-#           mapping.fields
-#         end
+
+      private
+
+      def persist_nodes(collection)
+        nodes_to_persist(collection).each do |object|
+          upsert_if_dirty(mapping.dump(object))
+        end
+      end
+
+      def associate_new_nodes(source_object, collection)
+        new_nodes = collection.respond_to?(:added_nodes) ?
+          collection.added_nodes : []
+
+        new_nodes.each do |node|
+          through_relation.insert(
+            foreign_key => source_object.public_send(:id),
+            association_foreign_key => node.public_send(:id),
+          )
+        end
+      end
+
+      def dissociate_removed_nodes(source_object, collection)
+        through_relation
+          .where(foreign_key => source_object.public_send(:id))
+          .exclude(association_foreign_key => collection.map(&:id))
+          .delete
+      end
+
+      def through_relation
+        datastore[through_relation_name]
+      end
     end
   end
 end

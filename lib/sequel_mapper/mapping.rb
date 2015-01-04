@@ -18,7 +18,7 @@ module SequelMapper
     def dump(object)
       pp object.id
       dump_associations(object)
-      serialize(object)
+      serialize_with_foreign_keys(object)
     end
 
     private
@@ -34,8 +34,14 @@ module SequelMapper
 
     def dump_associations(object)
       @associations.each do |name, assoc|
-        assoc.dump(object.public_send(name))
+        assoc.dump(object, object.public_send(name))
       end
+    end
+
+    def serialize_with_foreign_keys(object)
+      @associations.reduce(serialize(object)) { |agg, (label, assoc)|
+        agg.merge(assoc.foreign_key_field(label, object))
+      }
     end
 
     def serialize(object)

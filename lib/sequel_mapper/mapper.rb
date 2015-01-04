@@ -30,10 +30,10 @@ module SequelMapper
     def upsert(row)
       existing = relation.where(id: row.fetch(:id))
 
-      if existing
-        existing.update(row)
-      else
+      if existing.empty?
         relation.insert(row)
+      else
+        existing.update(row)
       end
     end
 
@@ -41,30 +41,22 @@ module SequelMapper
       dirty_map.store(row.fetch(:id), row)
     end
 
-
     def persisted_objects
       @persisted_objects ||= []
-    end
-
-    def identity_map
-      @identity_map ||= {}
-    end
-
-    def dirty_map
-      @dirty_map ||= {}
     end
   end
 
   class Mapper
     include MapperMethods
 
-    def initialize(datastore:, mapping:)
+    def initialize(datastore:, mapping:, dirty_map:)
       @datastore = datastore
       @mapping = mapping
+      @dirty_map = dirty_map
     end
 
-    attr_reader :datastore, :mapping
-    private     :datastore, :mapping
+    attr_reader :datastore, :mapping, :dirty_map
+    private     :datastore, :mapping, :dirty_map
 
     def where(criteria)
       relation
