@@ -185,10 +185,7 @@ module SequelMapper
       end
 
       def associate_new_nodes(source_object, collection)
-        new_nodes = collection.respond_to?(:added_nodes) ?
-          collection.added_nodes : []
-
-        new_nodes.each do |node|
+        added_nodes(collection).each do |node|
           through_relation.insert(
             foreign_key => source_object.public_send(:id),
             association_foreign_key => node.public_send(:id),
@@ -197,9 +194,13 @@ module SequelMapper
       end
 
       def dissociate_removed_nodes(source_object, collection)
+        ids = removed_nodes(collection).map(&:id)
+
         through_relation
-          .where(foreign_key => source_object.public_send(:id))
-          .exclude(association_foreign_key => collection.map(&:id))
+          .where(
+            foreign_key => source_object.public_send(:id),
+            association_foreign_key => ids,
+          )
           .delete
       end
 
