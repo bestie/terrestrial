@@ -16,7 +16,6 @@ module SequelMapper
     end
 
     def dump(object)
-      pp object.id
       dump_associations(object)
       serialize_with_foreign_keys(object)
     end
@@ -24,7 +23,6 @@ module SequelMapper
     private
 
     def associations(row)
-      pp row
       Hash[
         @associations.map { |label, assoc|
           [label, assoc.load(row)]
