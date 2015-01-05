@@ -96,21 +96,20 @@ module SequelMapper
     end
 
     class HasMany < Association
-      def initialize(key:, foreign_key:, order_by: [], **args)
+      def initialize(key:, foreign_key:, order_by: {}, **args)
         @key = key
         @foreign_key = foreign_key
+        @order_by = order_by
         super(**args)
       end
 
-      attr_reader :key, :foreign_key
-      private     :key, :foreign_key
+      attr_reader :key, :foreign_key, :order_by
+      private     :key, :foreign_key, :order_by
 
       def load(row)
-        data_enum = datastore[relation_name]
-          .where(foreign_key => row.fetch(key))
 
         AssociationProxy.new(
-          data_enum
+          data_enum(row)
             .lazy
             .map { |row| dirty_map.store(row.fetch(:id), row) }
             .map { |row| mapping.load(row) }
@@ -125,6 +124,25 @@ module SequelMapper
       end
 
       private
+
+      def data_enum(row)
+        apply_order(query(row))
+      end
+
+      # TODO: Add this ordering feature to HasManyThrough
+      def apply_order(query)
+        reverse_or_noop = order_by.fetch(:direction, :asc) == :desc ?
+          :reverse : :from_self
+
+        query
+          .order(*order_by.fetch(:fields, []))
+          .public_send(reverse_or_noop)
+      end
+
+      def query(row)
+        datastore[relation_name]
+          .where(foreign_key => row.fetch(key))
+      end
 
       def persist_nodes(collection)
         nodes_to_persist(collection).each do |object|

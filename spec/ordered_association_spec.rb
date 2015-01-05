@@ -14,10 +14,10 @@ RSpec.describe "Ordered associations" do
     }
 
     it "enumerates the objects in order specified in the config" do
-      user.toots.to_a
+      time_sorted_ids = user.toots.sort_by { |t| t.tooted_at }.map(&:id).reverse
 
       expect(user.toots.map(&:id).to_a)
-        .to eq(user.toots.to_a.sort_by { |t| t.tooted_at }.map(&:id).reverse)
+        .to eq(time_sorted_ids)
     end
   end
 end
