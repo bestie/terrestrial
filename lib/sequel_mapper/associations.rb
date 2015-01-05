@@ -155,10 +155,13 @@ module SequelMapper
       private     :through_relation_name, :foreign_key, :association_foreign_key
 
       def load(row)
+        ids = datastore[through_relation_name]
+                .select(association_foreign_key)
+                .where(foreign_key => row.fetch(:id))
+
         AssociationProxy.new(
           datastore[relation_name]
-            .join(through_relation_name, association_foreign_key => :id)
-            .where(foreign_key => row.fetch(:id))
+            .where(:id => ids)
             .lazy
             .map { |row| dirty_map.store(row.fetch(:id), row) }
             .map { |row| mapping.load(row) }
