@@ -1,6 +1,6 @@
 require "delegate"
 
-class BelongsToAssociationProxy < SimpleDelegator
+class LazyObjectProxy < SimpleDelegator
   def initialize(object_loader)
     @object_loader = object_loader
     @loaded = false

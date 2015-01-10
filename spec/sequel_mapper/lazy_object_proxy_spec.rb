@@ -1,9 +1,9 @@
 require "spec_helper"
 
-require "sequel_mapper/belongs_to_association_proxy"
+require "sequel_mapper/lazy_object_proxy"
 
-RSpec.describe BelongsToAssociationProxy do
-  subject(:proxy) { BelongsToAssociationProxy.new(object_loader) }
+RSpec.describe LazyObjectProxy do
+  subject(:proxy) { LazyObjectProxy.new(object_loader) }
 
   let(:object_loader)   { double(:object_loader, call: proxied_object) }
   let(:proxied_object)  { double(:proxied_object, name: name) }

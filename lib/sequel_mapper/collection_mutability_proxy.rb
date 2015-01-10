@@ -1,15 +1,18 @@
 require "forwardable"
 
 module SequelMapper
-  class AssociationProxy
-    def initialize(assoc_enum)
-      @assoc_enum = assoc_enum
+  class CollectionMutabilityProxy
+    def initialize(collection)
+      @collection = collection
       @added_nodes = []
       @removed_nodes = []
     end
 
-    attr_reader :assoc_enum, :removed_nodes, :added_nodes
-    private     :assoc_enum
+    attr_reader :collection, :removed_nodes, :added_nodes
+    private     :collection
+
+    extend Forwardable
+    def_delegators :collection, :where
 
     include Enumerable
     def each(&block)
@@ -30,13 +33,12 @@ module SequelMapper
       @added_nodes.push(node)
     end
 
-    def where(criteria)
-      @assoc_enum.where(criteria)
-      self
-    end
-
     def loaded?
       !!@loaded
+    end
+
+    def eager_load(association_name)
+      collection.eager_load(association_name)
     end
 
     private
@@ -45,11 +47,11 @@ module SequelMapper
       Enumerator.new do |yielder|
         mark_as_loaded
 
-        assoc_enum.each do |element|
+        collection.each do |element|
           yielder.yield(element) unless removed?(element)
         end
 
-        @added_nodes.each do |node|
+        added_nodes.each do |node|
           yielder.yield(node)
         end
       end

@@ -1,10 +1,10 @@
 require "spec_helper"
 
-require "sequel_mapper/association_proxy"
+require "sequel_mapper/collection_mutability_proxy"
 
-RSpec.describe SequelMapper::AssociationProxy do
+RSpec.describe SequelMapper::CollectionMutabilityProxy do
   let(:proxy) {
-    SequelMapper::AssociationProxy.new(lazy_enum)
+    SequelMapper::CollectionMutabilityProxy.new(lazy_enum)
   }
 
   let(:lazy_enum) { data_set.each.lazy }

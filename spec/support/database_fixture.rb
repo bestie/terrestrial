@@ -103,9 +103,9 @@ module SequelMapper
     require "sequel_mapper/mapping"
     require "sequel_mapper/identity_map"
     require "sequel_mapper/associations"
-    require "sequel_mapper/association_proxy"
+    require "sequel_mapper/collection_mutability_proxy"
     require "sequel_mapper/queryable_lazy_dataset_loader"
-    require "sequel_mapper/belongs_to_association_proxy"
+    require "sequel_mapper/lazy_object_proxy"
 
     def dirty_map
       @dirty_map ||= {}
@@ -118,12 +118,12 @@ module SequelMapper
     end
 
     def single_object_proxy_factory
-      BelongsToAssociationProxy.method(:new)
+      LazyObjectProxy.method(:new)
     end
 
     def collection_proxy_factory
       ->(*args) {
-        AssociationProxy.new(
+        CollectionMutabilityProxy.new(
           QueryableLazyDatasetLoader.new(*args)
         )
       }
