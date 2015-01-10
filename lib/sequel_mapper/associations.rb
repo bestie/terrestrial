@@ -1,20 +1,18 @@
-require "sequel_mapper/belongs_to_association_proxy"
-require "sequel_mapper/association_proxy"
-require "sequel_mapper/queryable_lazy_dataset_loader"
-
 module SequelMapper
   module Associations
     class Association
       include MapperMethods
 
-      def initialize(datastore:, mappings:, mapping:, dirty_map:)
+      def initialize(datastore:, proxy_factory:, dirty_map:, mappings:, mapping_name:)
         @datastore = datastore
-        @mappings = mappings
-        @mapping_name = mapping
+        @proxy_factory = proxy_factory
         @dirty_map = dirty_map
+        @mappings = mappings
+        @mapping_name = mapping_name
       end
 
-      attr_reader :datastore, :mapping, :dirty_map
+      attr_reader :datastore, :dirty_map, :proxy_factory
+      private :datastore, :dirty_map, :proxy_factory
 
       def load(_row)
         raise NotImplementedError
@@ -31,7 +29,9 @@ module SequelMapper
       private
 
       def mapping
-        @mappings.fetch(@mapping_name)
+        @mapping ||= @mappings.fetch(@mapping_name) { |name|
+          raise "Mapping #{name} not found"
+        }
       end
 
       def loaded?(collection)
@@ -78,7 +78,7 @@ module SequelMapper
       private     :foreign_key
 
       def load(row)
-        BelongsToAssociationProxy.new(
+        proxy_factory.call(
           datastore[relation_name]
             .where(:id => row.fetch(foreign_key))
             .lazy
@@ -114,11 +114,9 @@ module SequelMapper
       private     :key, :foreign_key, :order_by
 
       def load(row)
-        AssociationProxy.new(
-          QueryableLazyDatasetLoader.new(
-            data_enum(row),
-            row_loader_func,
-          )
+        proxy_factory.call(
+          data_enum(row),
+          row_loader_func,
         )
       end
 
@@ -179,11 +177,9 @@ module SequelMapper
       private     :through_relation_name, :foreign_key, :association_foreign_key
 
       def load(row)
-        AssociationProxy.new(
-          QueryableLazyDatasetLoader.new(
-            datastore[relation_name].where(:id => ids(row)),
-            row_loader_func,
-          )
+        proxy_factory.call(
+          datastore[relation_name].where(:id => ids(row)),
+          row_loader_func,
         )
       end
 

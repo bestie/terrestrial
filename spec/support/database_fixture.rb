@@ -103,6 +103,9 @@ module SequelMapper
     require "sequel_mapper/mapping"
     require "sequel_mapper/identity_map"
     require "sequel_mapper/associations"
+    require "sequel_mapper/association_proxy"
+    require "sequel_mapper/queryable_lazy_dataset_loader"
+    require "sequel_mapper/belongs_to_association_proxy"
 
     def dirty_map
       @dirty_map ||= {}
@@ -114,16 +117,43 @@ module SequelMapper
       )
     end
 
+    def single_object_proxy_factory
+      BelongsToAssociationProxy.method(:new)
+    end
+
+    def collection_proxy_factory
+      ->(*args) {
+        AssociationProxy.new(
+          QueryableLazyDatasetLoader.new(*args)
+        )
+      }
+    end
+
     def belongs_to(**args)
-      Associations::BelongsTo.new(datastore: datastore, dirty_map: dirty_map, **args)
+      Associations::BelongsTo.new(
+        datastore: datastore,
+        dirty_map: dirty_map,
+        proxy_factory: single_object_proxy_factory,
+        **args,
+      )
     end
 
     def has_many(**args)
-      Associations::HasMany.new(datastore: datastore, dirty_map: dirty_map, **args)
+      Associations::HasMany.new(
+        datastore: datastore,
+        dirty_map: dirty_map,
+        proxy_factory: collection_proxy_factory,
+        **args,
+      )
     end
 
     def has_many_through(**args)
-      Associations::HasManyThrough.new(datastore: datastore, dirty_map: dirty_map, **args)
+      Associations::HasManyThrough.new(
+        datastore: datastore,
+        dirty_map: dirty_map,
+        proxy_factory: collection_proxy_factory,
+        **args,
+      )
     end
 
     let(:mapper_config) {
@@ -141,13 +171,13 @@ module SequelMapper
         associations: {
           posts: has_many(
             mappings: mappings,
-            mapping: :posts,
+            mapping_name: :posts,
             key: :id,
             foreign_key: :author_id,
           ),
           toots: has_many(
             mappings: mappings,
-            mapping: :toots,
+            mapping_name: :toots,
             key: :id,
             foreign_key: :tooter_id,
             order_by: {
@@ -169,20 +199,20 @@ module SequelMapper
         associations: {
           comments: has_many(
             mappings: mappings,
-            mapping: :comments,
+            mapping_name: :comments,
             key: :id,
             foreign_key: :post_id,
           ),
           categories: has_many_through(
             mappings: mappings,
-            mapping: :categories,
+            mapping_name: :categories,
             through_relation_name: :categories_to_posts,
             foreign_key: :post_id,
             association_foreign_key: :category_id,
           ),
           author: belongs_to(
             mappings: mappings,
-            mapping: :users,
+            mapping_name: :users,
             foreign_key: :author_id,
           ),
         }
@@ -198,12 +228,12 @@ module SequelMapper
         associations: {
           post: belongs_to(
             mappings: mappings,
-            mapping: :posts,
+            mapping_name: :posts,
             foreign_key: :post_id,
           ),
           commenter: belongs_to(
             mappings: mappings,
-            mapping: :users,
+            mapping_name: :users,
             foreign_key: :commenter_id,
           ),
         },
@@ -219,7 +249,7 @@ module SequelMapper
         associations: {
           posts: has_many_through(
             mappings: mappings,
-            mapping: :posts,
+            mapping_name: :posts,
             through_relation_name: :categories_to_posts,
             foreign_key: :category_id,
             association_foreign_key: :post_id,
@@ -238,7 +268,7 @@ module SequelMapper
         associations: {
           tooter: belongs_to(
             mappings: mappings,
-            mapping: :users,
+            mapping_name: :users,
             foreign_key: :tooter_id,
           ),
         },
