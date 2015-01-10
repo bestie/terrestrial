@@ -1,6 +1,6 @@
 require "sequel_mapper/belongs_to_association_proxy"
 require "sequel_mapper/association_proxy"
-require "sequel_mapper/queryable_association_proxy"
+require "sequel_mapper/queryable_lazy_dataset_loader"
 
 module SequelMapper
   module Associations
@@ -115,7 +115,7 @@ module SequelMapper
 
       def load(row)
         AssociationProxy.new(
-          QueryableAssociationProxy.new(
+          QueryableLazyDatasetLoader.new(
             data_enum(row),
             row_loader_func,
           )
@@ -180,7 +180,7 @@ module SequelMapper
 
       def load(row)
         AssociationProxy.new(
-          QueryableAssociationProxy.new(
+          QueryableLazyDatasetLoader.new(
             datastore[relation_name].where(:id => ids(row)),
             row_loader_func,
           )

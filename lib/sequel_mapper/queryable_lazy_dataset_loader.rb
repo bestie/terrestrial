@@ -1,4 +1,4 @@
-class QueryableAssociationProxy
+class QueryableLazyDatasetLoader
   def initialize(database_enum, loader)
     @database_enum = database_enum
     @loader = loader
