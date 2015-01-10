@@ -13,17 +13,6 @@ module SequelMapper
 
     include Enumerable
     def each(&block)
-      enum = Enumerator.new do |yielder|
-        @loaded = true
-        assoc_enum.each do |element|
-          yielder.yield(element) unless removed?(element)
-        end
-
-        @added_nodes.each do |node|
-          yielder.yield(node)
-        end
-      end
-
       if block
         enum.each(&block)
         self
@@ -51,6 +40,24 @@ module SequelMapper
     end
 
     private
+
+    def enum
+      Enumerator.new do |yielder|
+        mark_as_loaded
+
+        assoc_enum.each do |element|
+          yielder.yield(element) unless removed?(element)
+        end
+
+        @added_nodes.each do |node|
+          yielder.yield(node)
+        end
+      end
+    end
+
+    def mark_as_loaded
+      @loaded = true
+    end
 
     def removed?(node)
       @removed_nodes.include?(node)
