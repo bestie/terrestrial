@@ -27,19 +27,12 @@ RSpec.describe "Querying" do
       ).to eq(["post/2"])
     end
 
-    it "sends the query directly to the datastore" do
+    it "delegates the query to the datastore, performs two additiona reads" do
       expect {
         user.posts
           .where(query_criteria)
           .map(&:id)
       }.to change { query_counter.read_count }.by(2)
-
-      # TODO: this is a quick hack to assert that no superfluous records where
-      #       loaded. Figure out a better way to check efficiency
-      expect(mapper.send(:identity_map).values.map(&:id)).to match_array([
-        "user/1",
-        "post/2",
-      ])
     end
   end
 end

@@ -1,5 +1,6 @@
 require "sequel_mapper/belongs_to_association_proxy"
 require "sequel_mapper/association_proxy"
+require "sequel_mapper/queryable_association_proxy"
 
 module SequelMapper
   module Associations
@@ -56,6 +57,13 @@ module SequelMapper
           added_nodes(collection)
         end
       end
+
+      def row_loader_func
+        ->(row) {
+          dirty_map.store(row.fetch(:id), row)
+          mapping.load(row)
+        }
+      end
     end
 
     # Association loads the correct associated row from the database,
@@ -74,8 +82,7 @@ module SequelMapper
           datastore[relation_name]
             .where(:id => row.fetch(foreign_key))
             .lazy
-            .map { |row| dirty_map.store(row.fetch(:id), row) }
-            .map { |row| mapping.load(row) }
+            .map(&row_loader_func)
             .public_method(:first)
         )
       end
@@ -107,12 +114,11 @@ module SequelMapper
       private     :key, :foreign_key, :order_by
 
       def load(row)
-
         AssociationProxy.new(
-          data_enum(row)
-            .lazy
-            .map { |row| dirty_map.store(row.fetch(:id), row) }
-            .map { |row| mapping.load(row) }
+          QueryableAssociationProxy.new(
+            data_enum(row),
+            row_loader_func,
+          )
         )
       end
 
@@ -173,16 +179,11 @@ module SequelMapper
       private     :through_relation_name, :foreign_key, :association_foreign_key
 
       def load(row)
-        ids = datastore[through_relation_name]
-                .select(association_foreign_key)
-                .where(foreign_key => row.fetch(:id))
-
         AssociationProxy.new(
-          datastore[relation_name]
-            .where(:id => ids)
-            .lazy
-            .map { |row| dirty_map.store(row.fetch(:id), row) }
-            .map { |row| mapping.load(row) }
+          QueryableAssociationProxy.new(
+            datastore[relation_name].where(:id => ids(row)),
+            row_loader_func,
+          )
         )
       end
 
@@ -195,6 +196,12 @@ module SequelMapper
       end
 
       private
+
+      def ids(row)
+        datastore[through_relation_name]
+          .select(association_foreign_key)
+          .where(foreign_key => row.fetch(:id))
+      end
 
       def persist_nodes(collection)
         nodes_to_persist(collection).each do |object|
