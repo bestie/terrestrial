@@ -24,15 +24,16 @@ module SequelMapper
 
     def associations(row)
       Hash[
-        @associations.map { |label, assoc|
-          [label, assoc.load(row)]
-        }
+        @associations
+          .map { |label, assoc|
+            [label, assoc.load_for_row(row)]
+          }
       ]
     end
 
     def dump_associations(object)
       @associations.each do |name, assoc|
-        assoc.dump(object, object.public_send(name))
+        assoc.save(object, object.public_send(name))
       end
     end
 

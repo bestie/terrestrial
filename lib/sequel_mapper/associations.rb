@@ -14,11 +14,11 @@ module SequelMapper
       attr_reader :datastore, :dirty_map, :proxy_factory
       private :datastore, :dirty_map, :proxy_factory
 
-      def load(_row)
+      def load_for_row(_row)
         raise NotImplementedError
       end
 
-      def dump(_source_object, _collection)
+      def save(_source_object, _collection)
         raise NotImplementedError
       end
 
@@ -77,7 +77,7 @@ module SequelMapper
       attr_reader :foreign_key
       private     :foreign_key
 
-      def load(row)
+      def load_for_row(row)
         proxy_factory.call(
           datastore[relation_name]
             .where(:id => row.fetch(foreign_key))
@@ -87,7 +87,7 @@ module SequelMapper
         )
       end
 
-      def dump(_source_object, object)
+      def save(_source_object, object)
         unless_already_persisted(object) do |object|
           if loaded?(object)
             upsert_if_dirty(mapping.dump(object))
@@ -113,14 +113,14 @@ module SequelMapper
       attr_reader :key, :foreign_key, :order_by
       private     :key, :foreign_key, :order_by
 
-      def load(row)
+      def load_for_row(row)
         proxy_factory.call(
           data_enum(row),
           row_loader_func,
         )
       end
 
-      def dump(_source_object, collection)
+      def save(_source_object, collection)
         unless_already_persisted(collection) do |collection_proxy|
           persist_nodes(collection)
           remove_deleted_nodes(collection_proxy)
@@ -176,14 +176,14 @@ module SequelMapper
       attr_reader :through_relation_name, :foreign_key, :association_foreign_key
       private     :through_relation_name, :foreign_key, :association_foreign_key
 
-      def load(row)
+      def load_for_row(row)
         proxy_factory.call(
           datastore[relation_name].where(:id => ids(row)),
           row_loader_func,
         )
       end
 
-      def dump(source_object, collection)
+      def save(source_object, collection)
         unless_already_persisted(collection) do |collection|
           persist_nodes(collection)
           associate_new_nodes(source_object, collection)
