@@ -1,21 +1,19 @@
-require "forwardable"
+require "delegate"
 
 module SequelMapper
-  class IdentityMap
-    extend Forwardable
-    def_delegators :mapping, :relation_name, :factory, :fields, :dump
-
-    def initialize(mapping, identity_map = {})
-      @mapping = mapping
+  class IdentityMap < SimpleDelegator
+    def initialize(loader, identity_map = {})
+      @loader = loader
       @identity_map = identity_map
+      super(loader)
     end
 
-    attr_reader :mapping, :identity_map
-    private     :mapping, :identity_map
+    attr_reader :loader, :identity_map
+    private     :loader, :identity_map
 
     def load(row)
       ensure_loaded_once(row.fetch(:id)) {
-        mapping.load(row)
+        loader.load(row)
       }
     end
 
