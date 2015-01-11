@@ -113,7 +113,7 @@ RSpec.describe "Graph persistence" do
   end
 
   context "eager loading" do
-    context "for nested has many" do
+    context "with nested has many" do
       it "performs 1 read per table rather than n + 1" do
         expect {
           user.posts.eager_load(:comments).map { |post| post.comments.map(&:id) }
@@ -121,16 +121,19 @@ RSpec.describe "Graph persistence" do
       end
     end
 
-    context "for has many via belongs to" do
-      xit "performs 1 read per table rather than n + 1" do
+    context "with has many and belongs to" do
+      it "performs 1 read per table rather than n + 1" do
         expect {
-          user.posts.first.comments.map(&:commenter).map(&:id)
+          user.posts.first
+            .comments.eager_load(:commenter)
+            .map(&:commenter)
+            .map(&:id)
         }.to change { query_counter.read_count }.by(4)
       end
     end
 
     context "for many to many" do
-      xit "performs 1 read per table rather than n + 1" do
+      it "performs 1 read per table rather than n + 1" do
         expect {
           user.posts.map(&:categories).map { |cats| cats.map(&:id) }
         }.to change { query_counter.read_count }.by(3)

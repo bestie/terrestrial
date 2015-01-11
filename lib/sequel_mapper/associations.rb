@@ -23,8 +23,16 @@ module SequelMapper
         raise NotImplementedError
       end
 
+      def eager_load_association(_dataset, _association_name)
+        raise NotImplementedError
+      end
+
       def foreign_key_field(_label, _object)
         {}
+      end
+
+      def eager_load(_foreign_key_field, _values)
+        raise NotImplementedError
       end
 
       private
@@ -41,6 +49,10 @@ module SequelMapper
         else
           true
         end
+      end
+
+      def eagerly_loaded?(row)
+        !!@eager_loads.fetch(row.fetch(key), false)
       end
 
       def added_nodes(collection)
@@ -79,13 +91,7 @@ module SequelMapper
       private     :foreign_key
 
       def load_for_row(row)
-        proxy_factory.call(
-          datastore[relation_name]
-            .where(:id => row.fetch(foreign_key))
-            .lazy
-            .map(&row_loader_func)
-            .public_method(:first)
-        )
+        proxy_factory.call(eagerly_loaded(row) || dataset(row))
       end
 
       def save(_source_object, object)
@@ -100,6 +106,38 @@ module SequelMapper
         {
           foreign_key => object.public_send(name).public_send(:id)
         }
+      end
+
+      def eager_load(_foreign_key_field, rows)
+        foreign_key_values = rows.map { |row| row.fetch(foreign_key) }
+        ids = rows.map { |row| row.fetch(:id) }
+
+        eager_object = relation.where(:id => foreign_key_values).first
+
+        ids.each do |id|
+          @eager_loads[id] = eager_object
+        end
+      end
+
+      private
+
+      def dataset(row)
+        ->() {
+          relation
+            .where(:id => row.fetch(foreign_key))
+            .map(&row_loader_func)
+            .first
+        }
+      end
+
+      def eagerly_loaded(row)
+        associated_row = @eager_loads.fetch(row.fetch(:id), nil)
+
+        if associated_row
+          ->() { row_loader_func.call(associated_row) }
+        else
+          nil
+        end
       end
     end
 
@@ -129,9 +167,8 @@ module SequelMapper
 
       def eager_load_association(dataset, association_name)
         rows = dataset.to_a
-        ids = rows.map { |row| row.fetch(key) }
 
-        association_by_name(association_name).eager_load(foreign_key, ids)
+        association_by_name(association_name).eager_load(foreign_key, rows)
 
         proxy_with_dataset(rows)
       end
@@ -143,7 +180,8 @@ module SequelMapper
         end
       end
 
-      def eager_load(foreign_key_field, ids)
+      def eager_load(foreign_key_field, rows)
+        ids = rows.map { |row| row.fetch(key) }
         eager_dataset = apply_order(relation.where(foreign_key => ids)).to_a
 
         ids.each do |id|
@@ -174,10 +212,6 @@ module SequelMapper
       def query(row)
         datastore[relation_name]
           .where(foreign_key => row.fetch(key))
-      end
-
-      def eagerly_loaded?(row)
-        !!@eager_loads.fetch(row.fetch(key), false)
       end
 
       def filter_preloaded_collection(row)
