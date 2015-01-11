@@ -55,6 +55,14 @@ module SequelMapper
         !!@eager_loads.fetch(row.fetch(key), false)
       end
 
+      def association_by_name(name)
+        # TODO: obviously this
+        mapping
+          .instance_variable_get(:@mapping)
+          .instance_variable_get(:@associations)
+          .fetch(name)
+      end
+
       def added_nodes(collection)
         collection.respond_to?(:added_nodes) ? collection.added_nodes : collection
       end
@@ -157,14 +165,6 @@ module SequelMapper
         proxy_with_dataset(data_enum(row))
       end
 
-      def association_by_name(name)
-        # TODO: obviously this
-        mapping
-          .instance_variable_get(:@mapping)
-          .instance_variable_get(:@associations)
-          .fetch(name)
-      end
-
       def eager_load_association(dataset, association_name)
         rows = dataset.to_a
 
@@ -262,9 +262,8 @@ module SequelMapper
       private     :through_relation_name, :foreign_key, :association_foreign_key
 
       def load_for_row(row)
-        proxy_factory.call(
-          datastore[relation_name].where(:id => ids(row)),
-          row_loader_func,
+        proxy_with_dataset(
+          eagerly_loaded_rows(row) || dataset(row),
         )
       end
 
@@ -276,12 +275,45 @@ module SequelMapper
         end
       end
 
+      def eager_load_association(dataset, association_name)
+        rows = dataset.to_a
+
+        association_by_name(association_name).eager_load(foreign_key, rows)
+
+        proxy_with_dataset(rows)
+      end
+
+      def eager_load(_foreign_key_field, rows)
+        associated_ids = rows.map { |row| row.fetch(:id) }
+        eager_dataset = dataset(id: associated_ids).to_a
+
+        associated_ids.each do |id|
+          @eager_loads[id] = eager_dataset
+        end
+      end
+
       private
 
-      def ids(row)
-        datastore[through_relation_name]
+      def proxy_with_dataset(dataset)
+        proxy_factory.call(
+          dataset,
+          row_loader_func,
+          self,
+        )
+      end
+
+      def dataset(row)
+        relation.where(:id => ids(row.fetch(:id)))
+      end
+
+      def ids(foreign_key_value)
+        through_relation
           .select(association_foreign_key)
-          .where(foreign_key => row.fetch(:id))
+          .where(foreign_key => foreign_key_value)
+      end
+
+      def eagerly_loaded_rows(row)
+        @eager_loads.fetch(row.fetch(:id), false)
       end
 
       def persist_nodes(collection)

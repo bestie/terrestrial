@@ -132,11 +132,19 @@ RSpec.describe "Graph persistence" do
       end
     end
 
-    context "for many to many" do
+    context "for has many to has many through" do
       it "performs 1 read per table rather than n + 1" do
         expect {
-          user.posts.map(&:categories).map { |cats| cats.map(&:id) }
+          user.posts.eager_load(:categories).map(&:categories).map { |cats| cats.map(&:id) }
         }.to change { query_counter.read_count }.by(3)
+      end
+    end
+
+    context "for has many through to has many" do
+      it "performs 1 read per table rather than n + 1" do
+        expect {
+          user.posts.first.categories.eager_load(:posts).first.id
+        }.to change { query_counter.read_count }.by(4)
       end
     end
   end
