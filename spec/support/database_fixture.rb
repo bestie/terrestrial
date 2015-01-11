@@ -294,6 +294,7 @@ module SequelMapper
         comments: [
           comment_1_data,
           comment_2_data,
+          comment_3_data,
         ],
         categories: [
           category_1_data,
@@ -382,6 +383,15 @@ module SequelMapper
         post_id: "post/1",
         commenter_id: "user/1",
         body: "You are so LOL",
+      }
+    }
+
+    let(:comment_3_data) {
+      {
+        id: "comment/3",
+        post_id: "post/2",
+        commenter_id: "user/3",
+        body: "I am trolling",
       }
     }
 

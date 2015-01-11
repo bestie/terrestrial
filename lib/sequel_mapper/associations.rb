@@ -9,6 +9,7 @@ module SequelMapper
         @dirty_map = dirty_map
         @mappings = mappings
         @mapping_name = mapping_name
+        @eager_loads = {}
       end
 
       attr_reader :datastore, :dirty_map, :proxy_factory
@@ -104,6 +105,7 @@ module SequelMapper
 
     class HasMany < Association
       def initialize(key:, foreign_key:, order_by: {}, **args)
+        # suffix with _field
         @key = key
         @foreign_key = foreign_key
         @order_by = order_by
@@ -114,10 +116,24 @@ module SequelMapper
       private     :key, :foreign_key, :order_by
 
       def load_for_row(row)
-        proxy_factory.call(
-          data_enum(row),
-          row_loader_func,
-        )
+        proxy_with_dataset(data_enum(row))
+      end
+
+      def association_by_name(name)
+        # TODO: obviously this
+        mapping
+          .instance_variable_get(:@mapping)
+          .instance_variable_get(:@associations)
+          .fetch(name)
+      end
+
+      def eager_load_association(dataset, association_name)
+        rows = dataset.to_a
+        ids = rows.map { |row| row.fetch(key) }
+
+        association_by_name(association_name).eager_load(foreign_key, ids)
+
+        proxy_with_dataset(rows)
       end
 
       def save(_source_object, collection)
@@ -127,10 +143,22 @@ module SequelMapper
         end
       end
 
+      def eager_load(foreign_key_field, ids)
+        eager_dataset = apply_order(relation.where(foreign_key => ids)).to_a
+
+        ids.each do |id|
+          @eager_loads[id] = eager_dataset
+        end
+      end
+
       private
 
       def data_enum(row)
-        apply_order(query(row))
+        if eagerly_loaded?(row)
+          filter_preloaded_collection(row)
+        else
+          apply_order(query(row))
+        end
       end
 
       # TODO: Add this ordering feature to HasManyThrough
@@ -146,6 +174,29 @@ module SequelMapper
       def query(row)
         datastore[relation_name]
           .where(foreign_key => row.fetch(key))
+      end
+
+      def eagerly_loaded?(row)
+        !!@eager_loads.fetch(row.fetch(key), false)
+      end
+
+      def filter_preloaded_collection(row)
+        id = row.fetch(key)
+
+        @eager_loads
+          .fetch(id)
+          .select { |association_row|
+            association_row.fetch(foreign_key) == id
+          }
+      end
+
+      def proxy_with_dataset(dataset)
+        proxy_factory.call(
+          dataset,
+          row_loader_func,
+          # TODO: interface segregation, only #eager_load_association is used
+          self,
+        )
       end
 
       def persist_nodes(collection)

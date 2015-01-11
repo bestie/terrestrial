@@ -15,6 +15,10 @@ class QueryableLazyDatasetLoader
 
   def_delegators :database_enum, :where
 
+  def eager_load(association_name)
+    @association_mapper.eager_load_association(database_enum, association_name)
+  end
+
   def where(criteria)
     self.class.new(database_enum.where(criteria), loader)
   end
