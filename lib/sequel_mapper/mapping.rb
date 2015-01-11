@@ -20,6 +20,10 @@ module SequelMapper
       serialize_with_foreign_keys(object)
     end
 
+    def fetch_association(name)
+      @associations.fetch(name)
+    end
+
     private
 
     def associations(row)

@@ -56,11 +56,7 @@ module SequelMapper
       end
 
       def association_by_name(name)
-        # TODO: obviously this
-        mapping
-          .instance_variable_get(:@mapping)
-          .instance_variable_get(:@associations)
-          .fetch(name)
+        mapping.fetch_association(name)
       end
 
       def added_nodes(collection)
