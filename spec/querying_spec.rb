@@ -18,21 +18,23 @@ RSpec.describe "Querying" do
     }
   }
 
+  let(:filtered_posts) {
+    user.posts.where(query_criteria)
+  }
+
   describe "arbitrary where query" do
     it "returns a filtered version of the association" do
-      expect(
-        user.posts
-          .where(query_criteria)
-          .map(&:id)
-      ).to eq(["post/2"])
+      expect(filtered_posts.map(&:id)).to eq(["post/2"])
     end
 
     it "delegates the query to the datastore, performs two additiona reads" do
       expect {
-        user.posts
-          .where(query_criteria)
-          .map(&:id)
+        filtered_posts.map(&:id)
       }.to change { query_counter.read_count }.by(2)
+    end
+
+    it "returns another collection" do
+      expect(filtered_posts).not_to be(user.posts)
     end
   end
 end
