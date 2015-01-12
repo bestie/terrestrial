@@ -78,6 +78,7 @@ module SequelMapper
       def row_loader_func
         ->(row) {
           dirty_map.store(row.fetch(:id), row)
+          require "pry"; binding.pry if !mapping.is_a?(IdentityMap)
           mapping.load(row)
         }
       end

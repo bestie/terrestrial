@@ -1,11 +1,13 @@
-require "delegate"
+require "forwardable"
 
 module SequelMapper
-  class IdentityMap < SimpleDelegator
+  class IdentityMap
+    extend Forwardable
+    def_delegators :loader, :dump, :relation_name, :fetch_association
+
     def initialize(loader, identity_map = {})
       @loader = loader
       @identity_map = identity_map
-      super(loader)
     end
 
     attr_reader :loader, :identity_map
