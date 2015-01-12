@@ -3,12 +3,8 @@
 In no particular order
 
 ## General
-* Refactor, methods too, big objects missing
-
-## Persistence
-* Efficient saving
-  - Part one, if it wasn't loaded it wasn't modified, check identity map
-  - Part two, dirty tracking
+* Refactor, methods too big, objects missing
+* Name things better
 
 ## Configuration
 * Automatic config generation based on schema, foreign keys etc
@@ -31,3 +27,13 @@ In no particular order
   - Skipped when dumping
 * Associations defined with a join
 * Composable associations
+
+# Hopefully done
+
+## Persistence
+* Efficient saving
+  - Part one, if it wasn't loaded it wasn't modified, check identity map
+  - Part two, dirty tracking
+
+## Associations
+* Eager loading
