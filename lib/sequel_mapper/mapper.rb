@@ -1,4 +1,4 @@
-require "sequel_mapper/dumper"
+require "sequel_mapper/serializer"
 
 module SequelMapper
   module MapperMethods
