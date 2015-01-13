@@ -169,6 +169,6 @@ RSpec.describe "Graph persistence" do
   end
 
   after do |ex|
-    query_counter.show_queries
+    query_counter.show_queries if ex.exception
   end
 end
