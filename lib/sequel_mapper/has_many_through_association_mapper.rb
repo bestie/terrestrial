@@ -1,7 +1,10 @@
 require "sequel_mapper/abstract_association_mapper"
+require "sequel_mapper/has_many_association_mapper_methods"
 
 module SequelMapper
   class HasManyThroughAssociationMapper < AbstractAssociationMapper
+    include HasManyAssociationMapperMethods
+
     def initialize(through_relation_name:, foreign_key:, association_foreign_key:, **args)
       @through_relation_name = through_relation_name
       @foreign_key = foreign_key

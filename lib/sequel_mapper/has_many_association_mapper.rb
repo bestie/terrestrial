@@ -1,7 +1,10 @@
 require "sequel_mapper/abstract_association_mapper"
+require "sequel_mapper/has_many_association_mapper_methods"
 
 module SequelMapper
   class HasManyAssociationMapper < AbstractAssociationMapper
+    include HasManyAssociationMapperMethods
+
     def initialize(key:, foreign_key:, order_by: {}, **args)
       # suffix with _field
       @key = key

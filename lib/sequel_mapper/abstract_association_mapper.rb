@@ -60,22 +60,6 @@ module SequelMapper
       mapping.fetch_association(name)
     end
 
-    def added_nodes(collection)
-      collection.respond_to?(:added_nodes) ? collection.added_nodes : collection
-    end
-
-    def removed_nodes(collection)
-      collection.respond_to?(:removed_nodes) ? collection.removed_nodes : []
-    end
-
-    def nodes_to_persist(collection)
-      if loaded?(collection)
-        collection
-      else
-        added_nodes(collection)
-      end
-    end
-
     def row_loader_func
       ->(row) {
         dirty_map.store(row.fetch(:id), row)
