@@ -44,9 +44,9 @@ module SequelMapper
       }
     end
 
-    def loaded?(collection)
-      if collection.respond_to?(:loaded?)
-        collection.loaded?
+    def loaded?(object_or_collection)
+      if object_or_collection.respond_to?(:loaded?)
+        object_or_collection.loaded?
       else
         true
       end
