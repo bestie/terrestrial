@@ -17,11 +17,19 @@ class LazyObjectProxy < SimpleDelegator
     super
   end
 
+  def loaded?
+    !!@loaded
+  end
+
   private
 
   def __load_object__
     __setobj__(@object_loader.call).tap {
-      @loaded = true
-    } unless @loaded
+      mark_as_loaded
+    } unless loaded?
+  end
+
+  def mark_as_loaded
+    @loaded = true
   end
 end

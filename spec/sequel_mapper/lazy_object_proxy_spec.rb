@@ -62,4 +62,24 @@ RSpec.describe LazyObjectProxy do
       end
     end
   end
+
+  describe "#loaded?" do
+    context "before the object is loaded" do
+      it "returns false" do
+        expect(proxy).not_to be_loaded
+      end
+    end
+
+    context "after the object is loaded" do
+      def force_object_load(object)
+        object.__getobj__
+      end
+
+      before { force_object_load(proxy) }
+
+      it "returns true" do
+        expect(proxy).to be_loaded
+      end
+    end
+  end
 end
