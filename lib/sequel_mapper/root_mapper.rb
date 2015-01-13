@@ -1,5 +1,3 @@
-require "sequel_mapper/serializer"
-
 module SequelMapper
   module MapperMethods
     private

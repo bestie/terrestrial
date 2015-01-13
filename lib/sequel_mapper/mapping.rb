@@ -1,3 +1,5 @@
+require "sequel_mapper/serializer"
+
 module SequelMapper
   class Mapping
     def initialize(relation_name:, factory:, fields:, associations:)
