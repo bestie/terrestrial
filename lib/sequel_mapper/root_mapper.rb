@@ -10,14 +10,13 @@ module SequelMapper
       @dirty_map = dirty_map
     end
 
-    attr_reader :datastore, :mapping, :dirty_map
-    private     :datastore, :mapping, :dirty_map
+    attr_reader :datastore, :mapping
+    private     :datastore, :mapping
 
     def where(criteria)
       relation
         .where(criteria)
-        .map { |row| register_load(row) }
-        .map { |row| mapping.load(row) }
+        .map(&row_loader_func)
     end
 
     def save(graph_root)

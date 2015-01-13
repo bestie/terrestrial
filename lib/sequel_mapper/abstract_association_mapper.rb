@@ -13,8 +13,8 @@ module SequelMapper
       @eager_loads = {}
     end
 
-    attr_reader :datastore, :dirty_map, :proxy_factory
-    private :datastore, :dirty_map, :proxy_factory
+    attr_reader :datastore, :proxy_factory
+    private :datastore, :proxy_factory
 
     def load_for_row(_row)
       raise NotImplementedError
@@ -58,14 +58,6 @@ module SequelMapper
 
     def association_by_name(name)
       mapping.fetch_association(name)
-    end
-
-    def row_loader_func
-      ->(row) {
-        dirty_map.store(row.fetch(:id), row)
-        require "pry"; binding.pry if !mapping.is_a?(IdentityMap)
-        mapping.load(row)
-      }
     end
   end
 end
