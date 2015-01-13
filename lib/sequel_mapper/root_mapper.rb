@@ -46,7 +46,7 @@ module SequelMapper
     end
   end
 
-  class Mapper
+  class RootMapper
     include MapperMethods
 
     def initialize(datastore:, mapping:, dirty_map:)
