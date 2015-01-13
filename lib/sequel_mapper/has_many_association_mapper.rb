@@ -23,7 +23,7 @@ module SequelMapper
     def eager_load_association(dataset, association_name)
       rows = dataset.to_a
 
-      association_by_name(association_name).eager_load(foreign_key, rows)
+      association_by_name(association_name).eager_load(rows)
 
       proxy_with_dataset(rows)
     end
@@ -35,7 +35,7 @@ module SequelMapper
       end
     end
 
-    def eager_load(foreign_key_field, rows)
+    def eager_load(rows)
       ids = rows.map { |row| row.fetch(key) }
       eager_dataset = apply_order(relation.where(foreign_key => ids)).to_a
 

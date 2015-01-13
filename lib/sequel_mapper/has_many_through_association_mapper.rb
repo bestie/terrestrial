@@ -32,12 +32,12 @@ module SequelMapper
     def eager_load_association(dataset, association_name)
       rows = dataset.to_a
 
-      association_by_name(association_name).eager_load(foreign_key, rows)
+      association_by_name(association_name).eager_load(rows)
 
       proxy_with_dataset(rows)
     end
 
-    def eager_load(_foreign_key_field, rows)
+    def eager_load(rows)
       associated_ids = rows.map { |row| row.fetch(:id) }
       eager_dataset = dataset(id: associated_ids).to_a
 

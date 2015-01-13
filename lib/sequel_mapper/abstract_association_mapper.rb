@@ -32,7 +32,7 @@ module SequelMapper
       {}
     end
 
-    def eager_load(_foreign_key_field, _values)
+    def eager_load(_values)
       raise NotImplementedError
     end
 

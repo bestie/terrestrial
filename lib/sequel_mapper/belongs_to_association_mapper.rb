@@ -30,7 +30,7 @@ module SequelMapper
       }
     end
 
-    def eager_load(_foreign_key_field, rows)
+    def eager_load(rows)
       foreign_key_values = rows.map { |row| row.fetch(foreign_key) }
       ids = rows.map { |row| row.fetch(:id) }
 
