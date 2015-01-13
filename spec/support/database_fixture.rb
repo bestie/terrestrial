@@ -102,7 +102,9 @@ module SequelMapper
 
     require "sequel_mapper/mapping"
     require "sequel_mapper/identity_map"
-    require "sequel_mapper/associations"
+    require "sequel_mapper/belongs_to_association_mapper"
+    require "sequel_mapper/has_many_association_mapper"
+    require "sequel_mapper/has_many_through_association_mapper"
     require "sequel_mapper/collection_mutability_proxy"
     require "sequel_mapper/queryable_lazy_dataset_loader"
     require "sequel_mapper/lazy_object_proxy"
@@ -130,7 +132,7 @@ module SequelMapper
     end
 
     def belongs_to(**args)
-      Associations::BelongsTo.new(
+      BelongsToAssociationMapper.new(
         datastore: datastore,
         dirty_map: dirty_map,
         proxy_factory: single_object_proxy_factory,
@@ -139,7 +141,7 @@ module SequelMapper
     end
 
     def has_many(**args)
-      Associations::HasMany.new(
+      HasManyAssociationMapper.new(
         datastore: datastore,
         dirty_map: dirty_map,
         proxy_factory: collection_proxy_factory,
@@ -148,7 +150,7 @@ module SequelMapper
     end
 
     def has_many_through(**args)
-      Associations::HasManyThrough.new(
+      HasManyThroughAssociationMapper.new(
         datastore: datastore,
         dirty_map: dirty_map,
         proxy_factory: collection_proxy_factory,
