@@ -24,6 +24,10 @@ module SequelMapper
       self.class.new(database_enum.where(criteria), loader)
     end
 
+    def first
+      loader.call(database_enum.first)
+    end
+
     def each(&block)
       database_enum
         .map(&loader)
