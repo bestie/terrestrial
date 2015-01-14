@@ -9,7 +9,7 @@ RSpec.describe "Graph persistence" do
   subject(:mapper) { mapper_fixture }
 
   let(:user) {
-    mapper.where(id: "user/1").fetch(0)
+    mapper.where(id: "user/1").first
   }
 
   context "without accessing associations" do
