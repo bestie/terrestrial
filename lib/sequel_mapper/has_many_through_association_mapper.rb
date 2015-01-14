@@ -29,6 +29,7 @@ module SequelMapper
       end
     end
 
+    # TODO: see HasManyAssociationMapper
     def eager_load_association(dataset, association_name)
       rows = dataset.to_a
 

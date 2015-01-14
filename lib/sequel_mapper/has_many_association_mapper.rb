@@ -20,6 +20,9 @@ module SequelMapper
       proxy_with_dataset(data_enum(row))
     end
 
+    # TODO RENAME it is not clear from these method names what the difference is
+
+    # #eager_load_association is the request to eager load an associated association
     def eager_load_association(dataset, association_name)
       rows = dataset.to_a
 
@@ -28,19 +31,20 @@ module SequelMapper
       proxy_with_dataset(rows)
     end
 
-    def save(_source_object, collection)
-      unless_already_persisted(collection) do |collection_proxy|
-        persist_nodes(collection)
-        remove_deleted_nodes(collection_proxy)
-      end
-    end
-
+    # #eager_load takes the parent dataset and executes the loading
     def eager_load(rows)
       ids = rows.map { |row| row.fetch(key) }
       eager_dataset = apply_order(relation.where(foreign_key => ids)).to_a
 
       ids.each do |id|
         @eager_loads[id] = eager_dataset
+      end
+    end
+
+    def save(_source_object, collection)
+      unless_already_persisted(collection) do |collection_proxy|
+        persist_nodes(collection)
+        remove_deleted_nodes(collection_proxy)
       end
     end
 
