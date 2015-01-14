@@ -4,8 +4,8 @@ module SequelMapper
   class AbstractAssociationMapper
     include MapperMethods
 
-    def initialize(datastore:, proxy_factory:, dirty_map:, mappings:, mapping_name:)
-      @datastore = datastore
+    def initialize(relation:, proxy_factory:, dirty_map:, mappings:, mapping_name:)
+      @relation = relation
       @proxy_factory = proxy_factory
       @dirty_map = dirty_map
       @mappings = mappings
@@ -13,8 +13,8 @@ module SequelMapper
       @eager_loads = {}
     end
 
-    attr_reader :datastore, :proxy_factory
-    private :datastore, :proxy_factory
+    attr_reader :relation, :proxy_factory
+    private :relation, :proxy_factory
 
     def load_for_row(_row)
       raise NotImplementedError
@@ -54,10 +54,6 @@ module SequelMapper
 
     def eagerly_loaded?(row)
       !!@eager_loads.fetch(row.fetch(key), false)
-    end
-
-    def association_by_name(name)
-      mapping.fetch_association(name)
     end
   end
 end

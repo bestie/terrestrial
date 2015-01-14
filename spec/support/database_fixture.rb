@@ -133,7 +133,6 @@ module SequelMapper
 
     def belongs_to(**args)
       BelongsToAssociationMapper.new(
-        datastore: datastore,
         dirty_map: dirty_map,
         proxy_factory: single_object_proxy_factory,
         **args,
@@ -142,7 +141,6 @@ module SequelMapper
 
     def has_many(**args)
       HasManyAssociationMapper.new(
-        datastore: datastore,
         dirty_map: dirty_map,
         proxy_factory: collection_proxy_factory,
         **args,
@@ -151,7 +149,6 @@ module SequelMapper
 
     def has_many_through(**args)
       HasManyThroughAssociationMapper.new(
-        datastore: datastore,
         dirty_map: dirty_map,
         proxy_factory: collection_proxy_factory,
         **args,
@@ -162,7 +159,6 @@ module SequelMapper
       mappings = {}
 
       mappings[:users] = mapping(
-        relation_name: :users,
         fields: [
           :id,
           :first_name,
@@ -172,12 +168,14 @@ module SequelMapper
         factory: user_factory,
         associations: {
           posts: has_many(
+            relation: datastore[:posts],
             mappings: mappings,
             mapping_name: :posts,
             key: :id,
             foreign_key: :author_id,
           ),
           toots: has_many(
+            relation: datastore[:toots],
             mappings: mappings,
             mapping_name: :toots,
             key: :id,
@@ -191,7 +189,6 @@ module SequelMapper
       )
 
       mappings[:posts] = mapping(
-        relation_name: :posts,
         fields: [
           :id,
           :subject,
@@ -200,19 +197,22 @@ module SequelMapper
         factory: post_factory,
         associations: {
           comments: has_many(
+            relation: datastore[:comments],
             mappings: mappings,
             mapping_name: :comments,
             key: :id,
             foreign_key: :post_id,
           ),
           categories: has_many_through(
+            relation: datastore[:categories],
             mappings: mappings,
             mapping_name: :categories,
-            through_relation_name: :categories_to_posts,
+            through_relation: datastore[:categories_to_posts],
             foreign_key: :post_id,
             association_foreign_key: :category_id,
           ),
           author: belongs_to(
+            relation: datastore[:users],
             mappings: mappings,
             mapping_name: :users,
             foreign_key: :author_id,
@@ -221,7 +221,6 @@ module SequelMapper
       )
 
       mappings[:comments] = mapping(
-        relation_name: :comments,
         fields: [
           :id,
           :body,
@@ -229,11 +228,13 @@ module SequelMapper
         factory: comment_factory,
         associations: {
           post: belongs_to(
+            relation: datastore[:posts],
             mappings: mappings,
             mapping_name: :posts,
             foreign_key: :post_id,
           ),
           commenter: belongs_to(
+            relation: datastore[:users],
             mappings: mappings,
             mapping_name: :users,
             foreign_key: :commenter_id,
@@ -242,7 +243,6 @@ module SequelMapper
       )
 
       mappings[:categories] = mapping(
-        relation_name: :categories,
         fields: [
           :id,
           :name,
@@ -250,9 +250,10 @@ module SequelMapper
         factory: category_factory,
         associations: {
           posts: has_many_through(
+            relation: datastore[:posts],
             mappings: mappings,
             mapping_name: :posts,
-            through_relation_name: :categories_to_posts,
+            through_relation: datastore[:categories_to_posts],
             foreign_key: :category_id,
             association_foreign_key: :post_id,
           ),
@@ -260,7 +261,6 @@ module SequelMapper
       )
 
       mappings[:toots] = mapping(
-        relation_name: :toots,
         fields: [
           :id,
           :body,
@@ -269,6 +269,7 @@ module SequelMapper
         factory: toot_factory,
         associations: {
           tooter: belongs_to(
+            relation: datastore[:tooter],
             mappings: mappings,
             mapping_name: :users,
             foreign_key: :tooter_id,

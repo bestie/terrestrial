@@ -65,8 +65,7 @@ module SequelMapper
     end
 
     def query(row)
-      datastore[relation_name]
-        .where(foreign_key => row.fetch(key))
+      relation.where(foreign_key => row.fetch(key))
     end
 
     def filter_preloaded_collection(row)

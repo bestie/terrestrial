@@ -5,15 +5,15 @@ module SequelMapper
   class HasManyThroughAssociationMapper < AbstractAssociationMapper
     include HasManyAssociationMapperMethods
 
-    def initialize(through_relation_name:, foreign_key:, association_foreign_key:, **args)
-      @through_relation_name = through_relation_name
+    def initialize(through_relation:, foreign_key:, association_foreign_key:, **args)
+      @through_relation = through_relation
       @foreign_key = foreign_key
       @association_foreign_key = association_foreign_key
       super(**args)
     end
 
-    attr_reader :through_relation_name, :foreign_key, :association_foreign_key
-    private     :through_relation_name, :foreign_key, :association_foreign_key
+    attr_reader :through_relation, :foreign_key, :association_foreign_key
+    private     :through_relation, :foreign_key, :association_foreign_key
 
     def load_for_row(row)
       proxy_with_dataset(
@@ -94,10 +94,6 @@ module SequelMapper
           association_foreign_key => ids,
         )
         .delete
-    end
-
-    def through_relation
-      datastore[through_relation_name]
     end
   end
 end

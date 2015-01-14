@@ -4,14 +4,14 @@ module SequelMapper
   class RootMapper
     include MapperMethods
 
-    def initialize(datastore:, mapping:, dirty_map:)
-      @datastore = datastore
+    def initialize(relation:, mapping:, dirty_map:)
+      @relation = relation
       @mapping = mapping
       @dirty_map = dirty_map
     end
 
-    attr_reader :datastore, :mapping
-    private     :datastore, :mapping
+    attr_reader :relation, :mapping
+    private     :relation, :mapping
 
     def where(criteria)
       relation

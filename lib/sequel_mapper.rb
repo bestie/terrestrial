@@ -3,7 +3,7 @@ module SequelMapper
 
   def mapper(datastore:, top_level_namespace:, mappings:, dirty_map:)
     RootMapper.new(
-      datastore: datastore,
+      relation: datastore[top_level_namespace],
       mapping: mappings[top_level_namespace],
       dirty_map: dirty_map,
     )

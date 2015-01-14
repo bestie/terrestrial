@@ -2,14 +2,6 @@ module SequelMapper
   module MapperMethods
     private
 
-    def relation
-      datastore[relation_name]
-    end
-
-    def relation_name
-      mapping.relation_name
-    end
-
     def row_loader_func
       ->(row) {
         register_row_loaded(row)
@@ -52,6 +44,10 @@ module SequelMapper
 
     def dirty_map
       @dirty_map or raise "Dirty map not set for #{self.class}"
+    end
+
+    def association_by_name(name)
+      mapping.fetch_association(name)
     end
   end
 end
