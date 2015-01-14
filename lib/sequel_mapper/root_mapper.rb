@@ -30,6 +30,11 @@ module SequelMapper
       upsert_if_dirty(mapping.dump(graph_root))
     end
 
+    def eager_load(association_name)
+      association_by_name(association_name).eager_load(relation)
+      new_with_dataset(relation)
+    end
+
     private
 
     def new_with_dataset(dataset)
