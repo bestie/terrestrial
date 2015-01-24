@@ -21,6 +21,11 @@ module SequelMapper
     end
 
     def where(criteria)
+      # TODO consider fixing this
+      unless relation.respond_to?(:where)
+        raise "Cannot perform datastore query after eager load"
+      end
+
       new_with_dataset(
         relation.where(criteria)
       )
@@ -31,8 +36,9 @@ module SequelMapper
     end
 
     def eager_load(association_name)
-      association_by_name(association_name).eager_load(relation)
-      new_with_dataset(relation)
+      rows = relation.to_a
+      association_by_name(association_name).eager_load(rows)
+      new_with_dataset(rows)
     end
 
     private
