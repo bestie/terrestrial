@@ -135,7 +135,7 @@ RSpec.describe "Graph persistence" do
 
     let(:new_post) {
       SequelMapper::StructFactory.new(
-        SequelMapper::DatabaseFixture::Post
+        Post
       ).call(new_post_attrs)
     }
 

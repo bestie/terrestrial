@@ -24,6 +24,14 @@ module SequelMapper
       @associations.fetch(name)
     end
 
+    def add_association(name, mapper)
+      @associations[name] = mapper
+    end
+
+    def mark_foreign_key(field_name)
+      @fields = @fields - [field_name]
+    end
+
     private
 
     def associations(row)

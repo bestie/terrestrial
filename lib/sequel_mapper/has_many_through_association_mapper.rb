@@ -5,15 +5,16 @@ module SequelMapper
   class HasManyThroughAssociationMapper < AbstractAssociationMapper
     include HasManyAssociationMapperMethods
 
-    def initialize(through_relation:, foreign_key:, association_foreign_key:, **args)
+    def initialize(through_relation:, key:, foreign_key:, association_foreign_key:, **args)
       @through_relation = through_relation
+      @key = key
       @foreign_key = foreign_key
       @association_foreign_key = association_foreign_key
       super(**args)
     end
 
-    attr_reader :through_relation, :foreign_key, :association_foreign_key
-    private     :through_relation, :foreign_key, :association_foreign_key
+    attr_reader :through_relation, :key, :foreign_key, :association_foreign_key
+    private     :through_relation, :key, :foreign_key, :association_foreign_key
 
     def load_for_row(row)
       proxy_with_dataset(
@@ -39,7 +40,7 @@ module SequelMapper
     end
 
     def eager_load(rows)
-      associated_ids = rows.map { |row| row.fetch(:id) }
+      associated_ids = rows.map { |row| row.fetch(key) }
       eager_dataset = dataset(id: associated_ids).to_a
 
       associated_ids.each do |id|
@@ -58,7 +59,7 @@ module SequelMapper
     end
 
     def dataset(row)
-      relation.where(:id => ids(row.fetch(:id)))
+      relation.where(key => ids(row.fetch(key)))
     end
 
     def ids(foreign_key_value)
@@ -68,7 +69,7 @@ module SequelMapper
     end
 
     def eagerly_loaded_rows(row)
-      @eager_loads.fetch(row.fetch(:id), false)
+      @eager_loads.fetch(row.fetch(key), false)
     end
 
     def persist_nodes(collection)
@@ -80,18 +81,18 @@ module SequelMapper
     def associate_new_nodes(source_object, collection)
       added_nodes(collection).each do |node|
         through_relation.insert(
-          foreign_key => source_object.public_send(:id),
-          association_foreign_key => node.public_send(:id),
+          foreign_key => source_object.public_send(key),
+          association_foreign_key => node.public_send(key),
         )
       end
     end
 
     def dissociate_removed_nodes(source_object, collection)
-      ids = removed_nodes(collection).map(&:id)
+      ids = removed_nodes(collection).map(&key)
 
       through_relation
         .where(
-          foreign_key => source_object.public_send(:id),
+          foreign_key => source_object.public_send(key),
           association_foreign_key => ids,
         )
         .delete

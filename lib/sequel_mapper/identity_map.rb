@@ -3,7 +3,13 @@ require "forwardable"
 module SequelMapper
   class IdentityMap
     extend Forwardable
-    def_delegators :loader, :dump, :relation_name, :fetch_association
+    def_delegators(:loader,
+      :dump,
+      :relation_name,
+      :fetch_association,
+      :add_association,
+      :mark_foreign_key,
+    )
 
     def initialize(loader, identity_map = {})
       @loader = loader
