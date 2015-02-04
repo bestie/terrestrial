@@ -161,21 +161,6 @@ RSpec.describe "Graph persistence" do
     end
   end
 
-  describe "optimized #first" do
-    context "root level mapper" do
-    end
-
-    context "associations" do
-      before { user }
-
-      it "loads only one row from the datastore" do
-        expect {
-          user.posts.first
-        }.to change { dirty_map.length }.by(1)
-      end
-    end
-  end
-
   after do |ex|
     query_counter.show_queries if ex.exception
   end

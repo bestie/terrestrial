@@ -33,12 +33,6 @@ module SequelMapper
       @added_nodes.push(node)
     end
 
-    def first
-      # TODO: this shows violation of SRP
-      mark_as_loaded
-      collection.first
-    end
-
     def loaded?
       !!@loaded
     end
