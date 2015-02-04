@@ -60,12 +60,15 @@ module SequelMapper
 
     # TODO: Add this ordering feature to HasManyThrough
     def apply_order(query)
-      reverse_or_noop = order_by.fetch(:direction, :asc) == :desc ?
-        :reverse : :from_self
+      order_by
+        .reject(&:empty?)
+        .reduce(query) { |ordered_query, (field, direction)|
+          reverse_or_noop = direction == :desc ? :reverse : :from_self
 
-      query
-        .order(*order_by.fetch(:fields, []))
-        .public_send(reverse_or_noop)
+          query
+            .order(field)
+            .public_send(reverse_or_noop)
+        }
     end
 
     def query(row)

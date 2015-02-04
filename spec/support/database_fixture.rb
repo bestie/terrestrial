@@ -125,16 +125,18 @@ module SequelMapper
 
       DEFAULT = :use_convention
 
-      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, table_name: DEFAULT)
+      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, table_name: DEFAULT, order_by: DEFAULT)
         defaults = {
           table_name: association_name,
           foreign_key: [INFLECTOR.singularize(mapping_name), "_id"].join.to_sym,
           key: :id,
+          order_by: [[]],
         }
         specified = {
           table_name: table_name,
           foreign_key: foreign_key,
           key: key,
+          order_by: order_by,
         }.reject { |_k,v|
           v == DEFAULT
         }
@@ -211,7 +213,7 @@ module SequelMapper
 
       private
 
-      def has_many_mapper(name:, relation:, key:, foreign_key:)
+      def has_many_mapper(name:, relation:, key:, foreign_key:, order_by:)
         HasManyAssociationMapper.new(
           foreign_key: foreign_key,
           key: key,
@@ -220,6 +222,7 @@ module SequelMapper
           dirty_map: dirty_map,
           proxy_factory: collection_proxy_factory,
           mappings: mappings,
+          order_by: order_by,
         )
       end
 
@@ -348,7 +351,7 @@ module SequelMapper
         .new(datastore)
         .for(:users) do |config|
           config.has_many(:posts, foreign_key: :author_id)
-          config.has_many(:toots, foreign_key: :tooter_id)
+          config.has_many(:toots, foreign_key: :tooter_id, order_by: [[:tooted_at, :desc]])
         end
         .for(:posts) do |config|
           config.belongs_to(:author, table_name: :users)
