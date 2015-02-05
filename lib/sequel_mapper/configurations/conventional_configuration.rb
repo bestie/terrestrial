@@ -73,7 +73,9 @@ module SequelMapper
             klass.method(:new)
           end
         else
-          warn "WARNDING: Class not found for table #{table_name}"
+          unless defined?(:RSpec)
+            warn "WARNING: Class not found for table #{table_name}"
+          end
         end
       end
 
