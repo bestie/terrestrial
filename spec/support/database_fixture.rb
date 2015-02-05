@@ -68,7 +68,7 @@ module SequelMapper
         top_level_namespace: :users,
         datastore: datastore,
         mappings: mapper_config,
-        dirty_map: DIRTY_MAP,
+        dirty_map: {},
       )
     end
 
@@ -95,277 +95,28 @@ module SequelMapper
     # Associations need not be two way but are setup symmetrically here for
     # illustrative purposes.
 
-    require "sequel_mapper/mapping"
-    require "sequel_mapper/identity_map"
-    require "sequel_mapper/belongs_to_association_mapper"
-    require "sequel_mapper/has_many_association_mapper"
-    require "sequel_mapper/has_many_through_association_mapper"
-    require "sequel_mapper/collection_mutability_proxy"
-    require "sequel_mapper/queryable_lazy_dataset_loader"
-    require "sequel_mapper/lazy_object_proxy"
-
-    require "active_support/inflector"
-    class Inflector
-      include ActiveSupport::Inflector
-    end
-
-    INFLECTOR = Inflector.new
-    DIRTY_MAP = {}
-
-    class ConventionalAssociationConfigurator
-      def initialize(mapping_name, mappings, dirty_map, datastore)
-        @mapping_name = mapping_name
-        @mappings = mappings
-        @dirty_map = dirty_map
-        @datastore = datastore
-      end
-
-      attr_reader :mapping_name, :mappings, :dirty_map, :datastore
-      private     :mapping_name, :mappings, :dirty_map, :datastore
-
-      DEFAULT = :use_convention
-
-      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, table_name: DEFAULT, order_by: DEFAULT)
-        defaults = {
-          table_name: association_name,
-          foreign_key: [INFLECTOR.singularize(mapping_name), "_id"].join.to_sym,
-          key: :id,
-          order_by: [[]],
-        }
-        specified = {
-          table_name: table_name,
-          foreign_key: foreign_key,
-          key: key,
-          order_by: order_by,
-        }.reject { |_k,v|
-          v == DEFAULT
-        }
-
-        config = defaults.merge(specified)
-        config = config.merge(
-            name: association_name,
-            relation: datastore[config.fetch(:table_name)],
-          )
-        config.delete(:table_name)
-
-        mappings.fetch(association_name).mark_foreign_key(config.fetch(:foreign_key))
-        mappings[mapping_name].add_association(association_name, has_many_mapper(**config))
-      end
-
-      def belongs_to(association_name, key: DEFAULT, foreign_key: DEFAULT, table_name: DEFAULT)
-        defaults = {
-          key: :id,
-          foreign_key: [association_name, "_id"].join.to_sym,
-          table_name: INFLECTOR.pluralize(association_name).to_sym,
-        }
-
-        specified = {
-          table_name: table_name,
-          foreign_key: foreign_key,
-          key: key,
-        }.reject { |_k,v|
-          v == DEFAULT
-        }
-
-        config = defaults
-          .merge(specified)
-
-        config.store(:name, config.fetch(:table_name))
-        config.store(:relation, datastore[config.fetch(:table_name)])
-        config.delete(:table_name)
-
-        mappings.fetch(mapping_name).mark_foreign_key(config.fetch(:foreign_key))
-        mappings[mapping_name].add_association(association_name, belongs_to_mapper(**config))
-      end
-
-      def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, table_name: DEFAULT, join_table_name: DEFAULT, association_foreign_key: DEFAULT)
-        defaults = {
-          table_name: association_name,
-          foreign_key: [INFLECTOR.singularize(mapping_name), "_id"].join.to_sym,
-          association_foreign_key: [INFLECTOR.singularize(association_name), "_id"].join.to_sym,
-          join_table_name: [association_name, mapping_name].sort.join("_to_"),
-          key: :id,
-        }
-        specified = {
-          table_name: table_name,
-          foreign_key: foreign_key,
-          association_foreign_key: association_foreign_key,
-          join_table_name: join_table_name,
-          key: key,
-        }.reject { |_k,v|
-          v == DEFAULT
-        }
-
-        config = defaults.merge(specified)
-
-        config = config
-          .merge(
-            name: association_name,
-            relation: datastore[config.fetch(:table_name).to_sym],
-            through_relation: datastore[config.fetch(:join_table_name).to_sym],
-          )
-
-        config.delete(:table_name)
-        config.delete(:join_table_name)
-
-        mappings[mapping_name].add_association(association_name, has_many_through_mapper(**config))
-      end
-
-      private
-
-      def has_many_mapper(name:, relation:, key:, foreign_key:, order_by:)
-        HasManyAssociationMapper.new(
-          foreign_key: foreign_key,
-          key: key,
-          relation: relation,
-          mapping_name: name,
-          dirty_map: dirty_map,
-          proxy_factory: collection_proxy_factory,
-          mappings: mappings,
-          order_by: order_by,
-        )
-      end
-
-      def belongs_to_mapper(name:, relation:, key:, foreign_key:)
-        BelongsToAssociationMapper.new(
-          foreign_key: foreign_key,
-          key: key,
-          relation: relation,
-          mapping_name: name,
-          dirty_map: dirty_map,
-          proxy_factory: single_object_proxy_factory,
-          mappings: mappings,
-        )
-      end
-
-      def has_many_through_mapper(name:, relation:, through_relation:, key:, foreign_key:, association_foreign_key:)
-        HasManyThroughAssociationMapper.new(
-          foreign_key: foreign_key,
-          association_foreign_key: association_foreign_key,
-          key: key,
-          relation: relation,
-          through_relation: through_relation,
-          mapping_name: name,
-          dirty_map: dirty_map,
-          proxy_factory: collection_proxy_factory,
-          mappings: mappings,
-        )
-      end
-
-      def single_object_proxy_factory
-        LazyObjectProxy.method(:new)
-      end
-
-      def collection_proxy_factory
-        ->(*args) {
-          CollectionMutabilityProxy.new(
-            QueryableLazyDatasetLoader.new(*args)
-          )
-        }
-      end
-    end
-
-    class ConventionalConfigurator
-      def initialize(datastore)
-        @datastore = datastore
-        @mappings = generate_mappings
-      end
-
-      attr_reader :datastore, :mappings
-      private     :datastore, :mappings
-
-      def [](mapping_name)
-        mappings[mapping_name]
-      end
-
-      def for(table_name, &block)
-        block.call(assocition_configurator(table_name)) if block
-        self
-      end
-
-      private
-
-      def assocition_configurator(table_name)
-        ConventionalAssociationConfigurator.new(
-          table_name,
-          mappings,
-          DIRTY_MAP,
-          datastore,
-        )
-      end
-
-      def generate_mappings
-        Hash[
-          tables
-            .map { |table_name|
-              [
-                table_name,
-                mapping(
-                  fields: get_fields(table_name),
-                  factory: table_name_to_factory(table_name),
-                  associations: {},
-                ),
-              ]
-            }
-          ]
-      end
-
-      def get_fields(table_name)
-        datastore[table_name]
-          .columns
-      end
-
-      def table_name_to_factory(table_name)
-        klass_name = INFLECTOR.classify(table_name)
-
-        if Object.constants.include?(klass_name.to_sym)
-          klass = Object.const_get(klass_name)
-          if klass.ancestors.include?(Struct)
-            StructFactory.new(klass)
-          else
-            klass.method(:new)
-          end
-        else
-          warn "WARNDING: Class not found for table #{table_name}"
-        end
-      end
-
-      def tables
-        (datastore.tables - [:schema_migrations])
-      end
-
-      def dirty_map
-        DIRTY_MAP
-      end
-
-      def mapping(**args)
-        IdentityMap.new(
-          Mapping.new(**args)
-        )
-      end
-
-    end
+    require "sequel_mapper/configurations/conventional_configuration"
 
     let(:mapper_config) {
-      ConventionalConfigurator
+      Configurations::ConventionalConfiguration
         .new(datastore)
-        .for(:users) do |config|
+        .setup_relation(:users) do |config|
           config.has_many(:posts, foreign_key: :author_id)
           config.has_many(:toots, foreign_key: :tooter_id, order_by: [[:tooted_at, :desc]])
         end
-        .for(:posts) do |config|
+        .setup_relation(:posts) do |config|
           config.belongs_to(:author, table_name: :users)
           config.has_many(:comments)
           config.has_many_through(:categories)
         end
-        .for(:comments) do |config|
+        .setup_relation(:comments) do |config|
           config.belongs_to(:post)
           config.belongs_to(:commenter, table_name: :users)
         end
-        .for(:categories) do |config|
+        .setup_relation(:categories) do |config|
           config.has_many_through(:posts)
         end
-        .for(:toots) do |config|
+        .setup_relation(:toots) do |config|
           config.belongs_to(:tooter, table_name: :users)
         end
     }
