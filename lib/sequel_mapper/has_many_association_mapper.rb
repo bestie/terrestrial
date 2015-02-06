@@ -109,5 +109,13 @@ module SequelMapper
     def delete_node(node)
       relation.where(id: node.id).delete
     end
+
+    def inspectable_properties
+      super + %w(
+        key
+        foreign_key
+        order_by
+      )
+    end
   end
 end

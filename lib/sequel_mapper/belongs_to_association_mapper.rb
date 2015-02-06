@@ -62,5 +62,12 @@ module SequelMapper
         nil
       end
     end
+
+    def inspectable_properties
+      super + %w(
+        key
+        foreign_key
+      )
+    end
   end
 end

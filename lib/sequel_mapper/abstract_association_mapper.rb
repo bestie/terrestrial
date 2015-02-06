@@ -16,6 +16,17 @@ module SequelMapper
     attr_reader :relation, :proxy_factory
     private :relation, :proxy_factory
 
+    def inspect
+      "\#<#{self.class.name}:#{self.object_id.<<(1).to_s(16)} " +
+        inspectable_properties.map { |property|
+          [
+            property,
+            instance_variable_get("@#{property}").inspect
+          ].join("=")
+        }
+        .join(" ") + ">"
+    end
+
     def load_for_row(_row)
       raise NotImplementedError
     end
@@ -54,6 +65,12 @@ module SequelMapper
 
     def eagerly_loaded?(row)
       !!@eager_loads.fetch(row.fetch(key), false)
+    end
+
+    def inspectable_properties
+      %w(
+        relation
+      )
     end
   end
 end

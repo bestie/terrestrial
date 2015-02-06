@@ -97,5 +97,14 @@ module SequelMapper
         )
         .delete
     end
+
+    def inspectable_properties
+      super + %w(
+        through_relation
+        key
+        foreign_key
+        association_foreign_key
+      )
+    end
   end
 end
