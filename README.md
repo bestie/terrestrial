@@ -15,8 +15,6 @@ It is built on top of Jeremy Evans' Sequel library.
 
 ## Why is it?
 
-* It seems like ROM may not be finished any time soon and I felt I could put
-  together something functional albeit less ambitious
 * I love the Sequel library
 * I love decoupling persistence
 * Writing a complex datamapper is sure way to stall your project so I'm writing
