@@ -98,11 +98,14 @@ module SequelMapper
     require "sequel_mapper/configurations/conventional_configuration"
 
     let(:mapper_config) {
+      SomeOtherUser = Struct.new(:id, :first_name, :last_name, :email, :posts, :toots)
+
       Configurations::ConventionalConfiguration
         .new(datastore)
         .setup_relation(:users) do |config|
           config.has_many(:posts, foreign_key: :author_id)
           config.has_many(:toots, foreign_key: :tooter_id, order_by: [[:tooted_at, :desc]])
+          # config.factory SomeOtherUser
         end
         .setup_relation(:posts) do |config|
           config.belongs_to(:author, table_name: :users)

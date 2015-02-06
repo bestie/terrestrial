@@ -1,12 +1,12 @@
-require "sequel_mapper/belongs_to_association_mapper"
-require "sequel_mapper/has_many_association_mapper"
-require "sequel_mapper/has_many_through_association_mapper"
-require "sequel_mapper/collection_mutability_proxy"
-require "sequel_mapper/queryable_lazy_dataset_loader"
-require "sequel_mapper/lazy_object_proxy"
-
 module SequelMapper
   module Configurations
+    require "sequel_mapper/belongs_to_association_mapper"
+    require "sequel_mapper/has_many_association_mapper"
+    require "sequel_mapper/has_many_through_association_mapper"
+    require "sequel_mapper/collection_mutability_proxy"
+    require "sequel_mapper/queryable_lazy_dataset_loader"
+    require "sequel_mapper/lazy_object_proxy"
+
     class ConventionalAssociationConfiguration
       def initialize(mapping_name, mappings, dirty_map, datastore)
         @mapping_name = mapping_name
