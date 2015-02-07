@@ -16,6 +16,7 @@ module SequelMapper
       def initialize(datastore)
         @datastore = datastore
         @overrides = {}
+        @associations_by_mapping = {}
       end
 
       attr_reader :datastore, :mappings
@@ -26,20 +27,16 @@ module SequelMapper
       end
 
       def setup_relation(table_name, &block)
+        @associations_by_mapping[table_name] ||= []
+
         block.call(
           RelationConfigOptionsProxy.new(
-            mappings[table_name],
-            assocition_configurator(table_name),
+            method(:add_override).to_proc.curry.call(table_name),
+            @associations_by_mapping.fetch(table_name),
           )
         ) if block
 
         self
-      end
-
-      def add_override(mapping_name, attrs)
-        overrides = @manual_overrides.fetch(mapping_name, {}).merge(attrs)
-
-        @manual_overrides.store(mapping_name, overrides)
       end
 
       private
@@ -47,19 +44,25 @@ module SequelMapper
       require "forwardable"
       class RelationConfigOptionsProxy
         extend Forwardable
-        def initialize(configurator, association_configurator)
-          @configurator = configurator
-          @association_configurator = association_configurator
+        def initialize(config_override, association_register)
+          @config_override = config_override
+          @association_register = association_register
         end
 
-        def_delegators(:@association_configurator,
-          :has_many,
-          :has_many_through,
-          :belongs_to,
-        )
+        def has_many(*args)
+          @association_register.push([:has_many, args])
+        end
+
+        def has_many_through(*args)
+          @association_register.push([:has_many_through, args])
+        end
+
+        def belongs_to(*args)
+          @association_register.push([:belongs_to, args])
+        end
 
         def factory(string_class_or_callable)
-          @configurator.add_override(factory: string_class_or_callable)
+          @config_override.call(factory: string_class_or_callable)
         end
       end
 
@@ -67,7 +70,13 @@ module SequelMapper
         @mappings ||= generate_mappings
       end
 
-      def assocition_configurator(table_name)
+      def add_override(mapping_name, attrs)
+        overrides = @overrides.fetch(mapping_name, {}).merge(attrs)
+
+        @overrides.store(mapping_name, overrides)
+      end
+
+      def assocition_configurator(mappings, table_name)
         ConventionalAssociationConfiguration.new(
           table_name,
           mappings,
@@ -83,13 +92,28 @@ module SequelMapper
               [
                 table_name,
                 mapping(
-                  **overrides_for_mapping(table_name).merge(
-                    mapping_args(table_name)
+                  **mapping_args(table_name).merge(
+                    overrides_for_mapping(table_name)
                   )
                 ),
               ]
             }
-          ]
+        ].tap { |mappings|
+          generate_associations_config(mappings)
+        }
+      end
+
+      def generate_associations_config(mappings)
+        # TODO: the ConventionalAssociationConfiguration takes all the mappings
+        # as a dependency and then sends mutating messages to them.
+        # This mutation based approach was originally a spike but now just
+        # seems totally bananas!
+        @associations_by_mapping.each do |mapping_name, associations|
+          associations.each do |(assoc_type, assoc_args)|
+            assocition_configurator(mappings, mapping_name)
+              .public_send(assoc_type, *assoc_args)
+          end
+        end
       end
 
       def mapping_args(table_name)
