@@ -7,8 +7,22 @@ module SequelMapper
     end
     module_function :create_database
 
+    def drop_tables
+      db_connection.tables.each do |table_name|
+        db_connection.drop_table(table_name)
+      end
+    end
+    module_function :drop_tables
+
+    def truncate_tables
+      db_connection.tables.each do |table_name|
+        db_connection[table_name].truncate
+      end
+    end
+    module_function :truncate_tables
+
     def db_connection
-      Sequel.postgres(
+      @db_connection ||= Sequel.postgres(
         host: ENV.fetch("PGHOST"),
         user: ENV.fetch("PGUSER"),
         database: ENV.fetch("PGDATABASE"),
