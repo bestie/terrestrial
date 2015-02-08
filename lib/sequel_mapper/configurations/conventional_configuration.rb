@@ -79,6 +79,10 @@ module SequelMapper
         def factory(string_class_or_callable)
           @config_override.call(factory: string_class_or_callable)
         end
+
+        def serializer(serializer_func)
+          @config_override.call(serializer: serializer_func)
+        end
       end
 
       def mappings
@@ -145,6 +149,7 @@ module SequelMapper
           relation_name: table_name,
           fields: get_fields(table_name),
           factory: ensure_factory(mapping_name),
+          serializer: standard_serializer,
           associations: {},
           queries: @queries.fetch(mapping_name, {}),
         }
@@ -168,11 +173,18 @@ module SequelMapper
         DIRTY_MAP
       end
 
-      def mapping(relation_name: ,factory:, fields:, associations:, queries:)
+      def standard_serializer
+        ->(fields, object) {
+          Serializer.new(fields, object).to_h
+        }
+      end
+
+      def mapping(relation_name: ,factory:, serializer:, fields:, associations:, queries:)
         IdentityMap.new(
           Mapping.new(
             relation_name: relation_name,
             factory: ensure_factory(factory),
+            serializer: serializer,
             fields: fields,
             associations: associations,
             queries: queries,

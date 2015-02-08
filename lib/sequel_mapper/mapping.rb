@@ -2,9 +2,10 @@ require "sequel_mapper/serializer"
 
 module SequelMapper
   class Mapping
-    def initialize(relation_name:, factory:, fields:, associations:, queries:)
+    def initialize(relation_name:, factory:, serializer:, fields:, associations:, queries:)
       @relation_name = relation_name
       @factory = factory
+      @serializer = serializer
       @fields = fields
       @associations = associations
       @queries = queries
@@ -53,6 +54,12 @@ module SequelMapper
     end
 
     def dump_associations(object)
+      # TODO: This approach requires that all entities' associations are
+      # exposed via public methods. Figure out how to allow the associated
+      # collectons to remain private to the object and still traverse and
+      # persist effieciently. Perhaps keep them in a registry or handle it via
+      # serialization, keeping track of which fields are associations, similar
+      # to how foreign_keys are handled.
       @associations.each do |name, assoc|
         assoc.save(object, object.public_send(name))
       end
@@ -65,7 +72,7 @@ module SequelMapper
     end
 
     def serialize(object)
-      Serializer.new(fields, object).to_h
+      @serializer.call(fields, object)
     end
   end
 end
