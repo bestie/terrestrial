@@ -12,7 +12,7 @@ module SequelMapper
     private     :collection
 
     extend Forwardable
-    def_delegators :collection, :where, :query
+    def_delegators :collection, :loaded?, :where, :query
 
     include Enumerable
     def each(&block)
@@ -33,10 +33,6 @@ module SequelMapper
       @added_nodes.push(node)
     end
 
-    def loaded?
-      !!@loaded
-    end
-
     def eager_load(association_name)
       collection.eager_load(association_name)
     end
@@ -45,8 +41,6 @@ module SequelMapper
 
     def enum
       Enumerator.new do |yielder|
-        mark_as_loaded
-
         collection.each do |element|
           yielder.yield(element) unless removed?(element)
         end
@@ -55,10 +49,6 @@ module SequelMapper
           yielder.yield(node)
         end
       end
-    end
-
-    def mark_as_loaded
-      @loaded = true
     end
 
     def removed?(node)

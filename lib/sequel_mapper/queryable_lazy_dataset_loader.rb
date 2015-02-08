@@ -6,6 +6,7 @@ module SequelMapper
       @database_enum = database_enum
       @loader = loader
       @mapper = mapper
+      @loaded = false
     end
 
     attr_reader :database_enum, :loader, :mapper
@@ -31,8 +32,19 @@ module SequelMapper
 
     def each(&block)
       database_enum
+        .map { |row| mark_as_loaded; row }
         .map(&loader)
         .each(&block)
+    end
+
+    def loaded?
+      !!@loaded
+    end
+
+    private
+
+    def mark_as_loaded
+      @loaded ||= true
     end
   end
 end
