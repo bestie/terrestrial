@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "sequel", "~> 4.16"
   spec.add_dependency "activesupport", "~> 4.0"
+  spec.add_dependency "fetchable", "~> 1.0"
 end

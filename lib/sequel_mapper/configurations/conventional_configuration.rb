@@ -12,7 +12,10 @@ module SequelMapper
     INFLECTOR = Inflector.new
     DIRTY_MAP = {}
 
+    require "fetchable"
     class ConventionalConfiguration
+      include Fetchable
+
       def initialize(datastore)
         @datastore = datastore
         @overrides = {}
