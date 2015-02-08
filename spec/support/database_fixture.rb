@@ -51,7 +51,7 @@ module SequelMapper
       db_connection.tap { |db|
         # When using the standard fixutres we need the fixture data loaded
         # before the connection should be used
-        load_fixture_data(db)
+        write_fixture_data(db, fixture_tables_hash)
 
         # The query_counter will let us make assertions about how efficiently
         # the database is being used
@@ -65,15 +65,15 @@ module SequelMapper
 
     def mapper_fixture
       SequelMapper.mapper(
-        top_level_namespace: :users,
+        top_level_mapping: :users,
         datastore: datastore,
         mappings: mapper_config,
         dirty_map: {},
       )
     end
 
-    def load_fixture_data(datastore)
-      fixture_tables_hash.each do |table_name, rows|
+    def write_fixture_data(datastore, fixture_data)
+      fixture_data.each do |table_name, rows|
 
         datastore.drop_table?(table_name)
 
@@ -100,24 +100,24 @@ module SequelMapper
     let(:mapper_config) {
       Configurations::ConventionalConfiguration
         .new(datastore)
-        .setup_relation(:users) do |config|
+        .setup_mapping(:users) do |config|
           config.has_many(:posts, foreign_key: :author_id)
           config.has_many(:toots, foreign_key: :tooter_id, order_by: [[:tooted_at, :desc]])
         end
-        .setup_relation(:posts) do |config|
-          config.belongs_to(:author, table_name: :users)
+        .setup_mapping(:posts) do |config|
+          config.belongs_to(:author, mapping_name: :users)
           config.has_many(:comments)
           config.has_many_through(:categories)
         end
-        .setup_relation(:comments) do |config|
+        .setup_mapping(:comments) do |config|
           config.belongs_to(:post)
-          config.belongs_to(:commenter, table_name: :users)
+          config.belongs_to(:commenter, mapping_name: :users)
         end
-        .setup_relation(:categories) do |config|
+        .setup_mapping(:categories) do |config|
           config.has_many_through(:posts)
         end
-        .setup_relation(:toots) do |config|
-          config.belongs_to(:tooter, table_name: :users)
+        .setup_mapping(:toots) do |config|
+          config.belongs_to(:tooter, mapping_name: :users)
         end
     }
 

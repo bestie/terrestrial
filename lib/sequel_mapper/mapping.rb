@@ -2,12 +2,14 @@ require "sequel_mapper/serializer"
 
 module SequelMapper
   class Mapping
-    def initialize(factory:, fields:, associations:)
+    def initialize(relation_name:, factory:, fields:, associations:)
+      @relation_name = relation_name
       @factory = factory
       @fields = fields
       @associations = associations
     end
 
+    attr_reader :relation_name
     attr_reader :factory, :fields
     private :factory, :fields
 

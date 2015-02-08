@@ -29,13 +29,13 @@ module SequelMapper
         mappings[mapping_name]
       end
 
-      def setup_relation(table_name, &block)
-        @associations_by_mapping[table_name] ||= []
+      def setup_mapping(mapping_name, &block)
+        @associations_by_mapping[mapping_name] ||= []
 
         block.call(
           RelationConfigOptionsProxy.new(
-            method(:add_override).to_proc.curry.call(table_name),
-            @associations_by_mapping.fetch(table_name),
+            method(:add_override).to_proc.curry.call(mapping_name),
+            @associations_by_mapping.fetch(mapping_name),
           )
         ) if block
 
@@ -51,6 +51,11 @@ module SequelMapper
           @config_override = config_override
           @association_register = association_register
         end
+
+        def relation_name(name)
+          @config_override.call(relation_name: name)
+        end
+        alias_method :table_name, :relation_name
 
         def has_many(*args)
           @association_register.push([:has_many, args])
@@ -79,9 +84,9 @@ module SequelMapper
         @overrides.store(mapping_name, overrides)
       end
 
-      def assocition_configurator(mappings, table_name)
+      def association_configurator(mappings, mapping_name)
         ConventionalAssociationConfiguration.new(
-          table_name,
+          mapping_name,
           mappings,
           dirty_map,
           datastore,
@@ -92,12 +97,12 @@ module SequelMapper
         Hash[
           tables
             .map { |table_name|
+              mapping_name, overrides = overrides_for_table(table_name)
+
               [
-                table_name,
+                mapping_name,
                 mapping(
-                  **mapping_args(table_name).merge(
-                    overrides_for_mapping(table_name)
-                  )
+                  **mapping_args(table_name, mapping_name).merge(overrides)
                 ),
               ]
             }
@@ -113,27 +118,29 @@ module SequelMapper
         # seems totally bananas!
         @associations_by_mapping.each do |mapping_name, associations|
           associations.each do |(assoc_type, assoc_args)|
-            assocition_configurator(mappings, mapping_name)
+            association_configurator(mappings, mapping_name)
               .public_send(assoc_type, *assoc_args)
           end
         end
       end
 
-      def mapping_args(table_name)
+      def mapping_args(table_name, mapping_name)
         {
+          relation_name: table_name,
           fields: get_fields(table_name),
-          factory: ensure_factory(table_name),
+          factory: ensure_factory(mapping_name),
           associations: {},
         }
       end
 
-      def overrides_for_mapping(mapping_name)
-        @overrides.fetch(mapping_name, {})
+      def overrides_for_table(table_name)
+        @overrides.find { |(_mapping_name, config)|
+          table_name == config.fetch(:relation_name, nil)
+        } || [table_name, @overrides.fetch(table_name, {})]
       end
 
       def get_fields(table_name)
-        datastore[table_name]
-          .columns
+        datastore[table_name].columns
       end
 
       def tables
@@ -144,9 +151,10 @@ module SequelMapper
         DIRTY_MAP
       end
 
-      def mapping(factory:, fields:, associations:)
+      def mapping(relation_name: ,factory:, fields:, associations:)
         IdentityMap.new(
           Mapping.new(
+            relation_name: relation_name,
             factory: ensure_factory(factory),
             fields: fields,
             associations: associations,

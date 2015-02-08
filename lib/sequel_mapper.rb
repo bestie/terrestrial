@@ -1,10 +1,13 @@
 module SequelMapper
   extend self
 
-  def mapper(datastore:, top_level_namespace:, mappings:, dirty_map:)
+  def mapper(datastore:, top_level_mapping:, mappings:, dirty_map:)
+    mapping = mappings[top_level_mapping]
+    relation_name = mapping.relation_name
+
     RootMapper.new(
-      relation: datastore[top_level_namespace],
-      mapping: mappings[top_level_namespace],
+      relation: datastore[relation_name],
+      mapping: mapping,
       dirty_map: dirty_map,
     )
   end
