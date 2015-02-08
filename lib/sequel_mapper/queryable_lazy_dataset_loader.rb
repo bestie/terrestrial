@@ -1,35 +1,31 @@
-require "forwardable"
-
 module SequelMapper
   class QueryableLazyDatasetLoader
-    extend Forwardable
     include Enumerable
 
-    def initialize(database_enum, loader, association_mapper = :mapper_not_provided)
+    def initialize(database_enum, loader, mapper)
       @database_enum = database_enum
       @loader = loader
-      @association_mapper = association_mapper
+      @mapper = mapper
     end
 
-    attr_reader :database_enum, :loader
-    private     :database_enum, :loader
-
-    def_delegators :database_enum, :where
+    attr_reader :database_enum, :loader, :mapper
+    private     :database_enum, :loader, :mapper
 
     def eager_load(association_name)
-      @association_mapper.eager_load_association(database_enum, association_name)
+      mapper.eager_load_association(database_enum, association_name)
     end
 
     def where(criteria)
-      self.class.new(database_enum.where(criteria), loader)
+      self.class.new(database_enum.where(criteria), loader, mapper)
     end
 
     def query(name)
       self.class.new(
-        @association_mapper
+        mapper
           .get_query(name)
           .call(database_enum),
         loader,
+        mapper,
       )
     end
 
