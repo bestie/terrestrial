@@ -39,6 +39,23 @@ RSpec.describe "Graph persistence" do
         )
       )
     end
+
+    # TODO move to a dirty tracking spec?
+    context "when mutating entity fields in place" do
+      it "saves the object" do
+        user.email << "MUTATED"
+
+        mapper.save(user)
+
+        expect(datastore).to have_persisted(
+          :users,
+          hash_including(
+            id: "user/1",
+            email: /MUTATED$/,
+          )
+        )
+      end
+    end
   end
 
   context "modify shallow has many associated object" do

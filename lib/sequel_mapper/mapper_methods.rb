@@ -10,7 +10,7 @@ module SequelMapper
     end
 
     def register_row_loaded(row)
-      dirty_map.store(row.fetch(:id), row)
+      dirty_map.store(row.fetch(:id), Marshal.dump(row))
     end
 
     def unless_already_persisted(thing, &not_persisted_callback)
@@ -21,9 +21,10 @@ module SequelMapper
     end
 
     def upsert_if_dirty(row)
-      loaded_row = dirty_map.fetch(row.fetch(:id), :not_found_therefore_dirty)
+      # TODO the dirty map concern is a prime candidate for extraction
+      loaded_row = dirty_map.fetch(row.fetch(:id), Marshal.dump(:not_found_therefore_dirty))
 
-      if loaded_row != row
+      if Marshal.load(loaded_row) != row
         upsert(row)
       end
     end
