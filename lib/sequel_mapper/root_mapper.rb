@@ -31,6 +31,12 @@ module SequelMapper
       )
     end
 
+    def query(name)
+      new_with_dataset(
+        mapping.get_query(name).call(relation)
+      )
+    end
+
     def save(graph_root)
       upsert_if_dirty(mapping.dump(graph_root))
     end

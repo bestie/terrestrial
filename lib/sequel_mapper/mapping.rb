@@ -2,11 +2,12 @@ require "sequel_mapper/serializer"
 
 module SequelMapper
   class Mapping
-    def initialize(relation_name:, factory:, fields:, associations:)
+    def initialize(relation_name:, factory:, fields:, associations:, queries:)
       @relation_name = relation_name
       @factory = factory
       @fields = fields
       @associations = associations
+      @queries = queries
     end
 
     attr_reader :relation_name
@@ -32,6 +33,12 @@ module SequelMapper
 
     def mark_foreign_key(field_name)
       @fields = @fields - [field_name]
+    end
+
+    def get_query(name)
+      @queries.fetch(name) {
+        raise "#{name} is not a registered query for relation named #{relation_name}"
+      }
     end
 
     private

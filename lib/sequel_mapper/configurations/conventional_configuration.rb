@@ -19,6 +19,7 @@ module SequelMapper
       def initialize(datastore)
         @datastore = datastore
         @overrides = {}
+        @queries = {}
         @associations_by_mapping = {}
       end
 
@@ -35,6 +36,7 @@ module SequelMapper
         block.call(
           RelationConfigOptionsProxy.new(
             method(:add_override).to_proc.curry.call(mapping_name),
+            method(:add_query).to_proc.curry.call(mapping_name),
             @associations_by_mapping.fetch(mapping_name),
           )
         ) if block
@@ -47,8 +49,9 @@ module SequelMapper
       require "forwardable"
       class RelationConfigOptionsProxy
         extend Forwardable
-        def initialize(config_override, association_register)
+        def initialize(config_override, query_adder, association_register)
           @config_override = config_override
+          @query_adder = query_adder
           @association_register = association_register
         end
 
@@ -56,6 +59,10 @@ module SequelMapper
           @config_override.call(relation_name: name)
         end
         alias_method :table_name, :relation_name
+
+        def query(query_name, &block)
+          @query_adder.call(query_name, block)
+        end
 
         def has_many(*args)
           @association_register.push([:has_many, args])
@@ -82,6 +89,15 @@ module SequelMapper
         overrides = @overrides.fetch(mapping_name, {}).merge(attrs)
 
         @overrides.store(mapping_name, overrides)
+      end
+
+      def add_query(mapping_name, query_name, block)
+        @queries.store(
+          mapping_name,
+          @queries.fetch(mapping_name, {}).merge(
+            query_name => block,
+          )
+        )
       end
 
       def association_configurator(mappings, mapping_name)
@@ -130,6 +146,7 @@ module SequelMapper
           fields: get_fields(table_name),
           factory: ensure_factory(mapping_name),
           associations: {},
+          queries: @queries.fetch(mapping_name, {}),
         }
       end
 
@@ -151,13 +168,14 @@ module SequelMapper
         DIRTY_MAP
       end
 
-      def mapping(relation_name: ,factory:, fields:, associations:)
+      def mapping(relation_name: ,factory:, fields:, associations:, queries:)
         IdentityMap.new(
           Mapping.new(
             relation_name: relation_name,
             factory: ensure_factory(factory),
             fields: fields,
             associations: associations,
+            queries: queries,
           )
         )
       end

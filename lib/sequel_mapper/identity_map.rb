@@ -10,6 +10,7 @@ module SequelMapper
       :add_association,
       :mark_foreign_key,
       :factory,
+      :get_query,
     )
 
     def initialize(loader, identity_map = {})
