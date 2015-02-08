@@ -6,10 +6,6 @@ In no particular order
 * Refactor, methods too big, objects missing
 * Name things better
 
-## Configuration
-* Automatic config generation based on schema, foreign keys etc
-* Config to take either a classes or callable factory
-
 ## Querying
 * Querying API, what would a repository with some arbitrary queries look like?
   - e.g. an association on post called `burger_comments` that finds comments
@@ -20,7 +16,6 @@ In no particular order
   Sequel's `#where` with block [querying API](http://sequel.jeremyevans.net/rdoc/files/doc/cheat_sheet_rdoc.html#label-AND%2FOR%2FNOT)
 
 ## Associations
-* Eager loading
 * Read only associations
   - Loaded objects would be immutable
   - Collection proxy would have no #push or #remove
@@ -37,3 +32,7 @@ In no particular order
 
 ## Associations
 * Eager loading
+
+## Configuration
+* Automatic config generation based on schema, foreign keys etc
+* Config to take either a classes or callable factory
