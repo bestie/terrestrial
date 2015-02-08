@@ -12,7 +12,7 @@ module SequelMapper
     private     :collection
 
     extend Forwardable
-    def_delegators :collection, :where
+    def_delegators :collection, :where, :query
 
     include Enumerable
     def each(&block)

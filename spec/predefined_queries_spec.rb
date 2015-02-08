@@ -21,11 +21,27 @@ RSpec.describe "Predefined queries" do
       end
     end
 
-    it "maps a datastore optimized query" do
+    it "maps the datastore query" do
       expect(users.query(:tricketts).map(&:first_name)).to match_array(%w(
         Jasper
         Hansel
       ))
+    end
+  end
+
+  context "on a has many association" do
+    before do
+      mapper_config.setup_mapping(:posts) do |config|
+        config.query(:about_laziness) do |dataset|
+          dataset.where(body: /lazy/i)
+        end
+      end
+    end
+
+    let(:user) { users.first }
+
+    it "maps the datastore query" do
+      expect(user.posts.query(:about_laziness).map(&:id)).to eq(["post/2"])
     end
   end
 end

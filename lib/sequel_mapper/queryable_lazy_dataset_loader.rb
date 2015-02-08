@@ -24,6 +24,15 @@ module SequelMapper
       self.class.new(database_enum.where(criteria), loader)
     end
 
+    def query(name)
+      self.class.new(
+        @association_mapper
+          .get_query(name)
+          .call(database_enum),
+        loader,
+      )
+    end
+
     def each(&block)
       database_enum
         .map(&loader)

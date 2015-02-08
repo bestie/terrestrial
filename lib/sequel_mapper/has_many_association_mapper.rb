@@ -41,6 +41,10 @@ module SequelMapper
       end
     end
 
+    def get_query(name)
+      mapping.get_query(name)
+    end
+
     def save(_source_object, collection)
       unless_already_persisted(collection) do |collection_proxy|
         persist_nodes(collection)
