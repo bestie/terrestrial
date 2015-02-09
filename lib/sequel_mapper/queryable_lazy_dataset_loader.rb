@@ -1,5 +1,8 @@
+require "short_inspection_string"
+
 module SequelMapper
   class QueryableLazyDatasetLoader
+    include ShortInspectionString
     include Enumerable
 
     def initialize(database_enum, loader, mapper)
@@ -45,6 +48,13 @@ module SequelMapper
 
     def mark_as_loaded
       @loaded ||= true
+    end
+
+    def inspectable_properties
+      [
+        :database_enum,
+        :loaded,
+      ]
     end
   end
 end

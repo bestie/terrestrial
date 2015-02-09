@@ -1,8 +1,10 @@
 require "sequel_mapper/mapper_methods"
+require "short_inspection_string"
 
 module SequelMapper
   class AbstractAssociationMapper
     include MapperMethods
+    include ShortInspectionString
 
     def initialize(relation:, proxy_factory:, dirty_map:, mappings:, mapping_name:)
       @relation = relation
@@ -15,17 +17,6 @@ module SequelMapper
 
     attr_reader :relation, :proxy_factory
     private :relation, :proxy_factory
-
-    def inspect
-      "\#<#{self.class.name}:#{self.object_id.<<(1).to_s(16)} " +
-        inspectable_properties.map { |property|
-          [
-            property,
-            instance_variable_get("@#{property}").inspect
-          ].join("=")
-        }
-        .join(" ") + ">"
-    end
 
     def load_for_row(_row)
       raise NotImplementedError

@@ -1,7 +1,10 @@
 require "forwardable"
+require "short_inspection_string"
 
 module SequelMapper
   class CollectionMutabilityProxy
+    include ShortInspectionString
+
     def initialize(collection)
       @collection = collection
       @added_nodes = []
