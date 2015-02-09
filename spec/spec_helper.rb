@@ -33,10 +33,10 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
-    SequelMapper::SequelTestSupport.truncate_tables
+    # SequelMapper::SequelTestSupport.truncate_tables
   end
 
   at_exit do
-    SequelMapper::SequelTestSupport.drop_tables
+    # SequelMapper::SequelTestSupport.drop_tables
   end
 end
