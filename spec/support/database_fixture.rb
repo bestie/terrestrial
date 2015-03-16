@@ -77,11 +77,16 @@ module SequelMapper
 
         datastore.drop_table?(table_name)
 
+        options = {
+          id: { primary_key: true },
+        }
+
         datastore.create_table(table_name) do
           # Create each column as a string type.
           # This will suffice for current tests.
+
           rows.first.keys.each do |column|
-            String column
+            String column, options.fetch(column, {})
           end
         end
 
