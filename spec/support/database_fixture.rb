@@ -65,11 +65,10 @@ module SequelMapper
 
     def mapper_fixture
       SequelMapper.mapper(
-        top_level_mapping: :users,
         datastore: datastore,
-        mappings: mapper_config,
+        config: mapper_config,
         dirty_map: {},
-      )
+      ).fetch(:users)
     end
 
     def write_fixture_data(datastore, fixture_data)
@@ -100,11 +99,9 @@ module SequelMapper
     # Associations need not be two way but are setup symmetrically here for
     # illustrative purposes.
 
-    require "sequel_mapper/configurations/conventional_configuration"
-
     let(:mapper_config) {
-      Configurations::ConventionalConfiguration
-        .new(datastore)
+      SequelMapper
+        .config(datastore)
         .setup_mapping(:users) do |config|
           config.has_many(:posts, foreign_key: :author_id)
           config.has_many(:toots, foreign_key: :tooter_id, order_by: [[:tooted_at, :desc]])
