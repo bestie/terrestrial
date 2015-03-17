@@ -277,6 +277,26 @@ RSpec.describe "Graph persistence" do
     end
   end
 
+  context "when a save operation fails (some object is not persistable)" do
+    before do
+      user.posts.first.subject = "UNRELATED CHANGE THAT WILL FAIL"
+      user.email = unpersistable_object
+    end
+
+    let(:unpersistable_object) { ->() { } }
+
+    it "rolls back the transation" do
+      begin
+        mapper.save(user)
+      rescue Sequel::Error
+      end
+
+      expect(datastore).not_to have_persisted(:posts, hash_including(
+        subject: "UNRELATED CHANGE THAT WILL FAIL"
+      ))
+    end
+  end
+
   RSpec::Matchers.define :have_persisted do |relation_name, data|
     match do |datastore|
       datastore[relation_name].find { |record|

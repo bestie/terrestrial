@@ -38,7 +38,9 @@ module SequelMapper
     end
 
     def save(graph_root)
-      upsert_if_dirty(mapping.dump(graph_root))
+      relation.db.transaction do
+        upsert_if_dirty(mapping.dump(graph_root))
+      end
     end
 
     def eager_load(association_name)
