@@ -8,24 +8,24 @@ RSpec.describe "Predefined queries" do
 
   subject(:users) { mapper_fixture }
 
-  # let(:user) {
-  #   mapper.where(id: "user/1").first
-  # }
-
-  context "on the top level" do
-    before do
-      mapper_config.setup_mapping(:users) do |config|
-        config.query(:tricketts) do |dataset|
-          dataset.where(last_name: "Trickett")
+  context "on the top level maper" do
+    context "query is defined with a block" do
+      before do
+        mapper_config.setup_mapping(:users) do |config|
+          config.query(:tricketts) do |dataset|
+            dataset
+              .where(last_name: "Trickett")
+              .order(:first_name)
+          end
         end
       end
-    end
 
-    it "maps the datastore query" do
-      expect(users.query(:tricketts).map(&:first_name)).to match_array(%w(
-        Jasper
-        Hansel
-      ))
+      it "maps the result of the query" do
+        expect(users.query(:tricketts).map(&:first_name)).to eq([
+          "Hansel",
+          "Jasper",
+        ])
+      end
     end
   end
 
