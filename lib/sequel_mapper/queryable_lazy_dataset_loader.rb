@@ -34,10 +34,7 @@ module SequelMapper
     end
 
     def each(&block)
-      database_enum
-        .map { |row| mark_as_loaded; row }
-        .map(&loader)
-        .each(&block)
+      enum.each(&block)
     end
 
     def loaded?
@@ -45,6 +42,30 @@ module SequelMapper
     end
 
     private
+
+    def enum
+      @enum ||= Enumerator.new { |yielder|
+        loaded_objects.each do |obj|
+          yielder.yield(obj)
+        end
+
+        loop do
+          object_enum.next.tap { |obj|
+            mark_as_loaded
+            loaded_objects.push(obj)
+            yielder.yield(obj)
+          }
+        end
+      }
+    end
+
+    def object_enum
+      @object_enum ||= database_enum.lazy.map(&loader)
+    end
+
+    def loaded_objects
+      @loaded_objects ||= []
+    end
 
     def mark_as_loaded
       @loaded ||= true
