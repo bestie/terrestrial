@@ -15,10 +15,6 @@ RSpec.describe "Proxying associations" do
 
     let(:posts) { user.posts }
 
-    def identity
-      ->(x){x}
-    end
-
     describe "limiting datastore reads" do
       context "when loading the root node" do
         it "only performs one read" do
@@ -43,14 +39,18 @@ RSpec.describe "Proxying associations" do
 
         it "does a single additional read for the assocation collection" do
           expect {
-            user.posts.map(&identity)
+            user.posts.each { |x| x }
           }.to change { query_counter.read_count }.by(1)
         end
 
         context "when doing this more than once" do
+          before do
+            posts.each { |x| x }
+          end
+
           it "performs no additional reads" do
             expect {
-              user.posts.map(&identity)
+              user.posts.each { |x| x }
             }.not_to change { query_counter.read_count }
           end
         end
@@ -75,7 +75,7 @@ RSpec.describe "Proxying associations" do
           post = user.posts.first
 
           expect {
-            post.categories.map(&:name).to_a
+            post.categories.each { |x| x }
           }.to change { query_counter.read_count }.by(1)
         end
       end
