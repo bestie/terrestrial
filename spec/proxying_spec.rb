@@ -46,6 +46,14 @@ RSpec.describe "Proxying associations" do
             user.posts.map(&identity)
           }.to change { query_counter.read_count }.by(1)
         end
+
+        context "when doing this more than once" do
+          it "performs no additional reads" do
+            expect {
+              user.posts.map(&identity)
+            }.not_to change { query_counter.read_count }
+          end
+        end
       end
 
       context "when getting a reference to a many to many assocation" do

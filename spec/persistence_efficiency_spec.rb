@@ -36,10 +36,22 @@ RSpec.describe "Graph persistence" do
       user.posts.first.subject = modified_post_subject
     end
 
-    it "performs 1 updates" do
+    it "performs 1 update" do
       expect {
         mapper.save(user)
       }.to change { query_counter.update_count }.by(1)
+    end
+
+    it "performs 0 deletes" do
+      expect {
+        mapper.save(user)
+      }.to change { query_counter.delete_count }.by(0)
+    end
+
+    it "performs 0 additional reads" do
+      expect {
+        mapper.save(user)
+      }.to change { query_counter.read_count }.by(0)
     end
   end
 
@@ -162,6 +174,6 @@ RSpec.describe "Graph persistence" do
   end
 
   after do |ex|
-    query_counter.show_queries if ex.exception
+    query_counter.show_queries if ex
   end
 end

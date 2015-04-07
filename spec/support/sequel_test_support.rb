@@ -41,6 +41,12 @@ module SequelMapper
           describe_table_queries_count
       end
 
+      def delete_count
+        @info.count { |query|
+          /\A\([0-9\.]+s\) DELETE/i === query
+        }
+      end
+
       def read_count_with_describes
         @info.count { |query|
           /\A\([0-9\.]+s\) SELECT/i === query
