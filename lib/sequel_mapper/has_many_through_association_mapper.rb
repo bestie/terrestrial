@@ -90,12 +90,14 @@ module SequelMapper
     def dissociate_removed_nodes(source_object, collection)
       ids = removed_nodes(collection).map(&key)
 
-      through_relation
-        .where(
-          foreign_key => source_object.public_send(key),
-          association_foreign_key => ids,
-        )
-        .delete
+      unless ids.empty?
+        through_relation
+          .where(
+            foreign_key => source_object.public_send(key),
+            association_foreign_key => ids,
+          )
+          .delete
+      end
     end
 
     def inspectable_properties
