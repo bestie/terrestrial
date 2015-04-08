@@ -14,7 +14,10 @@ module SequelMapper
     private     :key, :foreign_key
 
     def load_for_row(row)
-      proxy_factory.call(eagerly_loaded(row) || dataset(row))
+      proxy_factory.call(
+        (eagerly_loaded(row) || dataset(row)),
+        key => row.fetch(foreign_key),
+      )
     end
 
     def save(_source_object, object)

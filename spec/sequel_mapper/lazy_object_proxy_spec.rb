@@ -3,8 +3,15 @@ require "spec_helper"
 require "sequel_mapper/lazy_object_proxy"
 
 RSpec.describe LazyObjectProxy do
-  subject(:proxy) { LazyObjectProxy.new(object_loader) }
+  subject(:proxy) {
+    LazyObjectProxy.new(
+      object_loader,
+      known_fields,
+    )
+  }
 
+  let(:id) { double(:id) }
+  let(:known_fields) { { id: id } }
   let(:object_loader)   { double(:object_loader, call: proxied_object) }
   let(:proxied_object)  { double(:proxied_object, name: name) }
   let(:name)            { double(:name) }
@@ -79,6 +86,54 @@ RSpec.describe LazyObjectProxy do
 
       it "returns true" do
         expect(proxy).to be_loaded
+      end
+    end
+  end
+
+  describe "known fields" do
+    context "when fields are known before load (such as from foreign key)" do
+      it "does not load the object when that field is accessed" do
+        proxy.id
+
+        expect(proxy).not_to be_loaded
+      end
+
+      it "returns the given value" do
+        expect(proxy.id).to be(id)
+      end
+    end
+  end
+
+  describe "#respond_to?" do
+    context "when method corresponds to a known field" do
+      it "does not the load the object" do
+        proxy.respond_to?(:id)
+
+        expect(proxy).not_to be_loaded
+      end
+
+      it "repsonds to the method" do
+        expect(proxy).to respond_to(:id)
+      end
+    end
+
+    context "when the method is not a known field" do
+      it "loads the object" do
+        proxy.respond_to?(:something_arbitrary)
+
+        expect(proxy).to be_loaded
+      end
+
+      context "when lazy proxied object does respond to the method" do
+        it "responds to the method" do
+          expect(proxy).to respond_to(:name)
+        end
+      end
+
+      context "when lazy proxied object does not respond to the method" do
+        it "does not respond to the method" do
+          expect(proxy).not_to respond_to(:something_arbitrary)
+        end
       end
     end
   end

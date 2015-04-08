@@ -1,35 +1,38 @@
 require "delegate"
 
-class LazyObjectProxy < SimpleDelegator
-  def initialize(object_loader)
+class LazyObjectProxy
+  def initialize(object_loader, known_fields)
     @object_loader = object_loader
-    @loaded = false
+    @known_fields = known_fields
+    @lazy_object = nil
   end
+
+  attr_reader :object_loader, :known_fields
+  private     :object_loader, :known_fields
 
   def method_missing(method_id, *args, &block)
-    __load_object__
-
-    super
-  end
-
-  def __getobj__
-    __load_object__
-    super
+    if args.empty? && known_fields.include?(method_id)
+      known_fields.fetch(method_id)
+    else
+      lazy_object.public_send(method_id, *args, &block)
+    end
   end
 
   def loaded?
-    !!@loaded
+    !!@lazy_object
+  end
+
+  def __getobj__
+    lazy_object
   end
 
   private
 
-  def __load_object__
-    __setobj__(@object_loader.call).tap {
-      mark_as_loaded
-    } unless loaded?
+  def respond_to_missing?(method_id, _include_private = false)
+    known_fields.include?(method_id) || lazy_object.respond_to?(method_id)
   end
 
-  def mark_as_loaded
-    @loaded = true
+  def lazy_object
+    @lazy_object ||= object_loader.call
   end
 end
