@@ -15,29 +15,36 @@ RSpec.describe SequelMapper::QueryableLazyDatasetLoader do
   let(:row2) { double(:row2) }
   let(:object1) { double(:object1) }
   let(:object2) { double(:object2) }
-  let(:collection_size) { 2 }
+  let(:row_object_map) {
+    {
+      row1 => object1,
+      row2 => object2,
+    }
+  }
+  let(:collection_size) { row_object_map.size }
 
   let(:database_enum) { [row1, row2].each.lazy }
 
   let(:mapper) { double(:mapper) }
-  let(:identity_func) { ->(x){x} }
 
-  def loader
-    @loader ||= begin
-      @loader_count = 0
+  let(:loader_count) { @loader_count }
+  let(:loader) {
+    @loader_count = 0
 
-      ->(_) {
-        @loader_count += 1
-        [ object1, object2 ].fetch(@loader_count - 1)
-      }
-    end
-  end
-
-  def loader_count
-    @loader_count
-  end
+    ->(row) {
+      @loader_count = @loader_count + 1
+      row_object_map.fetch(row)
+    }
+  }
 
   describe "#each" do
+    it "iterates over all elements of the database_enum" do
+      elements = []
+      proxy.each { |x| elements.push(x) }
+
+      expect(elements).to eq([object1, object2])
+    end
+
     context "when the collection is not loaded" do
       it "loads the collection on first call" do
         proxy.each { |x| x }
@@ -52,9 +59,9 @@ RSpec.describe SequelMapper::QueryableLazyDatasetLoader do
       end
 
       it "does not load a second time" do
-        proxy.each { |x| x }
-
-        expect(loader_count).to eq(collection_size)
+        expect {
+          proxy.each { |x| x }
+        }.not_to change { loader_count }
       end
     end
 
