@@ -7,12 +7,14 @@ RSpec.shared_context "mapper setup" do
   User = Struct.new(:id, :first_name, :last_name, :email, :posts, :comments)
   Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
   Comment = Struct.new(:id, :post, :commenter, :body)
+  Category = Struct.new(:id, :name, :posts)
 
   let(:factories) {
     {
       users: SequelMapper::StructFactory.new(User),
       posts: SequelMapper::StructFactory.new(Post),
       comments: SequelMapper::StructFactory.new(Comment),
+      categories: SequelMapper::StructFactory.new(Category),
     }
   }
 
@@ -80,6 +82,15 @@ RSpec.shared_context "mapper setup" do
             foreign_key: :post_id,
             key: :id,
           },
+          categories: {
+            type: :many_to_many,
+            mapping_name: :categories,
+            key: :id,
+            foreign_key: :post_id,
+            association_foreign_key: :category_id,
+            association_key: :id,
+            through_namespace: :categories_to_posts,
+          },
         },
       },
 
@@ -97,6 +108,27 @@ RSpec.shared_context "mapper setup" do
             mapping_name: :users,
             key: :id,
             foreign_key: :commenter_id,
+          },
+        },
+      },
+
+      categories: {
+        namespace: :categories,
+        fields: [
+          :id,
+          :name,
+        ],
+        factory: :comment,
+        serializer: :default,
+        associations: {
+          posts: {
+            type: :many_to_many,
+            mapping_name: :posts,
+            key: :id,
+            foreign_key: :category_id,
+            association_foreign_key: :post_id,
+            association_key: :id,
+            through_namespace: :categories_to_posts,
           },
         },
       },

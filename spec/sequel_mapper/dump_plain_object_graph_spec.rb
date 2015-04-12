@@ -25,6 +25,9 @@ RSpec.describe "Dump a plain object graph to flat data" do
       comments: [
         biscuits_post_comment,
       ],
+      categories: [
+        cat_biscuits_category,
+      ],
     )
    }
 
@@ -44,8 +47,16 @@ RSpec.describe "Dump a plain object graph to flat data" do
     )
   }
 
+  let(:cat_biscuits_category) {
+    factories.fetch(:categories).call(
+      id: "categories/1",
+      name: "Cat biscuits",
+    )
+  }
+
   def annoying_circluar_bit
     biscuits_post_comment.commenter = hansel
+    cat_biscuits_category.posts = [ biscuits_post ]
   end
 
   before do
@@ -116,6 +127,34 @@ RSpec.describe "Dump a plain object graph to flat data" do
             commenter_id: "users/1",
           },
         ),
+      )
+    end
+
+    it "dumps the categories" do
+      expect(
+        mappers[:users].dump(hansel)
+      ).to include(
+        SequelMapper::NamespacedRecord.new(
+          :categories,
+          {
+            id: "categories/1",
+            name: "Cat biscuits",
+          },
+        )
+      )
+    end
+
+    it "dumps the 'join table' records" do
+      expect(
+        mappers[:users].dump(hansel)
+      ).to include(
+        SequelMapper::NamespacedRecord.new(
+          :categories_to_posts,
+          {
+            category_id: "categories/1",
+            post_id: "posts/1",
+          },
+        )
       )
     end
 

@@ -44,6 +44,8 @@ module SequelMapper
           dump_one_to_many(mapper, associated_objects, config, stack + [current_record])
         when :many_to_one
           dump_many_to_one(mapper, associated_objects, config, stack + [current_record])
+        when :many_to_many
+          dump_many_to_many(mapper, associated_objects, config, stack + [current_record])
         else
           raise "Association type not supported"
         end
@@ -76,6 +78,21 @@ module SequelMapper
         associated_record,
         stack.last.merge(foreign_key),
       ]
+    end
+
+    def dump_many_to_many(mapper, associated, config, stack)
+      (associated || []).flat_map { |associated_record|
+        this_record = mapper.dump(associated_record, {}, stack).first
+
+        [
+          this_record,
+          NamespacedRecord.new(
+            config.fetch(:through_namespace),
+            config.fetch(:foreign_key) => stack.last.fetch(config.fetch(:key)),
+            config.fetch(:association_foreign_key) => this_record.fetch(config.fetch(:association_key)),
+          ),
+        ]
+      }.flatten(1)
     end
 
     def mapping
