@@ -158,8 +158,15 @@ RSpec.describe "Dump a plain object graph to flat data" do
       )
     end
 
-    xit "duplicates the root object (but that's ok)" do
+    it "duplicates the root object (but that's ok)" do
       dupe = mappers[:users].dump(hansel)
+        .group_by { |x| x }
+        .map { |k, v| [k, v.length] }
+        .select { |o, count| count > 1 }
+        .first
+        .first
+
+      expect(dupe.fetch(:id)).to eq("users/1")
     end
   end
 end
