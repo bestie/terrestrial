@@ -3,28 +3,35 @@ require "forwardable"
 module SequelMapper
   class NamespacedRecord
     extend Forwardable
-    def initialize(namespace, record)
-      @namespace, @record = namespace, record
+    def initialize(namespace, identity, data = {})
+      @namespace = namespace
+      @identity = identity
+      @data = data
     end
 
-    attr_reader :namespace, :record
+    attr_reader :namespace, :identity
 
-    def_delegators :record, :fetch
+    def_delegators :data, :fetch, :to_h
+
+    def data
+      @data.merge(identity)
+    end
 
     def merge(hash)
       self.class.new(
         namespace,
-        record.merge(hash),
+        identity,
+        data.merge(hash),
       )
     end
 
     def each(&block)
-      record.each(&block)
+      data.each(&block)
       self
     end
 
     def to_a
-      [namespace, record]
+      [namespace, data]
     end
 
     def ==(other)
