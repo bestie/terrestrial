@@ -2,9 +2,11 @@ require "sequel_mapper/namespaced_record"
 
 module SequelMapper
   class Mapper
-    def initialize(namespace:, factory:, serializer:, fields:, associations:, dataset:, mappers:)
+    def initialize(datastore:, mapping_name:, namespace:, primary_key:, serializer:, fields:, associations:, dataset:, mappers:)
+      @datastore = datastore
+      @mapping_name = mapping_name
       @namespace = namespace
-      @factory = factory
+      @primary_key = primary_key
       @serializer = serializer
       @fields = fields
       @associations = associations
@@ -12,23 +14,31 @@ module SequelMapper
       @mappers = mappers
     end
 
-    attr_reader :namespace, :factory, :serializer, :fields, :associations, :dataset, :mappers
-    private     :namespace, :factory, :serializer, :fields, :associations, :dataset, :mappers
+    attr_reader :datastore
+    private     :datastore
 
-    def where(criteria)
-      dataset
-        .where(criteria)
-        .map { |row| factory.call(row) }
+    # For serialization
+    attr_reader :mapping_name, :namespace, :primary_key, :serializer, :fields, :associations, :dataset, :mappers
+    private     :mapping_name, :namespace, :primary_key, :serializer, :fields, :associations, :dataset, :mappers
+
+    def save(graph)
+      dump(graph).each do |record|
+        upsert(namespace, record)
+      end
+
+      self
     end
 
+    # TODO Move into another object, GraphSerializer perhaps
     def dump(object, foreign_key = {}, stack = [])
       serialized_record = serializer.call(object)
 
       current_record = NamespacedRecord.new(
         namespace,
+        record_identity(serialized_record),
         serialized_record
           .select { |k, _v| fields.include?(k) }
-          .merge(foreign_key)
+          .merge(foreign_key),
       )
 
       if stack.include?(current_record)
@@ -50,6 +60,19 @@ module SequelMapper
           raise "Association type not supported"
         end
       }
+    end
+
+    private
+
+    def upsert(namespace, record)
+      # TODO the record must also carry its primary key field name
+      existing = datastore[record.namespace].where(record.identity)
+
+      if existing.empty?
+        datastore[record.namespace].insert(record.to_h)
+      else
+        existing.update(record.to_h)
+      end
     end
 
     # TODO: remove use of stack.last, doesn't communicate meaning very well
@@ -88,15 +111,21 @@ module SequelMapper
           this_record,
           NamespacedRecord.new(
             config.fetch(:through_namespace),
-            config.fetch(:foreign_key) => stack.last.fetch(config.fetch(:key)),
-            config.fetch(:association_foreign_key) => this_record.fetch(config.fetch(:association_key)),
+            {
+              config.fetch(:foreign_key) => stack.last.fetch(config.fetch(:key)),
+              config.fetch(:association_foreign_key) => this_record.fetch(config.fetch(:association_key)),
+            },
           ),
         ]
       }.flatten(1)
     end
 
-    def mapping
-      @mapping ||= mappers.fetch(mapping_name)
+    def record_identity(record)
+      Hash[
+        primary_key.map { |field|
+          [field, record.fetch(field)]
+        }
+      ]
     end
   end
 end
