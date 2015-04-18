@@ -1,41 +1,23 @@
 require "sequel_mapper/mapper"
-require "sequel_mapper/serializer"
 require "sequel_mapper/dataset"
-require "sequel_mapper/struct_factory"
+require "support/object_graph_setup"
 
 RSpec.shared_context "mapper setup" do
-  User = Struct.new(:id, :first_name, :last_name, :email, :posts, :comments)
-  Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
-  Comment = Struct.new(:id, :post, :commenter, :body)
-  Category = Struct.new(:id, :name, :posts)
-
-  let(:factories) {
-    {
-      users: SequelMapper::StructFactory.new(User),
-      posts: SequelMapper::StructFactory.new(Post),
-      comments: SequelMapper::StructFactory.new(Comment),
-      categories: SequelMapper::StructFactory.new(Category),
-    }
-  }
-
-  let(:serializer) {
-    ->(fields) {
-      ->(object) {
-        SequelMapper::Serializer.new(fields, object).to_h
-      }
-    }
-  }
+  include_context "object graph setup"
 
   let(:mappers) {
     registry = {}
 
     configs.each { |name, config|
       registry[name] = SequelMapper::Mapper.new(
+        mapping_name: name,
         namespace: config.fetch(:namespace),
-        dataset: SequelMapper::Dataset.new([]),
-        factory: factories.fetch(name),
-        serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
         fields: config.fetch(:fields),
+        primary_key: config.fetch(:primary_key),
+
+        datastore: datastore,
+        dataset: SequelMapper::Dataset.new([]),
+        serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
         associations: config.fetch(:associations),
         mappers: registry,
       )
@@ -48,6 +30,7 @@ RSpec.shared_context "mapper setup" do
     {
       users: {
         namespace: :users,
+        primary_key: [:id],
         fields: [
           :id,
           :first_name,
@@ -68,6 +51,7 @@ RSpec.shared_context "mapper setup" do
 
       posts: {
         namespace: :posts,
+        primary_key: [:id],
         fields: [
           :id,
           :subject,
@@ -96,6 +80,7 @@ RSpec.shared_context "mapper setup" do
 
       comments: {
         namespace: :comments,
+        primary_key: [:id],
         fields: [
           :id,
           :body,
@@ -114,6 +99,7 @@ RSpec.shared_context "mapper setup" do
 
       categories: {
         namespace: :categories,
+        primary_key: [:id],
         fields: [
           :id,
           :name,
