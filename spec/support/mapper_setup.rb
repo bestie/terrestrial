@@ -1,4 +1,5 @@
-require "sequel_mapper/mapper"
+require "sequel_mapper/mapper_facade"
+require "sequel_mapper/relation_mapping"
 require "sequel_mapper/dataset"
 require "support/object_graph_setup"
 
@@ -6,20 +7,31 @@ RSpec.shared_context "mapper setup" do
   include_context "object graph setup"
 
   let(:mappers) {
+    {
+      users: SequelMapper::MapperFacade.new(
+        mappings: mappings,
+        mapping_name: :users,
+        datastore: datastore,
+        dataset: datastore[:users],
+      )
+    }
+  }
+
+  let(:mappings) {
     registry = {}
 
     configs.each { |name, config|
-      registry[name] = SequelMapper::Mapper.new(
-        mapping_name: name,
+      registry[name] = SequelMapper::RelationMapping.new(
+        name: name,
         namespace: config.fetch(:namespace),
         fields: config.fetch(:fields),
         primary_key: config.fetch(:primary_key),
 
-        datastore: datastore,
-        dataset: SequelMapper::Dataset.new([]),
         serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
         associations: config.fetch(:associations),
-        mappers: registry,
+        # mappers: registry,
+        # datastore: datastore,
+        # dataset: SequelMapper::Dataset.new([]),
       )
     }
 
