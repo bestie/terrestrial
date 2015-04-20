@@ -3,6 +3,8 @@ require "support/sequel_test_support"
 RSpec.shared_context "sequel persistence setup" do
   include SequelMapper::SequelTestSupport
 
+  before { truncate_tables }
+
   let(:datastore) {
     db_connection.tap { |db|
       # The query_counter will let us make assertions about how efficiently

@@ -29,6 +29,7 @@ RSpec.shared_context "mapper setup" do
             primary_key: config.fetch(:primary_key),
             serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
             associations: config.fetch(:associations),
+            factory: factories.fetch(name),
           )
         ]
       }
