@@ -40,7 +40,7 @@ RSpec.describe "Graph traversal" do
           .posts.first
           .comments.first
           .body
-      ).to eq("Trololol")
+      ).to eq("oh noes")
     end
 
     describe "lazy loading" do
@@ -54,8 +54,10 @@ RSpec.describe "Graph traversal" do
     end
 
     it "maps belongs to assocations" do
-      expect(user_query.first.posts.first.author.id)
-        .to eq("users/1")
+      post = user.posts.first
+      author = post.author
+
+      expect(author.id).to eq("users/1")
     end
 
     describe "identity map" do
@@ -72,10 +74,10 @@ RSpec.describe "Graph traversal" do
 
     it "maps has many to many associations as has many through" do
       expect(user_query.first.posts.first.categories.map(&:id))
-        .to match_array(["category/1", "category/2"])
+        .to match_array(["categories/1", "categories/2"])
 
       expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
-        .to match_array(["post/1", "post/2"])
+        .to match_array(["posts/1", "posts/2"])
     end
   end
 end
