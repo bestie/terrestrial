@@ -18,24 +18,21 @@ RSpec.shared_context "mapper setup" do
   }
 
   let(:mappings) {
-    registry = {}
-
-    configs.each { |name, config|
-      registry[name] = SequelMapper::RelationMapping.new(
-        name: name,
-        namespace: config.fetch(:namespace),
-        fields: config.fetch(:fields),
-        primary_key: config.fetch(:primary_key),
-
-        serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
-        associations: config.fetch(:associations),
-        # mappers: registry,
-        # datastore: datastore,
-        # dataset: SequelMapper::Dataset.new([]),
-      )
-    }
-
-    registry
+    Hash[
+      configs.map { |name, config|
+        [
+          name,
+          SequelMapper::RelationMapping.new(
+            name: name,
+            namespace: config.fetch(:namespace),
+            fields: config.fetch(:fields),
+            primary_key: config.fetch(:primary_key),
+            serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
+            associations: config.fetch(:associations),
+          )
+        ]
+      }
+    ]
   }
 
   let(:configs) {
