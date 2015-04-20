@@ -24,27 +24,21 @@ module SequelMapper
 
     def where(query)
       dataset.map { |record|
-        mapping.factory.call(
-          record.merge(get_associations(mapping, record))
-        )
+        graph_loader.call(mapping_name, record)
       }
     end
 
     private
 
     def get_associations(mapping, record)
-      mapping.associations.map { |association_name, assoc_config|
-        case assoc_config.fetch(:type)
-        when :one_to_many
-          require "pry"; binding.pry
-        else
-          rasie "Association type not supported"
-        end
-      }
     end
 
     def graph_serializer
       GraphSerializer.new(mappings: mappings)
+    end
+
+    def graph_loader
+      GraphLoader.new(mappings: mappings)
     end
 
     def mapping
@@ -59,6 +53,53 @@ module SequelMapper
       else
         existing.update(record.to_h)
       end
+    end
+  end
+
+  class GraphLoader
+    def initialize(mappings: mappings)
+      @mappings = mappings
+    end
+
+    attr_reader :mappings
+
+    def call(mapping_name, record)
+      mapping = mappings.fetch(mapping_name)
+
+      associations = mapping.associations.map { |association_name, assoc_config|
+        [
+          association_name,
+          case assoc_config.fetch(:type)
+          when :one_to_many
+            load_one_to_many(record, association_name, assoc_config)
+          when :many_to_many
+            []
+          when :many_to_one
+            []
+          else
+            raise "Association type not supported"
+          end
+        ]
+      }
+
+      mapping.factory.call(record.merge(Hash[associations]))
+    end
+
+    private
+
+    def load_one_to_many(record, name, config)
+      mapping = mappings.fetch(config.fetch(:mapping_name))
+      foreign_key_value = record.fetch(config.fetch(:key))
+      foreign_key_field = config.fetch(:foreign_key)
+
+      config.fetch(:proxy_factory).call(
+        query: ->(datastore) {
+          datastore[mapping.namespace].where(foreign_key_field => foreign_key_value)
+        },
+        loader: ->(record) {
+          call(config.fetch(:mapping_name), record)
+        },
+      )
     end
   end
 end

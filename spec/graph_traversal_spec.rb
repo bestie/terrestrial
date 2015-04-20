@@ -31,7 +31,7 @@ RSpec.describe "Graph traversal" do
     it "handles has_many associations" do
       post = user.posts.first
 
-      expect(post.subject).to eq("Cat biscuits")
+      expect(post.subject).to eq("Biscuits")
     end
 
     it "handles nested has_many associations" do

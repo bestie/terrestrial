@@ -1,5 +1,6 @@
 require "sequel_mapper/mapper_facade"
 require "sequel_mapper/relation_mapping"
+require "sequel_mapper/queryable_lazy_dataset_loader"
 require "sequel_mapper/dataset"
 require "support/object_graph_setup"
 
@@ -36,6 +37,16 @@ RSpec.shared_context "mapper setup" do
     ]
   }
 
+  let(:has_many_proxy_factory) {
+    ->(query:, loader:) {
+      SequelMapper::QueryableLazyDatasetLoader.new(
+        query.call(datastore),
+        loader,
+        :this_should_be_the_mapper,
+      )
+    }
+  }
+
   let(:configs) {
     {
       users: {
@@ -55,6 +66,7 @@ RSpec.shared_context "mapper setup" do
             mapping_name: :posts,
             foreign_key: :author_id,
             key: :id,
+            proxy_factory: has_many_proxy_factory,
           }
         },
       },
@@ -75,6 +87,7 @@ RSpec.shared_context "mapper setup" do
             mapping_name: :comments,
             foreign_key: :post_id,
             key: :id,
+            proxy_factory: has_many_proxy_factory,
           },
           categories: {
             type: :many_to_many,
@@ -84,6 +97,7 @@ RSpec.shared_context "mapper setup" do
             association_foreign_key: :category_id,
             association_key: :id,
             through_namespace: :categories_to_posts,
+            proxy_factory: has_many_proxy_factory,
           },
         },
       },
@@ -125,6 +139,7 @@ RSpec.shared_context "mapper setup" do
             association_foreign_key: :post_id,
             association_key: :id,
             through_namespace: :categories_to_posts,
+            proxy_factory: has_many_proxy_factory,
           },
         },
       },
