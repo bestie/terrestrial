@@ -22,10 +22,33 @@ module SequelMapper
       self
     end
 
+    def where(query)
+      dataset.map { |record|
+        mapping.factory.call(
+          record.merge(get_associations(mapping, record))
+        )
+      }
+    end
+
     private
+
+    def get_associations(mapping, record)
+      mapping.associations.map { |association_name, assoc_config|
+        case assoc_config.fetch(:type)
+        when :one_to_many
+          require "pry"; binding.pry
+        else
+          rasie "Association type not supported"
+        end
+      }
+    end
 
     def graph_serializer
       GraphSerializer.new(mappings: mappings)
+    end
+
+    def mapping
+      mappings.fetch(mapping_name)
     end
 
     def upsert(record)

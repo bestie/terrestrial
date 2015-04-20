@@ -1,35 +1,42 @@
 require "spec_helper"
-
+require "support/mapper_setup"
+require "support/sequel_persistence_setup"
+require "support/seed_data_setup"
 require "sequel_mapper"
-require "support/database_fixture"
 
 RSpec.describe "Graph traversal" do
-  include SequelMapper::DatabaseFixture
+  include_context "mapper setup"
+  include_context "sequel persistence setup"
+  include_context "seed data setup"
+
 
   describe "assocaitions" do
-    subject(:mapper) { mapper_fixture }
+    subject(:mapper) { mappers.fetch(:users) }
 
     let(:user_query) {
-      mapper.where(id: "user/1")
+      mapper.where(id: "users/1")
     }
 
+    let(:user) { user_query.first }
+
     it "finds data via the storage adapter" do
-      expect(user_query.count).to be 1
+      expect(user_query.count).to eq(1)
     end
 
     it "maps the raw data from the store into domain objects" do
-      expect(user_query.first.id).to eq("user/1")
-      expect(user_query.first.first_name).to eq("Stephen")
+      expect(user_query.first.id).to eq("users/1")
+      expect(user_query.first.first_name).to eq("Hansel")
     end
 
     it "handles has_many associations" do
-      expect(user_query.first.posts.first.subject)
-        .to eq("Object mapping")
+      post = user.posts.first
+
+      expect(post.subject).to eq("Cat biscuits")
     end
 
     it "handles nested has_many associations" do
       expect(
-        user_query.first
+        user
           .posts.first
           .comments.first
           .body
@@ -48,7 +55,7 @@ RSpec.describe "Graph traversal" do
 
     it "maps belongs to assocations" do
       expect(user_query.first.posts.first.author.id)
-        .to eq("user/1")
+        .to eq("users/1")
     end
 
     describe "identity map" do

@@ -6,12 +6,33 @@ module SequelMapper
   end
 
   def mapper(datastore:, config:, dirty_map: {})
-    MapperRegistry.new(
-      mapper_factory: RootMapper.method(:new),
+    SequelMapper::MapperFacade.new(
+      mappings: config,
+      mapping_name: :users,
       datastore: datastore,
-      config: config,
-      dirty_map: dirty_map,
+      dataset: datastore[:users],
     )
+  end
+
+  private
+
+  def config_to_mappings(config)
+    Hash[
+      configs.map { |name, config|
+        [
+          name,
+          SequelMapper::RelationMapping.new(
+            name: name,
+            namespace: config.fetch(:namespace),
+            fields: config.fetch(:fields),
+            primary_key: config.fetch(:primary_key),
+            serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
+            associations: config.fetch(:associations),
+            factory: config.fetch(factory),
+          )
+        ]
+      }
+    ]
   end
 
   require "fetchable"
@@ -50,5 +71,4 @@ module SequelMapper
   end
 end
 
-require "sequel_mapper/root_mapper"
-require "sequel_mapper/configurations/conventional_configuration"
+require "sequel_mapper/mapper_facade"
