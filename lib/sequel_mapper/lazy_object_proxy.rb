@@ -1,6 +1,6 @@
-require "delegate"
+SequelMapper ||= Module.new
 
-class LazyObjectProxy
+class SequelMapper::LazyObjectProxy
   def initialize(object_loader, known_fields)
     @object_loader = object_loader
     @known_fields = known_fields
