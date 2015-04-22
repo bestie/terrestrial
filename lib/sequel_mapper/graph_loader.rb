@@ -2,9 +2,10 @@ module SequelMapper
   class GraphLoader
     def initialize(mappings: mappings)
       @mappings = mappings
+      @identity_map = {}
     end
 
-    attr_reader :mappings
+    attr_reader :mappings, :identity_map
 
     def call(mapping_name, record)
       mapping = mappings.fetch(mapping_name)
@@ -25,7 +26,9 @@ module SequelMapper
         ]
       }
 
-      mapping.factory.call(record.merge(Hash[associations]))
+      identity_mapped_loader(mapping) { |record|
+        mapping.factory.call(record.merge(Hash[associations]))
+      }.call(record)
     end
 
     private
@@ -39,7 +42,7 @@ module SequelMapper
         query: ->(datastore) {
           datastore[mapping.namespace].where(foreign_key_field => foreign_key_value)
         },
-        loader: ->(record) {
+        loader: identity_mapped_loader(mapping) { |record|
           call(config.fetch(:mapping_name), record)
         },
       )
@@ -54,7 +57,7 @@ module SequelMapper
         query: ->(datastore) {
           datastore[mapping.namespace].where(key_field => foreign_key_value).first
         },
-        loader: ->(record) {
+        loader: identity_mapped_loader(mapping) { |record|
           call(config.fetch(:mapping_name), record)
         },
         preloaded_data: {
@@ -76,10 +79,26 @@ module SequelMapper
               .where(foreign_key_field => foreign_key_value)
           )
         },
-        loader: ->(record) {
+        loader: identity_mapped_loader(mapping) { |record|
           call(config.fetch(:mapping_name), record)
         },
       )
+    end
+
+    def identity_mapped_loader(mapping, &loader)
+      primary_key_fields = mapping.primary_key
+
+      ->(record) {
+        primary_key = primary_key_fields.map { |f| record.fetch(f) }
+        identity_map_key = [mapping.namespace, primary_key]
+
+        identity_map.fetch(identity_map_key) {
+          identity_map.store(
+            identity_map_key,
+            loader.call(record),
+          )
+        }
+      }
     end
   end
 end
