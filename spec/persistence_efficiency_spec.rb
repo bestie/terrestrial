@@ -1,16 +1,19 @@
-
 require "spec_helper"
 
+require "support/mapper_setup"
+require "support/sequel_persistence_setup"
+require "support/seed_data_setup"
 require "sequel_mapper"
-require "support/database_fixture"
 
-RSpec.describe "Graph persistence" do
-  include SequelMapper::DatabaseFixture
+RSpec.describe "Graph persistence efficiency" do
+  include_context "mapper setup"
+  include_context "sequel persistence setup"
+  include_context "seed data setup"
 
-  subject(:mapper) { mapper_fixture }
+  let(:mapper) { user_mapper }
 
   let(:user) {
-    mapper.where(id: "user/1").first
+    mapper.where(id: "users/1").first
   }
 
   context "when modifying the root node" do

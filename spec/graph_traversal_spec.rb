@@ -1,4 +1,5 @@
 require "spec_helper"
+
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
@@ -9,9 +10,8 @@ RSpec.describe "Graph traversal" do
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-
   describe "assocaitions" do
-    subject(:mapper) { mappers.fetch(:users) }
+    subject(:mapper) { user_mapper }
 
     let(:user_query) {
       mapper.where(id: "users/1")

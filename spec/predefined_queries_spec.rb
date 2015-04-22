@@ -1,12 +1,16 @@
 require "spec_helper"
 
+require "support/mapper_setup"
+require "support/sequel_persistence_setup"
+require "support/seed_data_setup"
 require "sequel_mapper"
-require "support/database_fixture"
 
 RSpec.describe "Predefined queries" do
-  include SequelMapper::DatabaseFixture
+  include_context "mapper setup"
+  include_context "sequel persistence setup"
+  include_context "seed data setup"
 
-  subject(:users) { mapper_fixture }
+  subject(:users) { user_mapper }
 
   context "on the top level maper" do
     context "query is defined with a block" do

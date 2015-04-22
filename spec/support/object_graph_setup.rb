@@ -12,10 +12,10 @@ RSpec.shared_context "object graph setup" do
     cat_biscuits_category.posts = [ biscuits_post ]
   end
 
-  User = Struct.new(:id, :first_name, :last_name, :email, :posts, :comments)
-  Post = Struct.new(:id, :author, :subject, :body, :comments, :categories)
-  Comment = Struct.new(:id, :post, :commenter, :body)
-  Category = Struct.new(:id, :name, :posts)
+  User ||= Struct.new(:id, :first_name, :last_name, :email, :posts, :comments)
+  Post ||= Struct.new(:id, :author, :subject, :body, :comments, :categories)
+  Comment ||= Struct.new(:id, :post, :commenter, :body)
+  Category ||= Struct.new(:id, :name, :posts)
 
   let(:factories) {
     {

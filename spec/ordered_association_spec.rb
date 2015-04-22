@@ -1,13 +1,17 @@
 require "spec_helper"
 
+require "support/mapper_setup"
+require "support/sequel_persistence_setup"
+require "support/seed_data_setup"
 require "sequel_mapper"
-require "support/database_fixture"
 
-RSpec.describe "Ordered associations" do
-  include SequelMapper::DatabaseFixture
+RSpec.xdescribe "Ordered associations" do
+  include_context "mapper setup"
+  include_context "sequel persistence setup"
+  include_context "seed data setup"
 
   context "of type `has_many`" do
-    subject(:mapper) { mapper_fixture }
+    subject(:mapper) { user_mapper }
 
     let(:user) {
       mapper.where(id: "user/1").first

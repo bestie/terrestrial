@@ -10,12 +10,16 @@ RSpec.shared_context "mapper setup" do
 
   let(:mappers) {
     {
-      users: SequelMapper.mapper(
-        config: mappings,
-        name: :users,
-        datastore: datastore,
-      )
+      users: user_mapper,
     }
+  }
+
+  let(:user_mapper) {
+    SequelMapper.mapper(
+      config: mappings,
+      name: :users,
+      datastore: datastore,
+    )
   }
 
   let(:mappings) {
