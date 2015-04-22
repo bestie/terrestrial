@@ -3,15 +3,16 @@ require "sequel_mapper/graph_loader"
 
 module SequelMapper
   class MapperFacade
-    def initialize(mappings:, mapping_name:, datastore:, dataset:)
+    def initialize(mappings:, mapping_name:, datastore:, dataset:, identity_map:)
       @mappings = mappings
       @mapping_name = mapping_name
       @datastore = datastore
       @dataset = dataset
+      @identity_map = identity_map
     end
 
-    attr_reader :mappings, :mapping_name, :datastore, :dataset
-    private     :mappings, :mapping_name, :datastore, :dataset
+    attr_reader :mappings, :mapping_name, :datastore, :dataset, :identity_map
+    private     :mappings, :mapping_name, :datastore, :dataset, :identity_map
 
     def save(graph)
       record_dump = graph_serializer.call(mapping_name, graph)
@@ -31,15 +32,15 @@ module SequelMapper
 
     private
 
-    def get_associations(mapping, record)
-    end
-
     def graph_serializer
       GraphSerializer.new(mappings: mappings)
     end
 
     def graph_loader
-      GraphLoader.new(mappings: mappings)
+      GraphLoader.new(
+        mappings: mappings,
+        object_load_pipeline: identity_map,
+      )
     end
 
     def mapping

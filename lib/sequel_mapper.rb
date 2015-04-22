@@ -5,12 +5,16 @@ module SequelMapper
     Configurations::ConventionalConfiguration.new(database_connection)
   end
 
-  def mapper(datastore:, config:, dirty_map: {})
+  def mapper(config:, name:, datastore:)
+    dataset = datastore[config.fetch(:users).namespace]
+    identity_map = IdentityMap.new({})
+
     SequelMapper::MapperFacade.new(
       mappings: config,
-      mapping_name: :users,
+      mapping_name: name,
       datastore: datastore,
-      dataset: datastore[:users],
+      dataset: dataset,
+      identity_map: identity_map,
     )
   end
 
@@ -33,6 +37,31 @@ module SequelMapper
         ]
       }
     ]
+  end
+
+  class IdentityMap
+    def initialize(storage)
+      @storage = storage
+    end
+
+    attr_reader :storage
+    private     :storage
+
+    def call(mapping, &not_already_loaded)
+      primary_key_fields = mapping.primary_key
+
+      ->(record) {
+        primary_key = primary_key_fields.map { |f| record.fetch(f) }
+        identity_map_key = [mapping.namespace, primary_key]
+
+        storage.fetch(identity_map_key) {
+          storage.store(
+            identity_map_key,
+            not_already_loaded.call(record),
+          )
+        }
+      }
+    end
   end
 
   require "fetchable"

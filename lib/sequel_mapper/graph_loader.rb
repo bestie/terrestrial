@@ -1,11 +1,11 @@
 module SequelMapper
   class GraphLoader
-    def initialize(mappings: mappings)
+    def initialize(mappings:, object_load_pipeline:)
       @mappings = mappings
-      @identity_map = {}
+      @object_load_pipeline = object_load_pipeline
     end
 
-    attr_reader :mappings, :identity_map
+    attr_reader :mappings, :object_load_pipeline
 
     def call(mapping_name, record)
       mapping = mappings.fetch(mapping_name)
@@ -26,7 +26,7 @@ module SequelMapper
         ]
       }
 
-      identity_mapped_loader(mapping) { |record|
+      object_load_pipeline.call(mapping) { |record|
         mapping.factory.call(record.merge(Hash[associations]))
       }.call(record)
     end
@@ -42,7 +42,7 @@ module SequelMapper
         query: ->(datastore) {
           datastore[mapping.namespace].where(foreign_key_field => foreign_key_value)
         },
-        loader: identity_mapped_loader(mapping) { |record|
+        loader: object_load_pipeline.call(mapping) { |record|
           call(config.fetch(:mapping_name), record)
         },
       )
@@ -57,7 +57,7 @@ module SequelMapper
         query: ->(datastore) {
           datastore[mapping.namespace].where(key_field => foreign_key_value).first
         },
-        loader: identity_mapped_loader(mapping) { |record|
+        loader: object_load_pipeline.call(mapping) { |record|
           call(config.fetch(:mapping_name), record)
         },
         preloaded_data: {
@@ -79,26 +79,10 @@ module SequelMapper
               .where(foreign_key_field => foreign_key_value)
           )
         },
-        loader: identity_mapped_loader(mapping) { |record|
+        loader: object_load_pipeline.call(mapping) { |record|
           call(config.fetch(:mapping_name), record)
         },
       )
-    end
-
-    def identity_mapped_loader(mapping, &loader)
-      primary_key_fields = mapping.primary_key
-
-      ->(record) {
-        primary_key = primary_key_fields.map { |f| record.fetch(f) }
-        identity_map_key = [mapping.namespace, primary_key]
-
-        identity_map.fetch(identity_map_key) {
-          identity_map.store(
-            identity_map_key,
-            loader.call(record),
-          )
-        }
-      }
     end
   end
 end
