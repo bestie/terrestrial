@@ -55,21 +55,24 @@ RSpec.describe "Graph traversal" do
 
     it "maps belongs to assocations" do
       post = user.posts.first
-      author = post.author
+      comment = post.comments.first
 
-      expect(author.id).to eq("users/1")
+      expect(comment.commenter.id).to eq("users/1")
     end
 
     describe "identity map" do
       it "always returns (a proxy of) the same object for a given id" do
-        expect(user_query.first.posts.first.author.__getobj__)
-          .to be(user_query.first)
+        post = user.posts.first
+        comment = post.comments.first
+
+        expect(comment.commenter.__getobj__)
+          .to be(user)
       end
     end
 
     it "maps deeply nested belongs to assocations" do
       expect(user_query.first.posts.first.comments.first.commenter.id)
-        .to eq("user/2")
+        .to eq("users/1")
     end
 
     it "maps has many to many associations as has many through" do

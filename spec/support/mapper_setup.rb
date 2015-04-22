@@ -1,6 +1,7 @@
 require "sequel_mapper/mapper_facade"
 require "sequel_mapper/relation_mapping"
 require "sequel_mapper/queryable_lazy_dataset_loader"
+require "sequel_mapper/lazy_object_proxy"
 require "sequel_mapper/dataset"
 require "support/object_graph_setup"
 
@@ -43,6 +44,15 @@ RSpec.shared_context "mapper setup" do
         query.call(datastore),
         loader,
         :this_should_be_the_mapper,
+      )
+    }
+  }
+
+  let(:many_to_one_proxy_factory) {
+    ->(query:, loader:, preloaded_data:) {
+      SequelMapper::LazyObjectProxy.new(
+        ->{ loader.call(query.call(datastore)) },
+        preloaded_data,
       )
     }
   }
@@ -117,6 +127,7 @@ RSpec.shared_context "mapper setup" do
             mapping_name: :users,
             key: :id,
             foreign_key: :commenter_id,
+            proxy_factory: many_to_one_proxy_factory,
           },
         },
       },

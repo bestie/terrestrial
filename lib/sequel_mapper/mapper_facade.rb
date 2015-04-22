@@ -75,7 +75,7 @@ module SequelMapper
           when :many_to_many
             load_many_to_many(record, association_name, assoc_config)
           when :many_to_one
-            []
+            load_many_to_one(record, association_name, assoc_config)
           else
             raise "Association type not supported"
           end
@@ -98,6 +98,24 @@ module SequelMapper
         },
         loader: ->(record) {
           call(config.fetch(:mapping_name), record)
+        },
+      )
+    end
+
+    def load_many_to_one(record, name, config)
+      mapping = mappings.fetch(config.fetch(:mapping_name))
+      foreign_key_value = record.fetch(config.fetch(:foreign_key))
+      key_field = config.fetch(:key)
+
+      config.fetch(:proxy_factory).call(
+        query: ->(datastore) {
+          datastore[mapping.namespace].where(key_field => foreign_key_value).first
+        },
+        loader: ->(record) {
+          call(config.fetch(:mapping_name), record)
+        },
+        preloaded_data: {
+          key_field => foreign_key_value,
         },
       )
     end
