@@ -23,9 +23,9 @@ RSpec.describe "Proxying associations" do
     describe "limiting datastore reads" do
       context "when loading the root node" do
         it "only performs one read" do
-          user
-
-          expect(query_counter.read_count).to eq(1)
+          expect {
+            user
+          }.to change { query_counter.read_count }.by(1)
         end
       end
 
