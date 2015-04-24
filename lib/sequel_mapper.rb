@@ -54,14 +54,20 @@ module SequelMapper
     private     :storage
 
     def load(_mapping, record)
-      # TODO copy the record
-      storage.store(record.identity, record)
+      storage.store(record.identity, deep_dup(record))
+      record
     end
 
     def dirty?(namespace, identity, record)
       loaded_value = storage.fetch(record.identity, :not_found)
 
       loaded_value != record
+    end
+
+    private
+
+    def deep_dup(record)
+      Marshal.load(Marshal.dump(record))
     end
   end
 

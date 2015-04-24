@@ -60,7 +60,9 @@ module SequelMapper
       ->(records) {
         [
           :uniq.to_proc,
+          ->(rs) { puts "After unique filter"; p rs },
           ->(rs) { rs.select { |r| dirty_map.dirty?(r.namespace, r.identity, r) } },
+          ->(rs) { puts "After dirty filter"; p rs },
           ->(rs) { rs.map(&method(:upsert)) },
         ].reduce(records) { |agg, operation|
           operation.call(agg)

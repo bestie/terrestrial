@@ -28,7 +28,7 @@ module SequelMapper
 
       object_load_pipeline.call(mapping) { |record|
         mapping.factory.call(record.merge(Hash[associations]))
-      }.call(record)
+      }.call(record.to_h) # TODO Try removing this #to_h and the other pipeline calls
     end
 
     private

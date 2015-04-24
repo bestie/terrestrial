@@ -41,13 +41,11 @@ module SequelMapper
         .map { |name, config|
           [serialized_record.fetch(name), config]
         }
-        .reject { |associated_object, config|
-          lazy_and_not_loaded?(associated_object)
+        .reject { |associated_objects, config|
+          lazy_and_not_loaded?(associated_objects)
         }
-        .flat_map { |associated_object, config|
+        .flat_map { |associated_objects, config|
           mapping = mappings.fetch(config.fetch(:mapping_name))
-
-          next if lazy_and_not_loaded?(associated_objects)
 
           case config.fetch(:type)
           when :one_to_many
