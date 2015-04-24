@@ -5,7 +5,7 @@ require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "sequel_mapper"
 
-RSpec.describe "Predefined queries" do
+RSpec.xdescribe "Predefined queries" do
   include_context "mapper setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
