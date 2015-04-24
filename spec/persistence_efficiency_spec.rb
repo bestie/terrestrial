@@ -59,17 +59,11 @@ RSpec.describe "Graph persistence efficiency" do
   end
 
   context "when loading many nodes of the graph" do
-    let(:leaf_node) {
-      user.posts.first.comments.first
+    let(:post) {
+      user.posts.first
     }
 
-    before do
-      leaf_node
-    end
-
     context "and modifying an intermediate node" do
-      let(:post) { leaf_node.post }
-
       before do
         post.subject = "MODIFIED"
       end
@@ -82,7 +76,7 @@ RSpec.describe "Graph persistence efficiency" do
     end
 
     context "and modifying a leaf node" do
-      let(:comment) { leaf_node }
+      let(:comment) { post.comments.first }
 
       before do
         comment.body = "UPDATED!"
@@ -96,8 +90,7 @@ RSpec.describe "Graph persistence efficiency" do
     end
 
     context "and modifying both a leaf and intermediate node" do
-      let(:post) { leaf_node.post }
-      let(:comment) { leaf_node }
+      let(:comment) { post.comments.first }
 
       before do
         comment.body = "UPDATED!"
