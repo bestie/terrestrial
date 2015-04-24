@@ -91,13 +91,16 @@ module SequelMapper
     end
 
     def upsert(record)
-      existing = datastore[record.namespace].where(record.identity)
+      # TODO I doubt this is really more performant but fewer queries register :)
+      row_count = datastore[record.namespace]
+        .where(record.identity)
+        .update(record.to_h)
 
-      if existing.empty?
-        datastore[record.namespace].insert(record.to_h)
-      else
-        existing.update(record.to_h)
+      if row_count < 0
+        row_count = datastore[record.namespace].insert(record.to_h)
       end
+
+      row_count
     end
   end
 end
