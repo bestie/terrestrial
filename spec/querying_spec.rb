@@ -18,7 +18,7 @@ RSpec.describe "Querying" do
 
   let(:query_criteria) {
     {
-      body: "Lazy load all the things!",
+      body: "I do it three times purrr day",
     }
   }
 
@@ -28,7 +28,7 @@ RSpec.describe "Querying" do
 
   describe "arbitrary where query" do
     it "returns a filtered version of the association" do
-      expect(filtered_posts.map(&:id)).to eq(["post/2"])
+      expect(filtered_posts.map(&:id)).to eq(["posts/2"])
     end
 
     it "delegates the query to the datastore, performs two additiona reads" do
