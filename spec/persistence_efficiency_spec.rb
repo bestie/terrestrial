@@ -127,7 +127,7 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  context "eager loading" do
+  xcontext "eager loading" do
     context "on root node" do
       it "performs 1 read per table rather than n + 1" do
         expect {
