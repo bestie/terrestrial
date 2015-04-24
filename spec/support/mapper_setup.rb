@@ -1,3 +1,4 @@
+require "sequel_mapper"
 require "sequel_mapper/mapper_facade"
 require "sequel_mapper/relation_mapping"
 require "sequel_mapper/queryable_lazy_dataset_loader"

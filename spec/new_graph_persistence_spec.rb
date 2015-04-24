@@ -3,11 +3,9 @@ require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/have_persisted_matcher"
 
-RSpec.xdescribe "Persist a new graph in empty datastore" do
+RSpec.describe "Persist a new graph in empty datastore" do
   include_context "mapper setup"
   include_context "sequel persistence setup"
-
-  let(:user_mapper) { mappers[:users] }
 
   before do
     truncate_tables
