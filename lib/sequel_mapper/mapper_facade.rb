@@ -60,9 +60,7 @@ module SequelMapper
       ->(records) {
         [
           :uniq.to_proc,
-          ->(x) { x.tap { |o| binding.pry}  },
           ->(rs) { rs.select { |r| dirty_map.dirty?(r.namespace, r.identity, r) } },
-          ->(x) { x.tap { |o| binding.pry}  },
           ->(rs) { rs.map(&method(:upsert)) },
         ].reduce(records) { |agg, operation|
           operation.call(agg)

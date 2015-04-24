@@ -1,5 +1,9 @@
+require "logger"
+
 module SequelMapper
   extend self
+
+  LOGGER = Logger.new(STDERR)
 
   def config(database_connection)
     Configurations::ConventionalConfiguration.new(database_connection)
@@ -58,15 +62,6 @@ module SequelMapper
       loaded_value = storage.fetch(record.identity, :not_found)
 
       loaded_value != record
-    end
-
-    private
-
-    def map_key(mapping, record)
-      primary_key_fields = mapping.primary_key
-      primary_key = primary_key_fields.map { |f| record.fetch(f) }
-
-      [mapping.namespace, primary_key]
     end
   end
 

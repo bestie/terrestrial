@@ -4,6 +4,7 @@ module SequelMapper
   class GraphSerializer
     def initialize(mappings:)
       @mappings = mappings
+      @count = 0
     end
 
     attr_reader :mappings
@@ -26,31 +27,39 @@ module SequelMapper
           .select { |k, _v| fields.include?(k) }
           .merge(foreign_key),
       )
-      .tap {|o| o.instance_variable_set(:@source_id, object.object_id)}
+      .tap {|o| o.instance_variable_set(:@source_id, object.object_id)} # DEBUG
 
-      raise "Use mapping to pull out foreign keys rather than passing them around!!!!!!!!!!!!"
-      binding.pry if object.is_a?(Comment)
-      return [] if lazy_and_not_loaded?(object)
+      # return [] if lazy_and_not_loaded?(object)
+      @count += 1
+      LOGGER.info "Dump #{@count} #{object.id}"
 
       if stack.include?(current_record)
         return [current_record]
       end
 
-      [current_record] + associations.flat_map { |name, config|
-        mapping = mappings.fetch(config.fetch(:mapping_name))
-        associated_objects = serialized_record.fetch(name)
+      [current_record] + associations
+        .map { |name, config|
+          [serialized_record.fetch(name), config]
+        }
+        .reject { |associated_object, config|
+          lazy_and_not_loaded?(associated_object)
+        }
+        .flat_map { |associated_object, config|
+          mapping = mappings.fetch(config.fetch(:mapping_name))
 
-        case config.fetch(:type)
-        when :one_to_many
-          dump_one_to_many(mapping, associated_objects, config, stack + [current_record])
-        when :many_to_one
-          dump_many_to_one(mapping, associated_objects, config, stack + [current_record])
-        when :many_to_many
-          dump_many_to_many(mapping, associated_objects, config, stack + [current_record])
-        else
-          raise "Association type not supported"
-        end
-      }
+          next if lazy_and_not_loaded?(associated_objects)
+
+          case config.fetch(:type)
+          when :one_to_many
+            dump_one_to_many(mapping, associated_objects, config, stack + [current_record])
+          when :many_to_one
+            dump_many_to_one(mapping, associated_objects, config, stack + [current_record])
+          when :many_to_many
+            dump_many_to_many(mapping, associated_objects, config, stack + [current_record])
+          else
+            raise "Association type not supported"
+          end
+        }
     end
 
     private
@@ -96,7 +105,8 @@ module SequelMapper
               config.fetch(:foreign_key) => stack.last.fetch(config.fetch(:key)),
               config.fetch(:association_foreign_key) => this_record.fetch(config.fetch(:association_key)),
             },
-          ),
+          )
+          .tap {|o| o.instance_variable_set(:@source_id, stack.last.object_id)}, # DEBUG
         ]
       }.flatten(1)
     end
@@ -110,7 +120,11 @@ module SequelMapper
     end
 
     def lazy_and_not_loaded?(object)
-      object.respond_to?(:loaded) && !object.loaded?
+      if object.respond_to?(:loaded?)
+        !object.loaded?
+      else
+        false
+      end
     end
   end
 end

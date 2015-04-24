@@ -25,7 +25,6 @@ RSpec.describe "Graph persistence efficiency" do
       end
 
       it "performs 1 update" do
-        require "pry"; binding.pry
         expect {
           mapper.save(user)
         }.to change { query_counter.update_count }.by(1)
