@@ -83,7 +83,7 @@ module SequelMapper
       storage.fetch(record.identity) {
         storage.store(
           record.identity,
-          not_already_loaded.call(record),
+          not_already_loaded.nil? ? record : not_already_loaded.call(record),
         )
       }
     end
