@@ -96,7 +96,7 @@ module SequelMapper
         .where(record.identity)
         .update(record.to_h)
 
-      if row_count < 0
+      if row_count < 1
         row_count = datastore[record.namespace].insert(record.to_h)
       end
 
