@@ -1,7 +1,7 @@
 require "spec_helper"
 require "support/mapper_setup"
 
-RSpec.describe "Dump a plain object graph to flat data" do
+RSpec.xdescribe "Dump a plain object graph to flat data" do
   include_context "mapper setup"
 
   let(:hansel) {

@@ -8,6 +8,7 @@ module SequelMapper
   def mapper(config:, name:, datastore:)
     dataset = datastore[config.fetch(:users).namespace]
     identity_map = IdentityMap.new({})
+    dirty_map = DirtyMap.new({})
 
     SequelMapper::MapperFacade.new(
       mappings: config,
@@ -15,6 +16,7 @@ module SequelMapper
       datastore: datastore,
       dataset: dataset,
       identity_map: identity_map,
+      dirty_map: dirty_map,
     )
   end
 
@@ -39,6 +41,35 @@ module SequelMapper
     ]
   end
 
+  class DirtyMap
+    def initialize(storage)
+      @storage = storage
+    end
+
+    attr_reader :storage
+    private     :storage
+
+    def load(_mapping, record)
+      # TODO copy the record
+      storage.store(record.identity, record)
+    end
+
+    def dirty?(namespace, identity, record)
+      loaded_value = storage.fetch(record.identity, :not_found)
+
+      loaded_value != record
+    end
+
+    private
+
+    def map_key(mapping, record)
+      primary_key_fields = mapping.primary_key
+      primary_key = primary_key_fields.map { |f| record.fetch(f) }
+
+      [mapping.namespace, primary_key]
+    end
+  end
+
   class IdentityMap
     def initialize(storage)
       @storage = storage
@@ -47,19 +78,17 @@ module SequelMapper
     attr_reader :storage
     private     :storage
 
-    def call(mapping, &not_already_loaded)
+    def call(mapping, record, &not_already_loaded)
       primary_key_fields = mapping.primary_key
 
-      ->(record) {
-        primary_key = primary_key_fields.map { |f| record.fetch(f) }
-        identity_map_key = [mapping.namespace, primary_key]
+      primary_key = primary_key_fields.map { |f| record.fetch(f) }
+      map_key = [mapping.namespace, primary_key]
 
-        storage.fetch(identity_map_key) {
-          storage.store(
-            identity_map_key,
-            not_already_loaded.call(record),
-          )
-        }
+      storage.fetch(map_key) {
+        storage.store(
+          map_key,
+          not_already_loaded.call(record),
+        )
       }
     end
   end

@@ -25,6 +25,8 @@ RSpec.shared_context "mapper setup" do
   let(:mappings) {
     Hash[
       configs.map { |name, config|
+        fields = config.fetch(:fields) + config.fetch(:associations).keys
+
         [
           name,
           SequelMapper::RelationMapping.new(
@@ -32,7 +34,7 @@ RSpec.shared_context "mapper setup" do
             namespace: config.fetch(:namespace),
             fields: config.fetch(:fields),
             primary_key: config.fetch(:primary_key),
-            serializer: serializer.call(config.fetch(:fields) + config.fetch(:associations).keys),
+            serializer: serializer.call(fields),
             associations: config.fetch(:associations),
             factory: factories.fetch(name),
           )

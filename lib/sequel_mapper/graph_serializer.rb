@@ -26,6 +26,11 @@ module SequelMapper
           .select { |k, _v| fields.include?(k) }
           .merge(foreign_key),
       )
+      .tap {|o| o.instance_variable_set(:@source_id, object.object_id)}
+
+      raise "Use mapping to pull out foreign keys rather than passing them around!!!!!!!!!!!!"
+      binding.pry if object.is_a?(Comment)
+      return [] if lazy_and_not_loaded?(object)
 
       if stack.include?(current_record)
         return [current_record]
@@ -102,6 +107,10 @@ module SequelMapper
           [field, record.fetch(field)]
         }
       ]
+    end
+
+    def lazy_and_not_loaded?(object)
+      object.respond_to?(:loaded) && !object.loaded?
     end
   end
 end
