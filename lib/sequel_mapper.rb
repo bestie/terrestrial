@@ -53,12 +53,12 @@ module SequelMapper
     attr_reader :storage
     private     :storage
 
-    def load(_mapping, record)
+    def load(record)
       storage.store(record.identity, deep_dup(record))
       record
     end
 
-    def dirty?(namespace, identity, record)
+    def dirty?(identity, record)
       loaded_value = storage.fetch(record.identity, :not_found)
 
       loaded_value != record
@@ -79,15 +79,10 @@ module SequelMapper
     attr_reader :storage
     private     :storage
 
-    def call(mapping, record, &not_already_loaded)
-      primary_key_fields = mapping.primary_key
-
-      primary_key = primary_key_fields.map { |f| record.fetch(f) }
-      map_key = [mapping.namespace, primary_key]
-
-      storage.fetch(map_key) {
+    def call(record, &not_already_loaded)
+      storage.fetch(record.identity) {
         storage.store(
-          map_key,
+          record.identity,
           not_already_loaded.call(record),
         )
       }

@@ -46,11 +46,11 @@ module SequelMapper
       ->(mapping, &callback){
         ->(record) {
           [
-            namespaceed_record_factory, # TODO terrible terrible naming
+            namespaced_record_factory(mapping), # TODO terrible terrible naming
             dirty_map.method(:load),
             identity_map,
           ].reduce(record) { |agg, operation|
-            operation.call(mapping, agg, &callback)
+            operation.call(agg, &callback)
           }
         }
       }
@@ -61,7 +61,7 @@ module SequelMapper
         [
           :uniq.to_proc,
           ->(rs) { puts "After unique filter"; p rs },
-          ->(rs) { rs.select { |r| dirty_map.dirty?(r.namespace, r.identity, r) } },
+          ->(rs) { rs.select { |r| dirty_map.dirty?(r.identity, r) } },
           ->(rs) { puts "After dirty filter"; p rs },
           ->(rs) { rs.map(&method(:upsert)) },
         ].reduce(records) { |agg, operation|
@@ -70,8 +70,8 @@ module SequelMapper
       }
     end
 
-    def namespaceed_record_factory
-      ->(mapping, record_hash) {
+    def namespaced_record_factory(mapping)
+      ->(record_hash) {
         identity = Hash[
           mapping.primary_key.map { |field|
             [field, record_hash.fetch(field)]
