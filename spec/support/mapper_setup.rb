@@ -45,11 +45,11 @@ RSpec.shared_context "mapper setup" do
   }
 
   let(:has_many_proxy_factory) {
-    ->(query:, loader:) {
+    ->(query:, loader:, mapper:) {
       SequelMapper::QueryableLazyDatasetLoader.new(
         query.call(datastore),
         loader,
-        :this_should_be_the_mapper,
+        mapper,
       )
     }
   }

@@ -29,7 +29,16 @@ module SequelMapper
       }
     end
 
+    def eager_load(association_name)
+    end
+
     private
+
+    class NotNullEmptyDataset
+      def empty?
+        false
+      end
+    end
 
     def graph_serializer
       GraphSerializer.new(mappings: mappings)
@@ -37,6 +46,7 @@ module SequelMapper
 
     def graph_loader
       GraphLoader.new(
+        datastore: datastore,
         mappings: mappings,
         object_load_pipeline: object_load_pipeline,
       )
@@ -56,13 +66,14 @@ module SequelMapper
       }
     end
 
+    require "pp"
     def object_dump_pipeline
       ->(records) {
         [
           :uniq.to_proc,
-          ->(rs) { puts "After unique filter"; p rs },
+          ->(rs) { puts "After unique filter"; pp rs },
           ->(rs) { rs.select { |r| dirty_map.dirty?(r.identity, r) } },
-          ->(rs) { puts "After dirty filter"; p rs },
+          ->(rs) { puts "After dirty filter"; pp rs },
           ->(rs) { rs.map(&method(:upsert)) },
         ].reduce(records) { |agg, operation|
           operation.call(agg)

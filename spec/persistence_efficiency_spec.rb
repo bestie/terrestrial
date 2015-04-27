@@ -120,11 +120,12 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  xcontext "eager loading" do
+  context "eager loading" do
     context "on root node" do
       it "performs 1 read per table rather than n + 1" do
         expect {
           mapper.eager_load(:posts).map(&:id)
+          .tap { |r| binding.pry }
         }.to change { query_counter.read_count }.by(2)
       end
     end

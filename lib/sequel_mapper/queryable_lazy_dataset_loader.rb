@@ -16,7 +16,8 @@ module SequelMapper
     private     :database_enum, :loader, :mapper
 
     def eager_load(association_name)
-      mapper.eager_load_association(database_enum, association_name)
+      require "pry"; binding.pry
+      mapper.eager_load(database_enum, association_name)
     end
 
     def where(criteria)
