@@ -4,7 +4,6 @@ module SequelMapper
   class GraphSerializer
     def initialize(mappings:)
       @mappings = mappings
-      @count = 0
     end
 
     attr_reader :mappings
@@ -13,54 +12,71 @@ module SequelMapper
       # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
       serializer = mapping.serializer
-      namespace = mapping.namespace
-      primary_key = mapping.primary_key
-      fields = mapping.fields
       associations = mapping.associations
 
       serialized_record = serializer.call(object)
 
-      current_record = NamespacedRecord.new(
+      current_record = namespaced_record(
+        mapping,
+        serialized_record,
+        foreign_key,
+      )
+
+      # TODO: Don't load unloaded collections on dump
+      # return [] if lazy_and_not_loaded?(object)
+
+      return [current_record] if already_persisted?(stack, current_record)
+
+      [current_record] + record_associations(
+        serialized_record,
+        associations,
+        stack + [current_record]
+      )
+    end
+
+    private
+
+    def already_persisted?(stack, current_record)
+      stack.include?(current_record)
+    end
+
+    def namespaced_record(mapping, serialized_record, foreign_key)
+      namespace = mapping.namespace
+      primary_key = mapping.primary_key
+      fields = mapping.fields
+
+      NamespacedRecord.new(
         namespace,
         record_identity(primary_key, serialized_record),
         serialized_record
           .select { |k, _v| fields.include?(k) }
           .merge(foreign_key),
       )
-      .tap {|o| o.instance_variable_set(:@source_id, object.object_id)} # DEBUG
-
-      # return [] if lazy_and_not_loaded?(object)
-      @count += 1
-      LOGGER.info "Dump #{@count} #{object.id}"
-
-      if stack.include?(current_record)
-        return [current_record]
-      end
-
-      [current_record] + associations
-        .map { |name, config|
-          [serialized_record.fetch(name), config]
-        }
-        .reject { |associated_objects, config|
-          lazy_and_not_loaded?(associated_objects)
-        }
-        .flat_map { |associated_objects, config|
-          mapping = mappings.fetch(config.fetch(:mapping_name))
-
-          case config.fetch(:type)
-          when :one_to_many
-            dump_one_to_many(mapping, associated_objects, config, stack + [current_record])
-          when :many_to_one
-            dump_many_to_one(mapping, associated_objects, config, stack + [current_record])
-          when :many_to_many
-            dump_many_to_many(mapping, associated_objects, config, stack + [current_record])
-          else
-            raise "Association type not supported"
-          end
-        }
     end
 
-    private
+    def record_associations(serialized_record, associations, stack)
+        associations
+          .map { |name, config|
+            [serialized_record.fetch(name), config]
+          }
+          .reject { |associated_objects, config|
+            lazy_and_not_loaded?(associated_objects)
+          }
+          .flat_map { |associated_objects, config|
+            mapping = mappings.fetch(config.fetch(:mapping_name))
+
+            case config.fetch(:type)
+            when :one_to_many
+              dump_one_to_many(mapping, associated_objects, config, stack)
+            when :many_to_one
+              dump_many_to_one(mapping, associated_objects, config, stack)
+            when :many_to_many
+              dump_many_to_many(mapping, associated_objects, config, stack)
+            else
+              raise "Association type not supported"
+            end
+          }
+    end
 
     # TODO: remove use of stack.last, doesn't communicate meaning very well
     def dump_one_to_many(mapping, associated, config, stack)
