@@ -108,41 +108,6 @@ RSpec.describe "Graph persistence" do
     end
   end
 
-  context "modify the foreign_key of an object" do
-    let(:original_author) { user }
-    let(:new_author)      { mapper.where(id: "users/2").first }
-    let(:post)            { original_author.posts.first }
-
-    it "persists the change in ownership" do
-      post.author = new_author
-      mapper.save(user)
-
-      expect(datastore).to have_persisted(
-        :posts,
-        hash_including(
-          id: post.id,
-          author_id: new_author.id,
-        )
-      )
-    end
-
-    xit "removes the object from the original graph" do
-      post.author = new_author
-      mapper.save(user)
-
-      expect(original_author.posts.to_a.map(&:id))
-        .not_to include("posts/1")
-    end
-
-    it "adds the object to the appropriate graph" do
-      post.author = new_author
-      mapper.save(user)
-
-      expect(new_author.posts.to_a.map(&:id))
-        .to include("posts/1")
-    end
-  end
-
   xcontext "add a node to a has many assocation" do
     let(:new_post_attrs) {
       {
