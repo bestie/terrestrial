@@ -41,19 +41,19 @@ module SequelMapper
         .map { |name, config|
           [serialized_record.fetch(name), config]
         }
-        .reject { |associated_objects, config|
-          lazy_and_not_loaded?(associated_objects)
+        .reject { |collection, config|
+          lazy_and_not_loaded?(collection)
         }
-        .flat_map { |associated_objects, config|
+        .flat_map { |collection, config|
           mapping = mappings.fetch(config.fetch(:mapping_name))
 
           case config.fetch(:type)
           when :one_to_many
-            dump_one_to_many(mapping, associated_objects, config, stack + [current_record])
+            dump_one_to_many(mapping, collection, config, stack + [current_record])
           when :many_to_one
-            dump_many_to_one(mapping, associated_objects, config, stack + [current_record])
+            dump_many_to_one(mapping, collection, config, stack + [current_record])
           when :many_to_many
-            dump_many_to_many(mapping, associated_objects, config, stack + [current_record])
+            dump_many_to_many(mapping, collection, config, stack + [current_record])
           else
             raise "Association type not supported"
           end
@@ -63,20 +63,20 @@ module SequelMapper
     private
 
     # TODO: remove use of stack.last, doesn't communicate meaning very well
-    def dump_one_to_many(mapping, associated, config, stack)
+    def dump_one_to_many(mapping, collection, config, stack)
       foreign_key = {
         config.fetch(:foreign_key) => stack.last.fetch(config.fetch(:key)),
       }
 
-      (associated || []).flat_map { |associated_record|
+      (collection || []).flat_map { |associated_record|
         call(mapping.name, associated_record, foreign_key, stack)
       }
     end
 
-    def dump_many_to_one(mapping, associated, config, stack)
+    def dump_many_to_one(mapping, collection, config, stack)
       associated_record = call(
         mapping.name,
-        associated,
+        collection,
         {},
         stack,
       ).first
@@ -91,8 +91,8 @@ module SequelMapper
       ]
     end
 
-    def dump_many_to_many(mapping, associated, config, stack)
-      (associated || []).flat_map { |associated_record|
+    def dump_many_to_many(mapping, collection, config, stack)
+      (collection || []).flat_map { |associated_record|
         this_record = call(mapping.name, associated_record, {}, stack).first
 
         [
