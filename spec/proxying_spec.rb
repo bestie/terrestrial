@@ -1,6 +1,5 @@
 require "spec_helper"
 
-require "spec_helper"
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
