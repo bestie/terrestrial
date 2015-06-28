@@ -24,7 +24,7 @@ module SequelMapper
     end
 
     def where(query)
-      dataset.map { |record|
+      dataset.where(query).map { |record|
         graph_loader.call(mapping_name, record)
       }
     end
