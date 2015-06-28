@@ -13,7 +13,7 @@ RSpec.describe "Querying" do
   subject(:mapper) { user_mapper }
 
   let(:user) {
-    mapper.where(id: "user/1").first
+    mapper.where(id: "users/1").first
   }
 
   let(:query_criteria) {
