@@ -10,6 +10,7 @@ module SequelMapper
       @dataset = dataset
       @identity_map = identity_map
       @dirty_map = dirty_map
+      @eager_data = {}
     end
 
     attr_reader :mappings, :mapping_name, :datastore, :dataset, :identity_map, :dirty_map
@@ -23,21 +24,65 @@ module SequelMapper
       self
     end
 
-    def where(query)
-      dataset.where(query).map { |record|
-        graph_loader.call(mapping_name, record)
-      }
+    def all
+      self
     end
 
-    def eager_load(association_name)
+    def where(query)
+      new_with_dataset(
+        dataset.where(query)
+      )
+    end
+
+    include Enumerable
+    def each(&block)
+      dataset
+        .map { |record|
+          graph_loader.call(mapping_name, record, Hash[@eager_data])
+        }
+        .each(&block)
+    end
+
+    def eager_load(association_name_map)
+      @eager_data = eager_load_the_things(mapping, dataset, association_name_map)
+
+      self
     end
 
     private
 
-    class NotNullEmptyDataset
-      def empty?
-        false
-      end
+    def eager_load_the_things(mapping, parent_dataset, association_name_map)
+      association_name_map
+        .flat_map { |name, deeper_association_names|
+          association = mapping.associations.fetch(name)
+          association_mapping = mappings.fetch(association.mapping_name)
+          association_namespace = association_mapping.namespace
+          association_dataset = get_eager_dataset(association, association_namespace, parent_dataset)
+
+          [
+            [[mapping.name, name] , association_dataset]
+          ] + eager_load_the_things(association_mapping, association_dataset, deeper_association_names)
+        }
+    end
+
+    def get_eager_dataset(association, association_namespace, parent_dataset)
+      SequelMapper::Dataset.new(
+        association.eager_superset(
+          datastore[association_namespace],
+          parent_dataset,
+        ).to_a
+      )
+    end
+
+    def new_with_dataset(new_dataset)
+      self.class.new(
+        dataset: new_dataset,
+        mappings: mappings,
+        mapping_name: mapping_name,
+        datastore: datastore,
+        identity_map: identity_map,
+        dirty_map: dirty_map,
+      )
     end
 
     def graph_serializer
@@ -46,7 +91,7 @@ module SequelMapper
 
     def graph_loader
       GraphLoader.new(
-        datastore: datastore,
+        datasets: datastore,
         mappings: mappings,
         object_load_pipeline: object_load_pipeline,
       )

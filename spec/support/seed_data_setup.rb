@@ -12,8 +12,10 @@ RSpec.shared_context "seed data setup" do
   let(:seeded_records) {
     [
       [ :users, hansel_record ],
+      [ :users, jasper_record ],
       [ :posts, biscuits_post_record ],
       [ :posts, sleep_post_record ],
+      [ :posts, catch_frogs_post_record ],
       [ :comments, biscuits_post_comment_record ],
       [ :categories, cat_biscuits_category_record ],
       [ :categories, eating_and_sleeping_category_record ],
@@ -32,6 +34,15 @@ RSpec.shared_context "seed data setup" do
     }
   }
 
+  let(:jasper_record) {
+    {
+      id: "users/2",
+      first_name: "Jasper",
+      last_name: "Trickett",
+      email: "jasper@tricketts.org",
+    }
+  }
+
   let(:biscuits_post_record) {
     {
       id: "posts/1",
@@ -47,6 +58,15 @@ RSpec.shared_context "seed data setup" do
        subject: "Sleeping",
        body: "I do it three times purrr day",
        author_id: "users/1",
+     }
+   }
+
+   let(:catch_frogs_post_record) {
+     {
+       id: "posts/3",
+       subject: "Catching frongs",
+       body: "I love them while at the same time I hate them",
+       author_id: "users/2",
      }
    }
 
@@ -78,6 +98,10 @@ RSpec.shared_context "seed data setup" do
       {
         post_id: "posts/1",
         category_id: "categories/1",
+      },
+      {
+        post_id: "posts/1",
+        category_id: "categories/2",
       },
       {
         post_id: "posts/2",

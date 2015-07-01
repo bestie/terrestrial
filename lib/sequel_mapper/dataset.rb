@@ -24,6 +24,10 @@ module SequelMapper
       )
     end
 
+    def select(field)
+      map { |data| data.fetch(field) }
+    end
+
     private
 
     def new(records)

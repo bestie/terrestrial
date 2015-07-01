@@ -4,6 +4,7 @@ require "sequel_mapper/relation_mapping"
 require "sequel_mapper/queryable_lazy_dataset_loader"
 require "sequel_mapper/lazy_object_proxy"
 require "sequel_mapper/dataset"
+require "sequel_mapper/loadable_one_to_many_association"
 require "support/object_graph_setup"
 
 RSpec.shared_context "mapper setup" do
@@ -28,6 +29,26 @@ RSpec.shared_context "mapper setup" do
       configs.map { |name, config|
         fields = config.fetch(:fields) + config.fetch(:associations).keys
 
+        associations = config.fetch(:associations).map { |assoc_name, assoc_config|
+          [
+            assoc_name,
+            case assoc_config.fetch(:type)
+            when :one_to_many
+              LoadableOneToManyAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+            when :many_to_one
+              LoadableManyToOneAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+            when :many_to_many
+              LoadableManyToManyAssociation.new(
+                through_namespace: assoc_config.fetch(:through_namespace),
+                through_dataset: datastore[assoc_config.fetch(:through_namespace)],
+                **assoc_config.dup.tap { |h| h.delete(:type); h.delete(:through_namespace) },
+              )
+            else
+              raise "Association type not supported"
+            end
+          ]
+        }
+
         [
           name,
           SequelMapper::RelationMapping.new(
@@ -36,7 +57,7 @@ RSpec.shared_context "mapper setup" do
             fields: config.fetch(:fields),
             primary_key: config.fetch(:primary_key),
             serializer: serializer.call(fields),
-            associations: config.fetch(:associations),
+            associations: Hash[associations],
             factory: factories.fetch(name),
           )
         ]
@@ -47,7 +68,7 @@ RSpec.shared_context "mapper setup" do
   let(:has_many_proxy_factory) {
     ->(query:, loader:, mapper:) {
       SequelMapper::QueryableLazyDatasetLoader.new(
-        query.call(datastore),
+        query,
         loader,
         mapper,
       )
@@ -57,7 +78,7 @@ RSpec.shared_context "mapper setup" do
   let(:many_to_one_proxy_factory) {
     ->(query:, loader:, preloaded_data:) {
       SequelMapper::LazyObjectProxy.new(
-        ->{ loader.call(query.call(datastore)) },
+        ->{ loader.call(query.first) },
         preloaded_data,
       )
     }

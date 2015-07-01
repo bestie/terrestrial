@@ -11,10 +11,8 @@ RSpec.describe "Graph persistence efficiency" do
   include_context "seed data setup"
 
   let(:mapper) { user_mapper }
-
-  let(:user) {
-    mapper.where(id: "users/1").first
-  }
+  let(:user_query) { mapper.where(id: "users/1") }
+  let(:user) { user_query.first }
 
   context "when modifying the root node" do
     let(:modified_email) { "modified@example.com" }
@@ -105,7 +103,7 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  context "when modifying a many to many association" do
+  xcontext "when modifying a many to many association" do
     let(:post) { user.posts.first }
     let(:category) { post.categories.first }
 
@@ -120,20 +118,27 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  xcontext "eager loading" do
+  context "eager loading" do
     context "on root node" do
       it "performs 1 read per table rather than n + 1" do
         expect {
-          mapper.eager_load(:posts).map(&:id)
-          .tap { |r| binding.pry }
+          mapper.eager_load(:posts => []).all.map { |user|
+            [user.id, user.posts.map(&:id)]
+          }
         }.to change { query_counter.read_count }.by(2)
       end
     end
 
+    # mapper.eager_load([:posts, [:comments, [:author]]])
+
     context "with nested has many" do
       it "performs 1 read per table rather than n + 1" do
         expect {
-          user.posts.eager_load(:comments).map { |post| post.comments.map(&:id) }
+          user_query
+            .eager_load(:posts => { :comments => [] })
+            .first
+            .posts
+            .map { |post| post.comments.map(&:id) }
         }.to change { query_counter.read_count }.by(3)
       end
     end
@@ -141,10 +146,11 @@ RSpec.describe "Graph persistence efficiency" do
     context "with has many and belongs to" do
       it "performs 1 read per table rather than n + 1" do
         expect {
-          user.posts.first
-            .comments.eager_load(:commenter)
-            .map(&:commenter)
-            .map(&:id)
+          user_query
+            .eager_load(:posts => { :comments => { :commenter => [] }})
+            .flat_map { |u| u.posts.to_a }
+            .flat_map { |p| p.comments.to_a }
+            .flat_map { |c| c.commenter.id }
         }.to change { query_counter.read_count }.by(4)
       end
     end
@@ -152,14 +158,16 @@ RSpec.describe "Graph persistence efficiency" do
     context "for has many to has many through" do
       it "performs 1 read per table rather than n + 1" do
         expect {
-          user.posts.eager_load(:categories)
-            .map(&:categories)
-            .flat_map { |cats| cats.map(&:id) }
+          user_query
+            .eager_load(:posts => { :categories => [] })
+            .flat_map { |u| u.posts.to_a }
+            .flat_map { |p| p.categories.to_a }
+            .flat_map { |c| c.id }
         }.to change { query_counter.read_count }.by(3)
       end
     end
 
-    context "for has many through to has many" do
+    xcontext "for has many through to has many" do
       it "performs 1 read per table rather than n + 1" do
         expect {
           user.posts.first.categories.eager_load(:posts)
