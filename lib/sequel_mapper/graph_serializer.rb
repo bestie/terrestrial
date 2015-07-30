@@ -40,9 +40,10 @@ module SequelMapper
         .map { |name, config|
           [serialized_record.fetch(name), config]
         }
-        .reject { |collection, config|
-          lazy_and_not_loaded?(collection)
+        .map { |collection, config|
+          [non_loading_enum(collection).to_a, config]
         }
+        .reject { |collection, _| collection.empty? }
         .flat_map { |collection, config|
           assoc_mapping = mappings.fetch(config.mapping_name)
 
@@ -54,20 +55,20 @@ module SequelMapper
 
     private
 
+    def non_loading_enum(collection)
+      if collection.respond_to?(:each_loaded)
+        collection.each_loaded
+      else
+        collection.each
+      end
+    end
+
     def record_identity(primary_key, record)
       Hash[
         primary_key.map { |field|
           [field, record.fetch(field)]
         }
       ]
-    end
-
-    def lazy_and_not_loaded?(object)
-      if object.respond_to?(:loaded?)
-        !object.loaded?
-      else
-        false
-      end
     end
   end
 end

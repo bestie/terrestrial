@@ -17,6 +17,14 @@ module SequelMapper
     extend Forwardable
     def_delegators :collection, :loaded?, :where, :query
 
+    def each_loaded(&block)
+      if loaded?
+        enum.each(&block)
+      else
+        added_nodes.each(&block)
+      end
+    end
+
     include Enumerable
     def each(&block)
       if block

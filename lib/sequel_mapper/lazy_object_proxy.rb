@@ -26,6 +26,10 @@ class SequelMapper::LazyObjectProxy
     lazy_object
   end
 
+  def each_loaded(&block)
+    [self].select(&:loaded?).each(&block)
+  end
+
   private
 
   def respond_to_missing?(method_id, _include_private = false)
