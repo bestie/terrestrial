@@ -58,8 +58,12 @@ module SequelMapper
     def non_loading_enum(collection)
       if collection.respond_to?(:each_loaded)
         collection.each_loaded
-      else
+      elsif collection.is_a?(Struct)
+        [collection]
+      elsif collection.respond_to?(:each)
         collection.each
+      else
+        collection
       end
     end
 

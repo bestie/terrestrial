@@ -69,19 +69,21 @@ class LoadableManyToOneAssociation < LoadableOneToManyAssociation
     superset.where(key => foreign_key_value(record))
   end
 
-  def dump(parent_record, object, &block)
-    block.call(mapping_name, object, _foreign_key_does_not_go_here = {})
-      .flat_map { |associated_record|
+  def dump(parent_record, collection, &block)
+    collection.flat_map { |object|
+      block.call(mapping_name, object, _foreign_key_does_not_go_here = {})
+        .flat_map { |associated_record|
 
-        foreign_key_pair = {
-          foreign_key => associated_record.fetch(key),
+          foreign_key_pair = {
+            foreign_key => associated_record.fetch(key),
+          }
+
+          [
+            associated_record,
+            parent_record.merge(foreign_key_pair),
+          ]
         }
-
-        [
-          associated_record,
-          parent_record.merge(foreign_key_pair),
-        ]
-      }
+    }
   end
 
   private
