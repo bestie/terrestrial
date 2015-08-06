@@ -148,17 +148,17 @@ RSpec.describe "Graph persistence" do
     end
   end
 
-  xcontext "remove an object from a has many association" do
+  context "delete an object from a has many association" do
     let(:post) { user.posts.first }
 
-    it "removes the object from the graph" do
-      user.posts.remove(post)
+    it "delete the object from the graph" do
+      user.posts.delete(post)
 
       expect(user.posts.map(&:id)).not_to include(post.id)
     end
 
-    it "removes the object from the datastore on save" do
-      user.posts.remove(post)
+    it "delete the object from the datastore on save" do
+      user.posts.delete(post)
       mapper.save(user)
 
       expect(datastore).not_to have_persisted(
@@ -173,17 +173,17 @@ RSpec.describe "Graph persistence" do
   xcontext "modify a many to many relationhip" do
     let(:post)     { user.posts.first }
 
-    context "remove a node" do
+    context "delete a node" do
       it "mutates the graph" do
         category = post.categories.first
-        post.categories.remove(category)
+        post.categories.delete(category)
 
         expect(post.categories.map(&:id)).not_to include(category.id)
       end
 
       it "persists the change" do
         category = post.categories.first
-        post.categories.remove(category)
+        post.categories.delete(category)
         mapper.save(user)
 
         expect(datastore).not_to have_persisted(

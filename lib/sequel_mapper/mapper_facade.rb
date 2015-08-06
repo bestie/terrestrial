@@ -119,7 +119,12 @@ module SequelMapper
           ->(rs) { puts "After unique filter"; pp rs },
           ->(rs) { rs.select { |r| dirty_map.dirty?(r.identity, r) } },
           ->(rs) { puts "After dirty filter"; pp rs },
-          ->(rs) { rs.map(&method(:upsert)) },
+          ->(rs) {
+            rs.each { |r|
+              r.if_upsert(&method(:upsert))
+               .if_delete(&method(:delete))
+            }
+          },
         ].reduce(records) { |agg, operation|
           operation.call(agg)
         }
@@ -157,6 +162,10 @@ module SequelMapper
       end
 
       row_count
+    end
+
+    def delete(record)
+      datastore[record.namespace].where(record.identity).delete
     end
   end
 end

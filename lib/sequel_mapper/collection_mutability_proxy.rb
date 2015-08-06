@@ -8,11 +8,11 @@ module SequelMapper
     def initialize(collection)
       @collection = collection
       @added_nodes = []
-      @removed_nodes = []
+      @deleted_nodes = []
     end
 
-    attr_reader :collection, :removed_nodes, :added_nodes
-    private     :collection
+    attr_reader :collection, :deleted_nodes, :added_nodes
+    private     :collection, :deleted_nodes, :added_nodes
 
     extend Forwardable
     def_delegators :collection, :loaded?, :where, :query
@@ -25,6 +25,10 @@ module SequelMapper
       end
     end
 
+    def each_deleted(&block)
+      @deleted_nodes.each(&block)
+    end
+
     include Enumerable
     def each(&block)
       if block
@@ -35,8 +39,8 @@ module SequelMapper
       end
     end
 
-    def remove(node)
-      @removed_nodes.push(node)
+    def delete(node)
+      @deleted_nodes.push(node)
       self
     end
 
@@ -53,7 +57,7 @@ module SequelMapper
     def enum
       Enumerator.new do |yielder|
         collection.each do |element|
-          yielder.yield(element) unless removed?(element)
+          yielder.yield(element) unless deleted?(element)
         end
 
         added_nodes.each do |node|
@@ -62,8 +66,8 @@ module SequelMapper
       end
     end
 
-    def removed?(node)
-      @removed_nodes.include?(node)
+    def deleted?(node)
+      @deleted_nodes.include?(node)
     end
   end
 end

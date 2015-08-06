@@ -16,7 +16,7 @@ module SequelMapper
       namespace = mapping.namespace
       primary_key = mapping.primary_key
       fields = mapping.fields
-      associations = mapping.associations
+      associations_map = mapping.associations
 
       serialized_record = serializer.call(object)
 
@@ -28,34 +28,50 @@ module SequelMapper
           .merge(foreign_key),
       )
 
-      # return [] if lazy_and_not_loaded?(object)
-      @count += 1
-      LOGGER.info "Dump #{@count} #{object.id}"
-
       if stack.include?(current_record)
         return [current_record]
       end
 
-      [current_record] + associations
-        .map { |name, config|
-          [serialized_record.fetch(name), config]
+      [current_record] + associations_map
+        .map { |name, association|
+          [serialized_record.fetch(name), association]
         }
-        .map { |collection, config|
-          [non_loading_enum(collection).to_a, config]
+        .map { |collection, association|
+          [nodes(collection), deleted_nodes(collection), association]
         }
-        .reject { |collection, _| collection.empty? }
-        .flat_map { |collection, config|
-          assoc_mapping = mappings.fetch(config.mapping_name)
+        .map { |nodes, deleted_nodes, association|
+          assoc_mapping = mappings.fetch(association.mapping_name)
 
-          config.dump(current_record, collection) { |assoc_mapping_name, assoc_object, foreign_key|
+          association.dump(current_record, nodes) { |assoc_mapping_name, assoc_object, foreign_key|
             call(assoc_mapping_name, assoc_object, foreign_key, stack + [current_record])
+          } +
+          association.dump(current_record, deleted_nodes) { |assoc_mapping_name, assoc_object, foreign_key|
+            delete(assoc_mapping_name, assoc_object, foreign_key, stack + [current_record])
           }
         }
+        .flatten(1)
     end
 
     private
 
-    def non_loading_enum(collection)
+    def delete(mapping_name, object, foreign_key, stack)
+      # TODO copypasta ¯\_(ツ)_/¯
+      mapping = mappings.fetch(mapping_name)
+      serializer = mapping.serializer
+      namespace = mapping.namespace
+      primary_key = mapping.primary_key
+
+      serialized_record = serializer.call(object)
+
+      [
+        DeletedRecord.new(
+          namespace,
+          record_identity(primary_key, serialized_record),
+        )
+      ]
+    end
+
+    def nodes(collection)
       if collection.respond_to?(:each_loaded)
         collection.each_loaded
       elsif collection.is_a?(Struct)
@@ -64,6 +80,25 @@ module SequelMapper
         collection.each
       else
         collection
+      end
+    end
+
+    def deleted_nodes(collection)
+      if collection.respond_to?(:each_deleted)
+        collection.each_deleted
+      else
+        []
+      end
+    end
+
+    DeletedRecord = Class.new(NamespacedRecord) do
+      def if_upsert(&block)
+        self
+      end
+
+      def if_delete(&block)
+        block.call(self)
+        self
       end
     end
 

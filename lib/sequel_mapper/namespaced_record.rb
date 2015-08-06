@@ -13,6 +13,15 @@ module SequelMapper
 
     def_delegators :data, :fetch, :to_h
 
+    def if_upsert(&block)
+      block.call(self)
+      self
+    end
+
+    def if_delete(&block)
+      self
+    end
+
     def data
       @data.merge(identity)
     end

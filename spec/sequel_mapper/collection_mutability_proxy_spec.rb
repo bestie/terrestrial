@@ -59,14 +59,14 @@ RSpec.describe SequelMapper::CollectionMutabilityProxy do
     end
   end
 
-  describe "#remove" do
+  describe "#delete" do
     it "returns self" do
-      expect(proxy.remove(3)).to be(proxy)
+      expect(proxy.delete(3)).to be(proxy)
     end
 
     context "after removing a element from the enumeration" do
       before do
-        proxy.remove(3)
+        proxy.delete(3)
       end
 
       it "skips that element in the enumeration" do
