@@ -45,7 +45,7 @@ module SequelMapper
           association.dump(current_record, nodes) { |assoc_mapping_name, assoc_object, foreign_key|
             call(assoc_mapping_name, assoc_object, foreign_key, stack + [current_record])
           } +
-          association.dump(current_record, deleted_nodes) { |assoc_mapping_name, assoc_object, foreign_key|
+          association.delete(current_record, deleted_nodes) { |assoc_mapping_name, assoc_object, foreign_key|
             delete(assoc_mapping_name, assoc_object, foreign_key, stack + [current_record])
           }
         }
@@ -54,7 +54,7 @@ module SequelMapper
 
     private
 
-    def delete(mapping_name, object, foreign_key, stack)
+    def delete(mapping_name, object, _foreign_key, _stack)
       # TODO copypasta ¯\_(ツ)_/¯
       mapping = mappings.fetch(mapping_name)
       serializer = mapping.serializer

@@ -184,6 +184,14 @@ RSpec.shared_context "mapper setup" do
           },
         },
       },
+
+      categories_to_posts: {
+        namespace: :categories_to_posts,
+        primary_key: [],
+        fields: [],
+        serializer: :default,
+        associations: {},
+      }
     }
   }
 end

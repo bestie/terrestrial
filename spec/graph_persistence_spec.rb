@@ -170,7 +170,7 @@ RSpec.describe "Graph persistence" do
     end
   end
 
-  xcontext "modify a many to many relationhip" do
+  context "modify a many to many relationship" do
     let(:post)     { user.posts.first }
 
     context "delete a node" do
@@ -181,7 +181,7 @@ RSpec.describe "Graph persistence" do
         expect(post.categories.map(&:id)).not_to include(category.id)
       end
 
-      it "persists the change" do
+      it "deletes the 'join table' record" do
         category = post.categories.first
         post.categories.delete(category)
         mapper.save(user)
@@ -192,6 +192,19 @@ RSpec.describe "Graph persistence" do
             post_id: post.id,
             category_id: category.id,
           }
+        )
+      end
+
+      it "does not delete the object" do
+        category = post.categories.first
+        post.categories.delete(category)
+        mapper.save(user)
+
+        expect(datastore).to have_persisted(
+          :categories,
+          hash_including(
+            id: category.id,
+          )
         )
       end
     end

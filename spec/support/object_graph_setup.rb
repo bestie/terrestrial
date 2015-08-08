@@ -23,6 +23,7 @@ RSpec.shared_context "object graph setup" do
       posts: SequelMapper::StructFactory.new(Post),
       comments: SequelMapper::StructFactory.new(Comment),
       categories: SequelMapper::StructFactory.new(Category),
+      categories_to_posts: ->(x){x},
       noop: ->(x){x},
     }
   }

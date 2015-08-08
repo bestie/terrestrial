@@ -28,6 +28,7 @@ class LoadableOneToManyAssociation
       block.call(mapping_name, associated_object, foreign_key_pair)
     }
   end
+  alias_method :delete, :dump
 
   def eager_superset(superset, associated_dataset)
     superset.where(foreign_key => associated_dataset.select(key))
@@ -135,27 +136,43 @@ class LoadableManyToManyAssociation < LoadableOneToManyAssociation
   end
 
   def dump(parent_record, collection, &block)
-    (collection || []).flat_map { |associated_object|
-      block
-        .call(mapping_name, associated_object, _foreign_key_does_not_go_here = {})
-        .flat_map { |record|
-          [
-            record,
-            SequelMapper::NamespacedRecord.new(
-              through_namespace,
-              {
-                foreign_key => parent_record.fetch(key),
-                association_foreign_key => record.fetch(association_key, nil),
-                # TODO: Record association key is missing when record is from
-                # the through dataset
-              },
-            )
-          ]
-        }
-    }.flatten(1)
+    flat_list_of_records_and_join_records(parent_record, collection, &block)
+  end
+
+  def delete(parent_record, collection, &block)
+    flat_list_of_just_join_records(parent_record, collection, &block)
   end
 
   private
+
+  def flat_list_of_records_and_join_records(parent_record, collection, &block)
+    record_join_record_pairs(parent_record, collection, &block).flatten(1)
+  end
+
+  def flat_list_of_just_join_records(parent_record, collection, &block)
+    record_join_record_pairs(parent_record, collection, &block)
+      .map { |(_records, join_records)| join_records }
+      .flatten(1)
+  end
+
+  def record_join_record_pairs(parent_record, collection, &block)
+    (collection || []).map { |associated_object|
+      records = block.call(mapping_name, associated_object, _foreign_key_does_not_go_here = {})
+
+      join_records = records.flat_map { |record|
+        block.call(through_namespace, _empty_obj = {}, foreign_keys(parent_record, record))
+      }
+
+      records + join_records
+    }
+  end
+
+  def foreign_keys(parent_record, record)
+    {
+      foreign_key => foreign_key_value(parent_record),
+      association_foreign_key => record.fetch(association_key),
+    }
+  end
 
   def foreign_key_value(record)
     record.fetch(key)
