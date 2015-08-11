@@ -57,7 +57,7 @@ RSpec.shared_context "mapper setup" do
             namespace: config.fetch(:namespace),
             fields: config.fetch(:fields),
             primary_key: config.fetch(:primary_key),
-            serializer: serializer.call(fields),
+            serializer: serializers.fetch(config.fetch(:serializer)).call(fields),
             associations: Hash[associations],
             factory: factories.fetch(name),
           )
@@ -84,6 +84,13 @@ RSpec.shared_context "mapper setup" do
         ->{ loader.call(query.first) },
         preloaded_data,
       )
+    }
+  }
+
+  let(:serializers) {
+    {
+      default: default_serializer,
+      null: null_serializer,
     }
   }
 
@@ -187,9 +194,9 @@ RSpec.shared_context "mapper setup" do
 
       categories_to_posts: {
         namespace: :categories_to_posts,
-        primary_key: [],
+        primary_key: [:category_id, :post_id],
         fields: [],
-        serializer: :default,
+        serializer: :null,
         associations: {},
       }
     }

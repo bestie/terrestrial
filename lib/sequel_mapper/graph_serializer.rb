@@ -5,11 +5,14 @@ module SequelMapper
     def initialize(mappings:)
       @mappings = mappings
       @count = 0
+      @encountered_records = Set.new
     end
 
-    attr_reader :mappings
+    attr_reader :mappings, :encountered_records
+    private     :mappings, :encountered_records
 
-    def call(mapping_name, object, foreign_key = {}, stack = [])
+    def call(mapping_name, object, foreign_key = {})
+      puts "------------------------------------" + "encountered_records " + encountered_records.to_a.to_s
       # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
       serializer = mapping.serializer
@@ -28,12 +31,17 @@ module SequelMapper
           .merge(foreign_key),
       )
 
-      if stack.include?(current_record)
+      puts "Dumping " + current_record.identity.to_s + current_record.to_h.to_s
+      if encountered_records.include?(current_record.identity)
+        puts "Terminating on " + current_record.to_h.to_s
         return [current_record]
+      else
+        encountered_records.add(current_record.identity)
       end
 
-      [current_record] + associations_map
+      $dumped = [current_record] + associations_map
         .map { |name, association|
+          puts "Dumping association #{name}"
           [serialized_record.fetch(name), association]
         }
         .map { |collection, association|
@@ -43,10 +51,10 @@ module SequelMapper
           assoc_mapping = mappings.fetch(association.mapping_name)
 
           association.dump(current_record, nodes) { |assoc_mapping_name, assoc_object, foreign_key|
-            call(assoc_mapping_name, assoc_object, foreign_key, stack + [current_record])
+            call(assoc_mapping_name, assoc_object, foreign_key)
           } +
           association.delete(current_record, deleted_nodes) { |assoc_mapping_name, assoc_object, foreign_key|
-            delete(assoc_mapping_name, assoc_object, foreign_key, stack + [current_record])
+            delete(assoc_mapping_name, assoc_object, foreign_key)
           }
         }
         .flatten(1)
@@ -54,12 +62,12 @@ module SequelMapper
 
     private
 
-    def delete(mapping_name, object, _foreign_key, _stack)
+    def delete(mapping_name, object, _foreign_key)
       # TODO copypasta ¯\_(ツ)_/¯
       mapping = mappings.fetch(mapping_name)
+      primary_key = mapping.primary_key
       serializer = mapping.serializer
       namespace = mapping.namespace
-      primary_key = mapping.primary_key
 
       serialized_record = serializer.call(object)
 

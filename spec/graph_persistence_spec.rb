@@ -17,7 +17,7 @@ RSpec.describe "Graph persistence" do
     mapper.where(id: "users/1").first
   }
 
-  context "without accessing associations" do
+  context "without associations" do
     let(:modified_email) { "bestie+modified@gmail.com" }
 
     it "saves the root object" do

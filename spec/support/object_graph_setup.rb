@@ -28,11 +28,17 @@ RSpec.shared_context "object graph setup" do
     }
   }
 
-  let(:serializer) {
+  let(:default_serializer) {
     ->(fields) {
       ->(object) {
         SequelMapper::Serializer.new(fields, object).to_h
       }
+    }
+  }
+
+  let(:null_serializer) {
+    ->(_fields) {
+      ->(x){x}
     }
   }
 
@@ -69,6 +75,9 @@ RSpec.shared_context "object graph setup" do
        subject: "Sleeping",
        body: "I do it three times purrr day",
        comments: [],
+       categories: [
+        chilling_category,
+      ],
      )
    }
 
@@ -83,6 +92,13 @@ RSpec.shared_context "object graph setup" do
     factories.fetch(:categories).call(
       id: "categories/1",
       name: "Cat biscuits",
+    )
+  }
+
+  let(:chilling_category) {
+    factories.fetch(:categories).call(
+      id: "categories/2",
+      name: "Chillaxing",
     )
   }
 end

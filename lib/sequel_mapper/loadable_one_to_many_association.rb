@@ -74,7 +74,6 @@ class LoadableManyToOneAssociation < LoadableOneToManyAssociation
     collection.flat_map { |object|
       block.call(mapping_name, object, _foreign_key_does_not_go_here = {})
         .flat_map { |associated_record|
-
           foreign_key_pair = {
             foreign_key => associated_record.fetch(key),
           }
@@ -157,10 +156,11 @@ class LoadableManyToManyAssociation < LoadableOneToManyAssociation
 
   def record_join_record_pairs(parent_record, collection, &block)
     (collection || []).map { |associated_object|
-      records = block.call(mapping_name, associated_object, _foreign_key_does_not_go_here = {})
+      records = block.call(mapping_name, associated_object, _no_foreign_key = {})
 
-      join_records = records.flat_map { |record|
-        block.call(through_namespace, _empty_obj = {}, foreign_keys(parent_record, record))
+      join_records = records.take(1).flat_map { |record|
+        fks = foreign_keys(parent_record, record)
+        block.call(through_namespace, fks, fks)
       }
 
       records + join_records
