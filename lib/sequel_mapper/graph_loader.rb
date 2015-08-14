@@ -13,9 +13,8 @@ module SequelMapper
 
       associations = load_associations(mapping, record, eager_data)
 
-      object_load_pipeline.call(mapping) { |pipelined_record|
-        mapping.factory.call(pipelined_record.merge(Hash[associations]))
-      }.call(record.to_h) # TODO Try removing this #to_h
+      pipelined_record = object_load_pipeline.call(mapping, record.to_h)
+      mapping.factory.call(pipelined_record.merge(Hash[associations]))
     end
 
     private
