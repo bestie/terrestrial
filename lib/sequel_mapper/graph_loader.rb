@@ -11,8 +11,18 @@ module SequelMapper
     def call(mapping_name, record, eager_data = {})
       mapping = mappings.fetch(mapping_name)
 
-      associations = mapping.associations.map { |name, association|
-        data_superset = eager_data.fetch([mapping_name, name]) {
+      associations = load_associations(mapping, record, eager_data)
+
+      object_load_pipeline.call(mapping) { |pipelined_record|
+        mapping.factory.call(pipelined_record.merge(Hash[associations]))
+      }.call(record.to_h) # TODO Try removing this #to_h
+    end
+
+    private
+
+    def load_associations(mapping, record, eager_data)
+      mapping.associations.map { |name, association|
+        data_superset = eager_data.fetch([mapping.name, name]) {
           datasets[mappings.fetch(association.mapping_name).namespace]
         }
 
@@ -27,10 +37,6 @@ module SequelMapper
           )
         ]
       }
-
-      object_load_pipeline.call(mapping) { |pipelined_record|
-        mapping.factory.call(pipelined_record.merge(Hash[associations]))
-      }.call(record.to_h) # TODO Try removing this #to_h
     end
   end
 end

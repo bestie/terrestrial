@@ -70,9 +70,4 @@ RSpec.describe "Persist a new graph in empty datastore" do
       })
     end
   end
-
-  after do |ex|
-    puts $dumped.map(&:inspect).join("\n")
-    require "pry"; binding.pry # DEBUG @bestie
-  end
 end
