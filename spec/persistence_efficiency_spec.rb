@@ -103,7 +103,7 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  xcontext "when modifying a many to many association" do
+  context "when modifying a many to many association" do
     let(:post) { user.posts.first }
     let(:category) { post.categories.first }
 

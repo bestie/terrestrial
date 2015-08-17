@@ -101,11 +101,12 @@ class LoadableManyToManyAssociation < LoadableOneToManyAssociation
     @proxy_factory = proxy_factory
     @association_foreign_key = association_foreign_key
     @association_key = association_key
-    @through_namespace = through_namespace
+    # TODO: mapping name not namespace!
+    @through_mapping_name = @through_namespace = through_namespace
     @through_dataset = through_dataset
   end
 
-  attr_reader :mapping_name
+  attr_reader :mapping_name, :through_mapping_name
 
   attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_namespace, :through_dataset
   private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_namespace, :through_dataset
@@ -113,7 +114,12 @@ class LoadableManyToManyAssociation < LoadableOneToManyAssociation
   def build_proxy(data_superset:, loader:, record:)
    proxy_factory.call(
       query: build_query(data_superset, record),
-      loader: loader,
+      loader: ->(record_list) {
+        record = record_list.first
+        join_records = record_list.last
+
+        loader.call(record, join_records)
+      },
       mapper: nil,
     )
   end
@@ -126,12 +132,15 @@ class LoadableManyToManyAssociation < LoadableOneToManyAssociation
     )
   end
 
-  def build_query(superset, record)
+  def build_query(superset, parent_record)
     superset.where(
       association_key => through_dataset
         .select(association_foreign_key)
-        .where(foreign_key => foreign_key_value(record))
+        .where(foreign_key => foreign_key_value(parent_record))
     )
+    .lazy.map { |record|
+      [record, [foreign_keys(parent_record, record)]]
+    }
   end
 
   def dump(parent_record, collection, &block)
