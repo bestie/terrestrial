@@ -19,8 +19,7 @@ module SequelMapper
     def load_record(mapping, record, eager_data)
       associations = load_associations(mapping, record, eager_data)
 
-      pipelined_record = object_load_pipeline.call(mapping, record.to_h)
-      mapping.factory.call(pipelined_record.merge(Hash[associations]))
+      object_load_pipeline.call(mapping, record, Hash[associations])
     end
 
     def load_associations(mapping, record, eager_data)

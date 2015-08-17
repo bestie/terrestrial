@@ -83,13 +83,16 @@ module SequelMapper
     attr_reader :storage
     private     :storage
 
-    def call(record, &not_already_loaded)
-      storage.fetch(record.identity) {
-        storage.store(
-          record.identity,
-          not_already_loaded.nil? ? record : not_already_loaded.call(record),
-        )
+    def call(record, object)
+      storage.fetch(hash_key(record)) {
+        storage.store(hash_key(record), object)
       }
+    end
+
+    private
+
+    def hash_key(record)
+      [record.namespace, record.identity]
     end
   end
 

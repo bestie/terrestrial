@@ -98,12 +98,12 @@ module SequelMapper
     end
 
     def object_load_pipeline
-      ->(mapping, record) {
+      ->(mapping, record, other_attrs = {}) {
         [
           ->(r) { puts "loading"; p r },
           namespaced_record_factory(mapping), # TODO terrible terrible naming
           dirty_map.method(:load),
-          identity_map,
+          ->(r) { identity_map.call(r, mapping.factory.call(r.merge(other_attrs))) },
         ].reduce(record) { |agg, operation|
           operation.call(agg)
         }
