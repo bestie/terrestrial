@@ -54,19 +54,23 @@ module SequelMapper
     private     :storage
 
     def load(record)
-      storage.store(record.identity, deep_dup(record))
+      storage.store(hash_key(record), deep_clone(record))
       record
     end
 
-    def dirty?(identity, record)
-      loaded_value = storage.fetch(record.identity, :not_found)
+    def dirty?(record)
+      record_as_loaded = storage.fetch(hash_key(record), :not_found)
 
-      loaded_value != record
+      record != record_as_loaded
     end
 
     private
 
-    def deep_dup(record)
+    def hash_key(record)
+      deep_clone([record.namespace, record.identity])
+    end
+
+    def deep_clone(record)
       Marshal.load(Marshal.dump(record))
     end
   end

@@ -100,6 +100,10 @@ module SequelMapper
     end
 
     DeletedRecord = Class.new(NamespacedRecord) do
+      def to_a
+        [:delete, namespace, data]
+      end
+
       def if_upsert(&block)
         self
       end

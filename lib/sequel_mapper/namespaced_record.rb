@@ -40,7 +40,7 @@ module SequelMapper
     end
 
     def to_a
-      [namespace, data]
+      [:upsert, namespace, data]
     end
 
     def ==(other)

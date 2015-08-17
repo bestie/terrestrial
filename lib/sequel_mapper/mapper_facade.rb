@@ -116,7 +116,7 @@ module SequelMapper
         [
           :uniq.to_proc,
           # ->(rs) { puts "After unique filter"; pp rs },
-          ->(rs) { rs.select { |r| dirty_map.dirty?(r.identity, r) } },
+          ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
           # ->(rs) { puts "After dirty filter"; pp rs },
           ->(rs) {
             rs.each { |r|
