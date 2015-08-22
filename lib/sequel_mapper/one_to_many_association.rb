@@ -1,4 +1,4 @@
-class LoadableOneToManyAssociation
+class OneToManyAssociation
   def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
     @mapping_name = mapping_name
     @foreign_key = foreign_key
@@ -39,7 +39,7 @@ class LoadableOneToManyAssociation
   end
 end
 
-class LoadableManyToOneAssociation
+class ManyToOneAssociation
   def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
     @mapping_name = mapping_name
     @foreign_key = foreign_key
@@ -94,7 +94,7 @@ class LoadableManyToOneAssociation
   end
 end
 
-class LoadableManyToManyAssociation
+class ManyToManyAssociation
   def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_namespace:, through_dataset:)
     @mapping_name = mapping_name
     @foreign_key = foreign_key

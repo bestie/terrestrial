@@ -5,7 +5,7 @@ require "sequel_mapper/queryable_lazy_dataset_loader"
 require "sequel_mapper/collection_mutability_proxy"
 require "sequel_mapper/lazy_object_proxy"
 require "sequel_mapper/dataset"
-require "sequel_mapper/loadable_one_to_many_association"
+require "sequel_mapper/one_to_many_association"
 require "support/object_graph_setup"
 
 RSpec.shared_context "mapper setup" do
@@ -35,11 +35,11 @@ RSpec.shared_context "mapper setup" do
             assoc_name,
             case assoc_config.fetch(:type)
             when :one_to_many
-              LoadableOneToManyAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+              OneToManyAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
             when :many_to_one
-              LoadableManyToOneAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+              ManyToOneAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
             when :many_to_many
-              LoadableManyToManyAssociation.new(
+              ManyToManyAssociation.new(
                 through_namespace: assoc_config.fetch(:through_namespace),
                 through_dataset: datastore[assoc_config.fetch(:through_namespace)],
                 **assoc_config.dup.tap { |h| h.delete(:type); h.delete(:through_namespace) },
