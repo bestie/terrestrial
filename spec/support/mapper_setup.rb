@@ -6,6 +6,8 @@ require "sequel_mapper/collection_mutability_proxy"
 require "sequel_mapper/lazy_object_proxy"
 require "sequel_mapper/dataset"
 require "sequel_mapper/one_to_many_association"
+require "sequel_mapper/many_to_one_association"
+require "sequel_mapper/many_to_many_association"
 require "support/object_graph_setup"
 
 RSpec.shared_context "mapper setup" do
