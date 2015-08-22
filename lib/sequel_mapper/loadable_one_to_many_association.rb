@@ -39,7 +39,7 @@ class LoadableOneToManyAssociation
   end
 end
 
-class LoadableManyToOneAssociation < LoadableOneToManyAssociation
+class LoadableManyToOneAssociation
   def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
     @mapping_name = mapping_name
     @foreign_key = foreign_key
@@ -85,6 +85,7 @@ class LoadableManyToOneAssociation < LoadableOneToManyAssociation
         }
     }
   end
+  alias_method :delete, :dump
 
   private
 
@@ -93,7 +94,7 @@ class LoadableManyToOneAssociation < LoadableOneToManyAssociation
   end
 end
 
-class LoadableManyToManyAssociation < LoadableOneToManyAssociation
+class LoadableManyToManyAssociation
   def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_namespace:, through_dataset:)
     @mapping_name = mapping_name
     @foreign_key = foreign_key
