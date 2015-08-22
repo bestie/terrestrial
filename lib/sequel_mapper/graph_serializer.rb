@@ -1,4 +1,5 @@
 require "sequel_mapper/namespaced_record"
+require "sequel_mapper/deleted_record"
 
 module SequelMapper
   class GraphSerializer
@@ -96,21 +97,6 @@ module SequelMapper
         collection.each_deleted
       else
         []
-      end
-    end
-
-    DeletedRecord = Class.new(NamespacedRecord) do
-      def to_a
-        [:delete, namespace, data]
-      end
-
-      def if_upsert(&block)
-        self
-      end
-
-      def if_delete(&block)
-        block.call(self)
-        self
       end
     end
 
