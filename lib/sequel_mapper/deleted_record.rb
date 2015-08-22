@@ -1,7 +1,7 @@
 require "sequel_mapper/namespaced_record"
 
 module SequelMapper
-  DeletedRecord = Class.new(NamespacedRecord) do
+  class DeletedRecord < NamespacedRecord
     def to_a
       [:delete, namespace, data]
     end
