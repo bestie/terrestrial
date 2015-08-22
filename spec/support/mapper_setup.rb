@@ -35,11 +35,11 @@ RSpec.shared_context "mapper setup" do
             assoc_name,
             case assoc_config.fetch(:type)
             when :one_to_many
-              OneToManyAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+              SequelMapper::OneToManyAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
             when :many_to_one
-              ManyToOneAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+              SequelMapper::ManyToOneAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
             when :many_to_many
-              ManyToManyAssociation.new(
+              SequelMapper::ManyToManyAssociation.new(
                 through_namespace: assoc_config.fetch(:through_namespace),
                 through_dataset: datastore[assoc_config.fetch(:through_namespace)],
                 **assoc_config.dup.tap { |h| h.delete(:type); h.delete(:through_namespace) },
