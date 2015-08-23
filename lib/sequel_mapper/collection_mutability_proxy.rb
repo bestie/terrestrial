@@ -15,14 +15,10 @@ module SequelMapper
     private     :collection, :deleted_nodes, :added_nodes
 
     extend Forwardable
-    def_delegators :collection, :loaded?, :where, :query
+    def_delegators :collection, :where, :query
 
     def each_loaded(&block)
-      if loaded?
-        enum.each(&block)
-      else
-        added_nodes.each(&block)
-      end
+      loaded_enum.each(&block)
     end
 
     def each_deleted(&block)
@@ -53,6 +49,18 @@ module SequelMapper
     end
 
     private
+
+    def loaded_enum
+      Enumerator.new do |yielder|
+        collection.each_loaded do |element|
+          yielder.yield(element) unless deleted?(element)
+        end
+
+        added_nodes.each do |node|
+          yielder.yield(node)
+        end
+      end
+    end
 
     def enum
       Enumerator.new do |yielder|

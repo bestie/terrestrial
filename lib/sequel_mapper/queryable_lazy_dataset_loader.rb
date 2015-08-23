@@ -37,8 +37,8 @@ module SequelMapper
       enum.each(&block)
     end
 
-    def loaded?
-      !!@loaded
+    def each_loaded(&block)
+      loaded_objects.each(&block)
     end
 
     private
@@ -51,7 +51,6 @@ module SequelMapper
 
         loop do
           object_enum.next.tap { |obj|
-            mark_as_loaded
             loaded_objects.push(obj)
             yielder.yield(obj)
           }
@@ -65,10 +64,6 @@ module SequelMapper
 
     def loaded_objects
       @loaded_objects ||= []
-    end
-
-    def mark_as_loaded
-      @loaded ||= true
     end
 
     def inspectable_properties

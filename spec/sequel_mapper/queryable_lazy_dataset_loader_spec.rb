@@ -100,44 +100,4 @@ RSpec.describe SequelMapper::QueryableLazyDatasetLoader do
       expect(loader_count).to eq(1)
     end
   end
-
-  describe "#loaded?" do
-    context "before an item in the collection has been yielded" do
-      it "is not loaded" do
-        expect(proxy.loaded?).to be(false)
-      end
-    end
-
-    context "after the collection has been mapped" do
-      before do
-        proxy.to_a
-      end
-
-      it "is loaded" do
-        expect(proxy.loaded?).to be(true)
-      end
-    end
-
-    context "after calling first" do
-      before do
-        proxy.first
-      end
-
-      it "is loaded" do
-        expect(proxy.loaded?).to be(true)
-      end
-    end
-
-    context "after iterating over the collection" do
-      before do
-        proxy.each do |obj|
-          # NO OP
-        end
-      end
-
-      it "is loaded" do
-        expect(proxy.loaded?).to be(true)
-      end
-    end
-  end
 end
