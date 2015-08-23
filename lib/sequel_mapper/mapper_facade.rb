@@ -101,7 +101,7 @@ module SequelMapper
       ->(mapping, record, other_attrs = {}) {
         [
           ->(r) { puts "loading"; p r },
-          namespaced_record_factory(mapping), # TODO terrible terrible naming
+          record_factory(mapping), # TODO terrible terrible naming
           dirty_map.method(:load),
           ->(r) { identity_map.call(r, mapping.factory.call(r.merge(other_attrs))) },
         ].reduce(record) { |agg, operation|
@@ -130,7 +130,7 @@ module SequelMapper
       }
     end
 
-    def namespaced_record_factory(mapping)
+    def record_factory(mapping)
       ->(record_hash) {
         identity = Hash[
           mapping.primary_key.map { |field|
@@ -138,7 +138,7 @@ module SequelMapper
           }
         ]
 
-        SequelMapper::NamespacedRecord.new(
+        SequelMapper::UpsertedRecord.new(
           mapping.namespace,
           identity,
           record_hash,

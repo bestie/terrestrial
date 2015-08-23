@@ -1,4 +1,4 @@
-require "sequel_mapper/namespaced_record"
+require "sequel_mapper/upserted_record"
 require "sequel_mapper/deleted_record"
 
 module SequelMapper
@@ -24,7 +24,7 @@ module SequelMapper
 
       serialized_record = serializer.call(object)
 
-      current_record = NamespacedRecord.new(
+      current_record = UpsertedRecord.new(
         namespace,
         record_identity(primary_key, serialized_record),
         serialized_record

@@ -1,7 +1,7 @@
-require "sequel_mapper/namespaced_record"
+require "sequel_mapper/upserted_record"
 
 module SequelMapper
-  class DeletedRecord < NamespacedRecord
+  class DeletedRecord < UpsertedRecord
     def to_a
       [:delete, namespace, data]
     end
