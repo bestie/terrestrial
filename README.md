@@ -291,6 +291,28 @@ data model and/or a deep object graph.
   user_mapper.save(user)
 ```
 
+## Running the tests
+
+### Set the following environment variables
+* PGHOST
+* PGUSER
+* PGDATABASE
+
+### Create the database and standard (blog) schema
+```
+$ bundle exec rake db:setup
+```
+
+### Run RSpec
+```
+$ bundle exec rspec
+```
+
+### Drop the test database and start fresh
+```
+$ bundle exec rake db:drop
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:

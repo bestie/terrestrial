@@ -7,10 +7,6 @@ RSpec.describe "Persist a new graph in empty datastore" do
   include_context "mapper setup"
   include_context "sequel persistence setup"
 
-  before do
-    truncate_tables
-  end
-
   context "given a graph of new objects" do
     it "persists the root node" do
       user_mapper.save(hansel)

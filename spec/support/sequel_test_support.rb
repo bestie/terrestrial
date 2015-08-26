@@ -7,6 +7,11 @@ module SequelMapper
     end
     module_function :create_database
 
+    def drop_database
+      `psql postgres --command "DROP DATABASE $PGDATABASE;"`
+    end
+    module_function :drop_database
+
     def drop_tables
       db_connection.tables.each do |table_name|
         db_connection.drop_table(table_name)
@@ -29,6 +34,32 @@ module SequelMapper
       )
     end
     module_function :db_connection
+
+    def create_tables(schema)
+      options_map = {
+        id: { primary_key: true },
+      }
+
+      schema.each do |table_name, fields|
+
+        db_connection.create_table(table_name) do
+          fields.each do |field|
+            type = field.fetch(:type)
+            name = field.fetch(:name)
+            options = options_map.fetch(name, {})
+
+            send(type, name, options)
+          end
+        end
+      end
+    end
+    module_function :create_tables
+
+    def insert_records(datastore, records)
+      records.each { |(namespace, record)|
+        datastore[namespace].insert(record)
+      }
+    end
 
     class QueryCounter
       def initialize

@@ -29,14 +29,6 @@ RSpec.configure do |config|
   # Kernel.srand config.seed
 
   config.before(:suite) do
-    SequelMapper::SequelTestSupport.create_database
-  end
-
-  config.before(:each) do
-    # SequelMapper::SequelTestSupport.truncate_tables
-  end
-
-  at_exit do
-    # SequelMapper::SequelTestSupport.drop_tables
+    SequelMapper::SequelTestSupport.truncate_tables
   end
 end

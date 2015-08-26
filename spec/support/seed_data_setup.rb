@@ -1,12 +1,9 @@
 require "support/object_graph_setup"
-
 RSpec.shared_context "seed data setup" do
   include_context "object graph setup"
 
   before {
-    seeded_records.each { |(namespace, record)|
-      datastore[namespace].insert(record)
-    }
+    insert_records(datastore, seeded_records)
   }
 
   let(:seeded_records) {
