@@ -5,20 +5,31 @@ require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "sequel_mapper"
 
-RSpec.xdescribe "Configuration override" do
+require "sequel_mapper/configurations/conventional_configuration"
+
+RSpec.describe "Configuration override" do
   include_context "mapper setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:mapper) { user_mapper }
-
-  let(:user) {
-    mapper.where(id: "user/1").first
+  subject(:user_mapper) {
+    SequelMapper.mapper(
+      config: mapper_config,
+      name: :users,
+      datastore: datastore,
+    )
   }
 
-  before do
-    SequelMapper::SequelTestSupport.drop_tables
-  end
+  let(:mapper_config) {
+    SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
+      .setup_mapping(:users) { |users|
+        users.has_many :posts, foreign_key: :author_id
+      }
+  }
+
+  let(:user) {
+    user_mapper.where(id: "users/1").first
+  }
 
   context "override the root mapper factory" do
     context "with a Struct class" do
@@ -61,39 +72,76 @@ RSpec.xdescribe "Configuration override" do
   end
 
   context "override table names" do
-    let(:datastore) { db_connection }
+    context "for just the top level mapping" do
+      before do
+        datastore.rename_table(:users, unconventional_table_name)
+      end
 
-    let(:users_table_name) {
-      :users_is_called_this_weird_thing_perhaps_for_legacy_reasons
-    }
+      after do
+        datastore.rename_table(unconventional_table_name, :users)
+      end
 
-    let(:strange_data) {
-      {
-        users_table_name => fixture_tables_hash.fetch(:users),
-      }
-    }
-
-    before do
-      write_fixture_data(datastore, strange_data)
-    end
-
-    let(:mapper_config) {
-      SequelMapper::Configurations::ConventionalConfiguration
+      let(:mapper_config) {
+        SequelMapper::Configurations::ConventionalConfiguration
         .new(datastore)
         .setup_mapping(:users) do |config|
-          config.relation_name users_table_name
+          config.relation_name unconventional_table_name
         end
-    }
+      }
 
-    context "for just the top level mapping" do
+
+      let(:datastore) { db_connection }
+
+      let(:unconventional_table_name) {
+        :users_is_called_this_weird_thing_perhaps_for_legacy_reasons
+      }
+
       it "maps data from the specified relation" do
         expect(
-          mapper.map(&:id)
-        ).to eq(["user/1", "user/2", "user/3"])
+          user_mapper.map(&:id)
+        ).to eq(["users/1", "users/2"])
       end
     end
 
     context "for associated collections" do
+      before do
+        rename_all_the_tables
+        setup_the_strange_table_name_mappings
+      end
+
+      after do
+        undo_rename_all_the_tables
+      end
+
+      def rename_all_the_tables
+        strange_table_name_map.each do |name, new_name|
+          datastore.rename_table(name, new_name)
+        end
+      end
+
+      def undo_rename_all_the_tables
+        strange_table_name_map.each do |original_name, strange_name|
+          datastore.rename_table(strange_name, original_name)
+        end
+      end
+
+      def setup_the_strange_table_name_mappings
+        mapper_config
+          .setup_mapping(:users) do |config|
+            config.relation_name strange_table_name_map.fetch(:users)
+            config.has_many(:posts, foreign_key: :author_id)
+          end
+          .setup_mapping(:posts) do |config|
+            config.relation_name strange_table_name_map.fetch(:posts)
+            config.belongs_to(:author, mapping_name: :users)
+            config.has_many_through(:categories, through_mapping_name: strange_table_name_map.fetch(:categories_to_posts))
+          end
+          .setup_mapping(:categories) do |config|
+            config.relation_name strange_table_name_map.fetch(:categories)
+            config.has_many_through(:posts, through_mapping_name: strange_table_name_map.fetch(:categories_to_posts))
+          end
+      end
+
       let(:strange_table_name_map) {
         {
           :users => :users_table_that_has_silly_name_perhaps_for_legacy_reasons,
@@ -103,43 +151,16 @@ RSpec.xdescribe "Configuration override" do
         }
       }
 
-      let(:strange_data) {
-        Hash[
-          strange_table_name_map.map { |good_name, bad_name|
-            [bad_name, fixture_tables_hash.fetch(good_name)]
-          }
-        ]
-      }
-
-      before do
-        write_fixture_data(datastore, strange_data)
-
-        mapper_config
-          .setup_mapping(:users) do |config|
-            config.relation_name strange_table_name_map.fetch(:users)
-            config.has_many(:posts, foreign_key: :author_id)
-          end
-          .setup_mapping(:posts) do |config|
-            config.relation_name strange_table_name_map.fetch(:posts)
-            config.belongs_to(:author, mapping_name: :users)
-            config.has_many_through(:categories, join_table_name: strange_table_name_map.fetch(:categories_to_posts))
-          end
-          .setup_mapping(:categories) do |config|
-            config.relation_name strange_table_name_map.fetch(:categories)
-            config.has_many_through(:posts, join_table_name: strange_table_name_map.fetch(:categories_to_posts))
-          end
-      end
-
       it "maps data from the specified relation into a has many collection" do
         expect(
           user.posts.map(&:id)
-        ).to eq(["post/1", "post/2"])
+        ).to eq(["posts/1", "posts/2"])
       end
 
-      it "maps data from the specified relation into a belongs to field" do
+      it "maps data from the specified relation into a `belongs_to` field" do
         expect(
-          user.posts.first.author
-        ).to eq(user)
+          user.posts.first.author.__getobj__.object_id
+        ).to eq(user.object_id)
       end
     end
   end

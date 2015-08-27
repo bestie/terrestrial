@@ -1,21 +1,20 @@
 module SequelMapper
   class ManyToManyAssociation
-    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_namespace:, through_dataset:)
+    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_mapping_name:, through_dataset:)
       @mapping_name = mapping_name
       @foreign_key = foreign_key
       @key = key
       @proxy_factory = proxy_factory
       @association_foreign_key = association_foreign_key
       @association_key = association_key
-      # TODO: mapping name not namespace!
-      @through_mapping_name = @through_namespace = through_namespace
+      @through_mapping_name = through_mapping_name
       @through_dataset = through_dataset
     end
 
     attr_reader :mapping_name, :through_mapping_name
 
-    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_namespace, :through_dataset
-    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_namespace, :through_dataset
+    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset
+    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset
 
     def build_proxy(data_superset:, loader:, record:)
      proxy_factory.call(
@@ -75,7 +74,7 @@ module SequelMapper
 
         join_records = records.take(1).flat_map { |record|
           fks = foreign_keys(parent_record, record)
-          block.call(through_namespace, fks, fks)
+          block.call(through_mapping_name, fks, fks)
         }
 
         records + join_records

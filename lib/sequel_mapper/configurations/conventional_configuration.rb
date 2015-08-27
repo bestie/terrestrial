@@ -1,6 +1,5 @@
 require "sequel_mapper/configurations/conventional_association_configuration"
-require "sequel_mapper/identity_map"
-require "sequel_mapper/mapping"
+require "sequel_mapper/relation_mapping"
 
 module SequelMapper
   module Configurations
@@ -146,8 +145,10 @@ module SequelMapper
 
       def mapping_args(table_name, mapping_name)
         {
+          name: mapping_name,
           relation_name: table_name,
           fields: get_fields(table_name),
+          primary_key: get_primary_key(table_name),
           factory: ensure_factory(mapping_name),
           serializer: standard_serializer,
           associations: {},
@@ -165,6 +166,14 @@ module SequelMapper
         datastore[table_name].columns
       end
 
+      def get_primary_key(table_name)
+        datastore.schema(table_name)
+          .select { |field_name, properties|
+            properties.fetch(:primary_key)
+          }
+          .map { |field_name, _| field_name }
+      end
+
       def tables
         (datastore.tables - [:schema_migrations])
       end
@@ -179,16 +188,16 @@ module SequelMapper
         }
       end
 
-      def mapping(relation_name: ,factory:, serializer:, fields:, associations:, queries:)
-        IdentityMap.new(
-          Mapping.new(
-            relation_name: relation_name,
-            factory: ensure_factory(factory),
-            serializer: serializer,
-            fields: fields,
-            associations: associations,
-            queries: queries,
-          )
+      def mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, queries:)
+        RelationMapping.new(
+          name: name,
+          namespace: relation_name,
+          primary_key: primary_key,
+          factory: ensure_factory(factory),
+          serializer: serializer,
+          fields: fields,
+          associations: associations,
+          queries: queries,
         )
       end
 
