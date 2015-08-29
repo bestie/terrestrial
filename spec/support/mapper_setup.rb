@@ -43,7 +43,11 @@ RSpec.shared_context "mapper setup" do
             when :many_to_many
               SequelMapper::ManyToManyAssociation.new(
                 through_mapping_name: assoc_config.fetch(:through_mapping_name),
-                through_dataset: datastore[assoc_config.fetch(:through_namespace)],
+                through_dataset: datastore[
+                  configs
+                    .fetch(assoc_config.fetch(:through_mapping_name))
+                    .fetch(:namespace)
+                ],
                 **assoc_config.dup.tap { |h| h.delete(:type); h.delete(:through_namespace) },
               )
             else
@@ -62,6 +66,7 @@ RSpec.shared_context "mapper setup" do
             serializer: serializers.fetch(config.fetch(:serializer)).call(fields),
             associations: Hash[associations],
             factory: factories.fetch(name),
+            queries: {},
           )
         ]
       }
