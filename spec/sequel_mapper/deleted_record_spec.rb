@@ -1,10 +1,10 @@
 require "spec_helper"
 
-require "sequel_mapper/upserted_record"
+require "sequel_mapper/deleted_record"
 
-RSpec.describe SequelMapper::UpsertedRecord do
+RSpec.describe SequelMapper::DeletedRecord do
   subject(:record) {
-    SequelMapper::UpsertedRecord.new(namespace, identity, raw_data)
+    SequelMapper::DeletedRecord.new(namespace, identity, raw_data)
   }
 
   let(:namespace) { double(:namespace) }
@@ -22,16 +22,16 @@ RSpec.describe SequelMapper::UpsertedRecord do
   let(:id) { double(:id) }
   let(:name) { double(:name) }
 
-  describe "#if_upsert" do
+  describe "#if_delete" do
     it "invokes the callback" do
       expect { |callback|
-        record.if_upsert(&callback)
+        record.if_delete(&callback)
       }.to yield_with_args(record)
     end
   end
 
   describe "#==" do
-    context "with another record that upserts" do
+    context "with another record that deletes" do
       let(:comparitor) {
         record.merge({})
       }
@@ -41,7 +41,7 @@ RSpec.describe SequelMapper::UpsertedRecord do
       end
     end
 
-    context "with another record that does not upsert" do
+    context "with another record that does not delete" do
       let(:comparitor) {
         Class.new(SequelMapper::AbstractRecord) do
           protected

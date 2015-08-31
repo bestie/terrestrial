@@ -1,18 +1,16 @@
-require "sequel_mapper/upserted_record"
+require "sequel_mapper/abstract_record"
 
 module SequelMapper
-  class DeletedRecord < UpsertedRecord
-    def to_a
-      [:delete, namespace, data]
-    end
-
-    def if_upsert(&block)
-      self
-    end
-
+  class DeletedRecord < AbstractRecord
     def if_delete(&block)
       block.call(self)
       self
+    end
+
+    protected
+
+    def operation
+      :delete
     end
   end
 end
