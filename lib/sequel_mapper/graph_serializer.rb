@@ -13,7 +13,6 @@ module SequelMapper
     private     :mappings, :encountered_records
 
     def call(mapping_name, object, foreign_key = {})
-      puts "------------------------------------" + "encountered_records " + encountered_records.to_a.to_s
       # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
       serializer = mapping.serializer
@@ -32,17 +31,14 @@ module SequelMapper
           .merge(foreign_key),
       )
 
-      puts "Dumping " + current_record.identity.to_s + current_record.to_h.to_s
       if encountered_records.include?(current_record.identity)
-        puts "Terminating on " + current_record.to_h.to_s
         return [current_record]
       else
         encountered_records.add(current_record.identity)
       end
 
-      $dumped = [current_record] + associations_map
+      [current_record] + associations_map
         .map { |name, association|
-          puts "Dumping association #{name}"
           [serialized_record.fetch(name), association]
         }
         .map { |collection, association|

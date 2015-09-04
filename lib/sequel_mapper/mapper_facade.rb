@@ -100,8 +100,7 @@ module SequelMapper
     def object_load_pipeline
       ->(mapping, record, other_attrs = {}) {
         [
-          ->(r) { puts "loading"; p r },
-          record_factory(mapping), # TODO terrible terrible naming
+          record_factory(mapping),
           dirty_map.method(:load),
           ->(r) { identity_map.call(r, mapping.factory.call(r.merge(other_attrs))) },
         ].reduce(record) { |agg, operation|
@@ -110,14 +109,11 @@ module SequelMapper
       }
     end
 
-    require "pp"
     def object_dump_pipeline
       ->(records) {
         [
           :uniq.to_proc,
-          # ->(rs) { puts "After unique filter"; pp rs },
           ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
-          # ->(rs) { puts "After dirty filter"; pp rs },
           ->(rs) {
             rs.each { |r|
               r.if_upsert(&method(:upsert))

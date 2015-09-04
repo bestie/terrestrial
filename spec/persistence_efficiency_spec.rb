@@ -180,7 +180,7 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  after do |ex|
-    query_counter.show_queries if ex
+  after do |example|
+    query_counter.show_queries if example.exception
   end
 end

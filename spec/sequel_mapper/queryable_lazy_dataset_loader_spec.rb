@@ -86,7 +86,7 @@ RSpec.describe SequelMapper::QueryableLazyDatasetLoader do
 
     context "when drop has been called beforehand" do
       it "loads each object just once" do
-        proxy.drop(1).each { |x| p "here #{x}" }
+        proxy.drop(1).each { |x| x }
 
         expect(loader_count).to eq(collection_size)
       end

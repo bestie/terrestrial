@@ -113,7 +113,6 @@ class SequelMapper::MockSequel
     end
 
     def each(&block)
-      puts "iterating over #{matching_rows}"
       database.log_read
 
       matching_rows.each(&block)
