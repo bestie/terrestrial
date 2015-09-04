@@ -150,7 +150,7 @@ module SequelMapper
           fields: get_fields(table_name),
           primary_key: get_primary_key(table_name),
           factory: ensure_factory(mapping_name),
-          serializer: standard_serializer,
+          serializer: null_serializer,
           associations: {},
           queries: @queries.fetch(mapping_name, {}),
         }
@@ -182,10 +182,8 @@ module SequelMapper
         DIRTY_MAP
       end
 
-      def standard_serializer
-        ->(fields, object) {
-          Serializer.new(fields, object).to_h
-        }
+      def null_serializer
+        ->(*_){}
       end
 
       def mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, queries:)
