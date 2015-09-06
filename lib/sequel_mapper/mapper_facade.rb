@@ -66,12 +66,10 @@ module SequelMapper
     end
 
     def get_eager_dataset(association, association_namespace, parent_dataset)
-      SequelMapper::Dataset.new(
         association.eager_superset(
           datastore[association_namespace],
           parent_dataset,
-        ).to_a
-      )
+        )
     end
 
     def new_with_dataset(new_dataset)

@@ -1,3 +1,5 @@
+require "sequel_mapper/dataset"
+
 module SequelMapper
   class ManyToOneAssociation
     def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
@@ -23,7 +25,9 @@ module SequelMapper
     end
 
     def eager_superset(superset, associated_dataset)
-      superset.where(key => associated_dataset.select(foreign_key))
+      Dataset.new(
+        superset.where(key => associated_dataset.select(foreign_key)).to_a
+      )
     end
 
     def build_query(superset, record)

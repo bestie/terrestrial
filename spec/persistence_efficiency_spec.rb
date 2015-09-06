@@ -156,26 +156,26 @@ RSpec.describe "Graph persistence efficiency" do
     end
 
     context "for has many to has many through" do
-      it "performs 1 read per table rather than n + 1" do
+      it "performs 1 read per table (including join table) rather than n + 1" do
         expect {
           user_query
             .eager_load(:posts => { :categories => [] })
             .flat_map { |u| u.posts.to_a }
             .flat_map { |p| p.categories.to_a }
             .flat_map { |c| c.id }
-        }.to change { query_counter.read_count }.by(3)
+        }.to change { query_counter.read_count }.by(4)
       end
     end
 
     context "for has many through to has many" do
-      it "performs 1 read per table rather than n + 1" do
+      it "performs 1 read per table (includiing join table) rather than n + 1" do
         expect {
           user_query
             .eager_load(:posts => { :categories => { :posts => [] }})
             .flat_map { |u| u.posts.to_a }
             .flat_map { |p| p.categories.to_a }
             .flat_map { |c| c.posts.to_a }
-        }.to change { query_counter.read_count }.by(4)
+        }.to change { query_counter.read_count }.by(6)
       end
     end
   end

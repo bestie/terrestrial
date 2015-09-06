@@ -1,3 +1,5 @@
+require "sequel_mapper/dataset"
+
 module SequelMapper
   class OneToManyAssociation
     def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
@@ -32,7 +34,11 @@ module SequelMapper
     alias_method :delete, :dump
 
     def eager_superset(superset, associated_dataset)
-      superset.where(foreign_key => associated_dataset.select(key))
+      Dataset.new(
+        superset.where(
+          foreign_key => associated_dataset.select(key)
+        ).to_a
+      )
     end
 
     def build_query(superset, record)
