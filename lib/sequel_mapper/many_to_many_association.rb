@@ -30,16 +30,17 @@ module SequelMapper
     end
 
     def eager_superset(superset, associated_dataset)
+      # TODO: All these keys can be confusing, write some focused tests.
       superset.where(
-        association_key => through_dataset
+        key => through_dataset
           .select(association_foreign_key)
-          .where(foreign_key => associated_dataset.select(key))
+          .where(foreign_key => associated_dataset.select(association_key))
       )
     end
 
     def build_query(superset, parent_record)
       superset.where(
-        association_key => through_dataset
+        key => through_dataset
           .select(association_foreign_key)
           .where(foreign_key => foreign_key_value(parent_record))
       )
