@@ -45,10 +45,23 @@ RSpec.describe "Object identity" do
       end
     end
 
-    xcontext "when eager loading" do
+    context "when eager loading" do
+      let(:user_query) { mapper.where(id: "users/1") }
+
+      let(:eager_category) {
+        user_query
+          .eager_load(:posts => { :categories => { :posts => [] }})
+          .first
+          .posts
+          .first
+          .categories
+          .first
+      }
+
       it "returns the same object for a row's primary once loaded" do
         expect(
-          user.posts.first.categories.eager_load(:posts).first.posts
+          eager_category
+            .posts
             .find { |cat_post| cat_post.id == post.id }
         ).to be(post)
       end
