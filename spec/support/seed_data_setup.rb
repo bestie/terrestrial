@@ -10,6 +10,7 @@ RSpec.shared_context "seed data setup" do
     [
       [ :users, hansel_record ],
       [ :users, jasper_record ],
+      [ :users, poppy_record ],
       [ :posts, biscuits_post_record ],
       [ :posts, sleep_post_record ],
       [ :posts, catch_frogs_post_record ],
@@ -37,6 +38,15 @@ RSpec.shared_context "seed data setup" do
       first_name: "Jasper",
       last_name: "Trickett",
       email: "jasper@tricketts.org",
+    }
+  }
+
+  let(:poppy_record) {
+    {
+      id: "users/3",
+      first_name: "Poppy",
+      last_name: "Herzog",
+      email: "poppy@herzog.info",
     }
   }
 

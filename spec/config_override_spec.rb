@@ -99,7 +99,7 @@ RSpec.describe "Configuration override" do
       it "maps data from the specified relation" do
         expect(
           user_mapper.map(&:id)
-        ).to eq(["users/1", "users/2"])
+        ).to eq(["users/1", "users/2", "users/3"])
       end
     end
 

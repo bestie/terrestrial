@@ -5,27 +5,26 @@ module SequelMapper
     include ShortInspectionString
     include Enumerable
 
-    def initialize(database_enum, loader, mapper)
+    def initialize(database_enum, loader, queries)
       @database_enum = database_enum
       @loader = loader
-      @mapper = mapper
+      raise "nope" if queries.nil?
+      @queries = queries
       @loaded = false
     end
 
-    attr_reader :database_enum, :loader, :mapper
-    private     :database_enum, :loader, :mapper
+    attr_reader :database_enum, :loader, :queries
+    private     :database_enum, :loader, :queries
 
     def where(criteria)
-      self.class.new(database_enum.where(criteria), loader, mapper)
+      self.class.new(database_enum.where(criteria), loader, queries)
     end
 
     def query(name)
       self.class.new(
-        mapper
-          .get_query(name)
-          .call(database_enum),
+        queries.execute(name, database_enum),
         loader,
-        mapper,
+        queries,
       )
     end
 

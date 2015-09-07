@@ -4,15 +4,31 @@ require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "sequel_mapper"
+require "sequel_mapper/configurations/conventional_configuration"
 
-RSpec.xdescribe "Predefined queries" do
+RSpec.describe "Predefined queries" do
   include_context "mapper setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
   subject(:users) { user_mapper }
 
-  context "on the top level maper" do
+  subject(:user_mapper) {
+    SequelMapper.mapper(
+      config: mapper_config,
+      name: :users,
+      datastore: datastore,
+    )
+  }
+
+  let(:mapper_config) {
+    SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
+      .setup_mapping(:users) { |users|
+        users.has_many :posts, foreign_key: :author_id
+      }
+  }
+
+  context "on the top level mapper" do
     context "query is defined with a block" do
       before do
         mapper_config.setup_mapping(:users) do |config|
@@ -36,8 +52,8 @@ RSpec.xdescribe "Predefined queries" do
   context "on a has many association" do
     before do
       mapper_config.setup_mapping(:posts) do |config|
-        config.query(:about_laziness) do |dataset|
-          dataset.where(body: /lazy/i)
+        config.query(:happy) do |dataset|
+          dataset.where(body: /purr/i)
         end
       end
     end
@@ -45,7 +61,7 @@ RSpec.xdescribe "Predefined queries" do
     let(:user) { users.first }
 
     it "maps the datastore query" do
-      expect(user.posts.query(:about_laziness).map(&:id)).to eq(["post/2"])
+      expect(user.posts.query(:happy).map(&:id)).to eq(["posts/2"])
     end
   end
 end

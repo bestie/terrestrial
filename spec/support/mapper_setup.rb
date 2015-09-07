@@ -8,6 +8,7 @@ require "sequel_mapper/dataset"
 require "sequel_mapper/one_to_many_association"
 require "sequel_mapper/many_to_one_association"
 require "sequel_mapper/many_to_many_association"
+require "sequel_mapper/subset_queries_proxy"
 require "support/object_graph_setup"
 
 RSpec.shared_context "mapper setup" do
@@ -66,7 +67,7 @@ RSpec.shared_context "mapper setup" do
             serializer: serializers.fetch(config.fetch(:serializer)).call(fields),
             associations: Hash[associations],
             factory: factories.fetch(name),
-            queries: {},
+            queries: SequelMapper::SubsetQueriesProxy.new(config.fetch(:queries, {}))
           )
         ]
       }
@@ -74,12 +75,12 @@ RSpec.shared_context "mapper setup" do
   }
 
   let(:has_many_proxy_factory) {
-    ->(query:, loader:, mapper:) {
+    ->(query:, loader:, mapping_name:) {
       SequelMapper::CollectionMutabilityProxy.new(
         SequelMapper::QueryableLazyDatasetLoader.new(
           query,
           loader,
-          mapper,
+          mappings.fetch(mapping_name).queries,
         )
       )
     }

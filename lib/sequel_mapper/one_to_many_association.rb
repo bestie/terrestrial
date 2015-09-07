@@ -18,7 +18,7 @@ module SequelMapper
      proxy_factory.call(
         query: build_query(data_superset, record),
         loader: loader,
-        mapper: nil,
+        mapping_name: mapping_name,
       )
     end
 

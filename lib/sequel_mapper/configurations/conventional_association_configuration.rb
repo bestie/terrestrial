@@ -159,9 +159,13 @@ module SequelMapper
       end
 
       def collection_proxy_factory
-        ->(query:, loader:, mapper:) {
+        ->(query:, loader:, mapping_name:) {
           CollectionMutabilityProxy.new(
-            QueryableLazyDatasetLoader.new(query, loader, mapper)
+            QueryableLazyDatasetLoader.new(
+              query,
+              loader,
+              mappings.fetch(mapping_name).queries,
+            )
           )
         }
       end

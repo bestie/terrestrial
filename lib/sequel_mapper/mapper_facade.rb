@@ -34,6 +34,12 @@ module SequelMapper
       )
     end
 
+    def query(name)
+      new_with_dataset(
+        mapping.queries.execute(name, dataset)
+      )
+    end
+
     include Enumerable
     def each(&block)
       dataset

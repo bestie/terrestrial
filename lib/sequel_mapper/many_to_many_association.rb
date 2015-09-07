@@ -27,7 +27,7 @@ module SequelMapper
 
           loader.call(record, join_records)
         },
-        mapper: nil,
+        mapping_name: mapping_name,
       )
     end
 

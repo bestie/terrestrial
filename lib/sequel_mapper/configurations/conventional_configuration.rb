@@ -152,7 +152,7 @@ module SequelMapper
           factory: ensure_factory(mapping_name),
           serializer: null_serializer,
           associations: {},
-          queries: @queries.fetch(mapping_name, {}),
+          queries: queries_proxy(@queries.fetch(mapping_name, {})),
         }
       end
 
@@ -184,6 +184,10 @@ module SequelMapper
 
       def null_serializer
         ->(*_){}
+      end
+
+      def queries_proxy(query_map)
+        SubsetQueriesProxy.new(query_map)
       end
 
       def mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, queries:)
