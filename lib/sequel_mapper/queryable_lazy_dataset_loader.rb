@@ -15,10 +15,6 @@ module SequelMapper
     attr_reader :database_enum, :loader, :mapper
     private     :database_enum, :loader, :mapper
 
-    def eager_load(association_name)
-      mapper.eager_load(database_enum, association_name)
-    end
-
     def where(criteria)
       self.class.new(database_enum.where(criteria), loader, mapper)
     end

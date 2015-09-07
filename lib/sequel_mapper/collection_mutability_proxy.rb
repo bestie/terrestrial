@@ -44,10 +44,6 @@ module SequelMapper
       @added_nodes.push(node)
     end
 
-    def eager_load(association_name)
-      collection.eager_load(association_name)
-    end
-
     private
 
     def loaded_enum
