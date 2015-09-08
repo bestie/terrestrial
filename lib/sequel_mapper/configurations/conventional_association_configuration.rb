@@ -8,16 +8,15 @@ module SequelMapper
     require "sequel_mapper/lazy_object_proxy"
 
     class ConventionalAssociationConfiguration
-      def initialize(mapping_name, mappings, dirty_map, datastore)
+      def initialize(mapping_name, mappings, datastore)
         @local_mapping_name = mapping_name
         @mappings = mappings
         @local_mapping = mappings.fetch(local_mapping_name)
-        @dirty_map = dirty_map
         @datastore = datastore
       end
 
-      attr_reader :local_mapping_name, :local_mapping, :mappings, :dirty_map, :datastore
-      private     :local_mapping_name, :local_mapping, :mappings, :dirty_map, :datastore
+      attr_reader :local_mapping_name, :local_mapping, :mappings, :datastore
+      private     :local_mapping_name, :local_mapping, :mappings, :datastore
 
       DEFAULT = :use_convention
 

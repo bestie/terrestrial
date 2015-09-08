@@ -9,7 +9,6 @@ module SequelMapper
     end
 
     INFLECTOR = Inflector.new
-    DIRTY_MAP = {}
 
     require "fetchable"
     class ConventionalConfiguration
@@ -107,7 +106,6 @@ module SequelMapper
         ConventionalAssociationConfiguration.new(
           mapping_name,
           mappings,
-          dirty_map,
           datastore,
         )
       end
@@ -176,10 +174,6 @@ module SequelMapper
 
       def tables
         (datastore.tables - [:schema_migrations])
-      end
-
-      def dirty_map
-        DIRTY_MAP
       end
 
       def null_serializer
