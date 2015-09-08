@@ -20,19 +20,19 @@ module SequelMapper
 
       DEFAULT = Module.new
 
-      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, order_by: DEFAULT)
+      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, order: DEFAULT)
         defaults = {
           mapping_name: association_name,
           foreign_key: [INFLECTOR.singularize(local_mapping_name), "_id"].join.to_sym,
           key: :id,
-          order_by: [[]],
+          order: [[]],
         }
 
         specified = {
           mapping_name: mapping_name,
           foreign_key: foreign_key,
           key: key,
-          order_by: order_by,
+          order: order,
         }.reject { |_k,v|
           v == DEFAULT
         }
@@ -117,7 +117,7 @@ module SequelMapper
 
       private
 
-      def has_many_mapper(mapping_name:, key:, foreign_key:, order_by:)
+      def has_many_mapper(mapping_name:, key:, foreign_key:, order:)
         OneToManyAssociation.new(
           mapping_name: mapping_name,
           foreign_key: foreign_key,
