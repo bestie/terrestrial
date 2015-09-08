@@ -18,7 +18,7 @@ module SequelMapper
       attr_reader :local_mapping_name, :local_mapping, :mappings, :datastore
       private     :local_mapping_name, :local_mapping, :mappings, :datastore
 
-      DEFAULT = :use_convention
+      DEFAULT = Module.new
 
       def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, order_by: DEFAULT)
         defaults = {
