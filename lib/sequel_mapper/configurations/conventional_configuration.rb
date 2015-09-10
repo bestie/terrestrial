@@ -189,7 +189,7 @@ module SequelMapper
           name: name,
           namespace: relation_name,
           primary_key: primary_key,
-          factory: ensure_factory(factory),
+          factory: factory,
           serializer: serializer,
           fields: fields,
           associations: associations,
@@ -207,13 +207,9 @@ module SequelMapper
         end
       end
 
-      NotFoundFacotry = Class.new do
-        def initialize(error)
-          @error = error
-        end
-
-        def call(*args)
-          raise @error
+      NullFactory = Class.new do
+        def call(*_)
+          nil
         end
       end
 
@@ -229,9 +225,7 @@ module SequelMapper
           if factory_argument.respond_to?(:call)
             factory_argument
           else
-            NotFoundFacotry.new(
-              FactoryNotFoundError.new(factory_argument)
-            )
+            NullFactory.new
           end
         end
       end
