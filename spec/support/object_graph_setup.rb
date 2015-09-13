@@ -67,19 +67,19 @@ RSpec.shared_context "object graph setup" do
         cat_biscuits_category,
       ],
     )
-   }
+  }
 
-   let(:sleep_post) {
-     factories.fetch(:posts).call(
-       id: "posts/2",
-       subject: "Sleeping",
-       body: "I do it three times purrr day",
-       comments: [],
-       categories: [
+  let(:sleep_post) {
+    factories.fetch(:posts).call(
+      id: "posts/2",
+      subject: "Sleeping",
+      body: "I do it three times purrr day",
+      comments: [],
+      categories: [
         chilling_category,
       ],
-     )
-   }
+    )
+  }
 
   let(:biscuits_post_comment) {
     factories.fetch(:comments).call(

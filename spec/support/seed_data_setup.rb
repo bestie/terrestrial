@@ -57,25 +57,25 @@ RSpec.shared_context "seed data setup" do
       body: "I like them",
       author_id: "users/1",
     }
-   }
+  }
 
-   let(:sleep_post_record) {
-     {
-       id: "posts/2",
-       subject: "Sleeping",
-       body: "I do it three times purrr day",
-       author_id: "users/1",
-     }
-   }
+  let(:sleep_post_record) {
+    {
+      id: "posts/2",
+      subject: "Sleeping",
+      body: "I do it three times purrr day",
+      author_id: "users/1",
+    }
+  }
 
-   let(:catch_frogs_post_record) {
-     {
-       id: "posts/3",
-       subject: "Catching frongs",
-       body: "I love them while at the same time I hate them",
-       author_id: "users/2",
-     }
-   }
+  let(:catch_frogs_post_record) {
+    {
+      id: "posts/3",
+      subject: "Catching frongs",
+      body: "I love them while at the same time I hate them",
+      author_id: "users/2",
+    }
+  }
 
   let(:biscuits_post_comment_record) {
     {
