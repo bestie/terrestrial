@@ -2,7 +2,7 @@ require "sequel_mapper/dataset"
 
 module SequelMapper
   class ManyToManyAssociation
-    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_mapping_name:, through_dataset:)
+    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_mapping_name:, through_dataset:, order:)
       @mapping_name = mapping_name
       @foreign_key = foreign_key
       @key = key
@@ -11,12 +11,13 @@ module SequelMapper
       @association_key = association_key
       @through_mapping_name = through_mapping_name
       @through_dataset = through_dataset
+      @order = order
     end
 
     attr_reader :mapping_name, :through_mapping_name
 
-    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset
-    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset
+    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset, :order
+    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset, :order
 
     def build_proxy(data_superset:, loader:, record:)
      proxy_factory.call(
@@ -47,11 +48,14 @@ module SequelMapper
     end
 
     def build_query(superset, parent_record)
-      superset.join(through_mapping_name, association_foreign_key => key)
-      .where(foreign_key => foreign_key_value(parent_record))
-      .lazy.map { |record|
-        [record, [foreign_keys(parent_record, record)]]
-      }
+      order
+        .apply(
+          superset.join(through_mapping_name, association_foreign_key => key)
+            .where(foreign_key => foreign_key_value(parent_record))
+        )
+        .lazy.map { |record|
+          [record, [foreign_keys(parent_record, record)]]
+        }
     end
 
     class JoinedDataset < Dataset

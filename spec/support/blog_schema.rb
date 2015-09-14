@@ -10,6 +10,7 @@ BLOG_SCHEMA = {
     { name: :subject, type: :String },
     { name: :body, type: :String },
     { name: :author_id, type: :String },
+    { name: :created_at, type: :DateTime },
   ],
   comments: [
     { name: :id, type: :String },

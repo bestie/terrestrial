@@ -5,6 +5,7 @@ require "sequel_mapper/queryable_lazy_dataset_loader"
 require "sequel_mapper/collection_mutability_proxy"
 require "sequel_mapper/lazy_object_proxy"
 require "sequel_mapper/dataset"
+require "sequel_mapper/query_order"
 require "sequel_mapper/one_to_many_association"
 require "sequel_mapper/many_to_one_association"
 require "sequel_mapper/many_to_many_association"
@@ -38,18 +39,32 @@ RSpec.shared_context "mapper setup" do
             assoc_name,
             case assoc_config.fetch(:type)
             when :one_to_many
-              SequelMapper::OneToManyAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+              SequelMapper::OneToManyAssociation.new(
+                **assoc_defaults.merge(
+                  assoc_config.dup.tap { |h| h.delete(:type) }
+                )
+              )
             when :many_to_one
-              SequelMapper::ManyToOneAssociation.new(**assoc_config.dup.tap { |h| h.delete(:type) })
+              SequelMapper::ManyToOneAssociation.new(
+                assoc_config.dup.tap { |h| h.delete(:type) }
+              )
             when :many_to_many
               SequelMapper::ManyToManyAssociation.new(
-                through_mapping_name: assoc_config.fetch(:through_mapping_name),
-                through_dataset: datastore[
-                  configs
-                    .fetch(assoc_config.fetch(:through_mapping_name))
-                    .fetch(:namespace)
-                ],
-                **assoc_config.dup.tap { |h| h.delete(:type); h.delete(:through_namespace) },
+                **assoc_defaults
+                  .merge(
+                    through_mapping_name: assoc_config.fetch(:through_mapping_name),
+                    through_dataset: datastore[
+                      configs
+                        .fetch(assoc_config.fetch(:through_mapping_name))
+                        .fetch(:namespace)
+                    ],
+                  )
+                  .merge(
+                    assoc_config.dup.tap { |h|
+                      h.delete(:type)
+                      h.delete(:through_namespace)
+                    }
+                  )
               )
             else
               raise "Association type not supported"
@@ -73,6 +88,12 @@ RSpec.shared_context "mapper setup" do
       }
     ]
   }
+
+  def assoc_defaults
+    {
+      order: SequelMapper::QueryOrder.new(fields: [], direction: "ASC")
+    }
+  end
 
   let(:has_many_proxy_factory) {
     ->(query:, loader:, mapping_name:) {
@@ -133,6 +154,7 @@ RSpec.shared_context "mapper setup" do
           :id,
           :subject,
           :body,
+          :created_at,
         ],
         factory: :post,
         serializer: :default,

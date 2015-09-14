@@ -56,6 +56,7 @@ RSpec.shared_context "seed data setup" do
       subject: "Biscuits",
       body: "I like them",
       author_id: "users/1",
+      created_at: Time.parse("2015-09-05T15:00:00+01:00"),
     }
   }
 
@@ -65,6 +66,7 @@ RSpec.shared_context "seed data setup" do
       subject: "Sleeping",
       body: "I do it three times purrr day",
       author_id: "users/1",
+      created_at: Time.parse("2015-09-02T15:00:00+01:00"),
     }
   }
 
@@ -74,6 +76,7 @@ RSpec.shared_context "seed data setup" do
       subject: "Catching frongs",
       body: "I love them while at the same time I hate them",
       author_id: "users/2",
+      created_at: Time.parse("2015-09-03T15:00:00+01:00"),
     }
   }
 

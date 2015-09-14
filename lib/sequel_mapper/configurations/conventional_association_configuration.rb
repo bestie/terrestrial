@@ -20,19 +20,21 @@ module SequelMapper
 
       DEFAULT = Module.new
 
-      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, order: DEFAULT)
+      def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
         defaults = {
           mapping_name: association_name,
           foreign_key: [INFLECTOR.singularize(local_mapping_name), "_id"].join.to_sym,
           key: :id,
-          order: [[]],
+          order_fields: [],
+          order_direction: "ASC",
         }
 
         specified = {
           mapping_name: mapping_name,
           foreign_key: foreign_key,
           key: key,
-          order: order,
+          order_fields: order_fields,
+          order_direction: order_direction,
         }.reject { |_k,v|
           v == DEFAULT
         }
@@ -73,13 +75,15 @@ module SequelMapper
         )
       end
 
-      def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, through_mapping_name: DEFAULT, association_key: DEFAULT, association_foreign_key: DEFAULT)
+      def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, through_mapping_name: DEFAULT, association_key: DEFAULT, association_foreign_key: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
         defaults = {
           mapping_name: association_name,
           key: :id,
           association_key: :id,
           foreign_key: [INFLECTOR.singularize(local_mapping_name), "_id"].join.to_sym,
           association_foreign_key: [INFLECTOR.singularize(association_name), "_id"].join.to_sym,
+          order_fields: [],
+          order_direction: "ASC",
         }
 
         specified = {
@@ -88,6 +92,8 @@ module SequelMapper
           association_key: association_key,
           foreign_key: foreign_key,
           association_foreign_key: association_foreign_key,
+          order_fields: order_fields,
+          order_direction: order_direction,
         }.reject { |_k,v|
           v == DEFAULT
         }
@@ -97,9 +103,9 @@ module SequelMapper
 
         if through_mapping_name == DEFAULT
           through_mapping_name = [
-            associated_mapping.relation_name,
-            local_mapping.relation_name,
-          ].sort.join("_to_")
+            associated_mapping.name,
+            local_mapping.name,
+          ].sort.join("_to_").to_sym
         end
 
         join_table_name = mappings.fetch(through_mapping_name).namespace
@@ -117,11 +123,12 @@ module SequelMapper
 
       private
 
-      def has_many_mapper(mapping_name:, key:, foreign_key:, order:)
+      def has_many_mapper(mapping_name:, key:, foreign_key:, order_fields:, order_direction:)
         OneToManyAssociation.new(
           mapping_name: mapping_name,
           foreign_key: foreign_key,
           key: key,
+          order: query_order(order_fields, order_direction),
           proxy_factory: collection_proxy_factory,
         )
       end
@@ -135,7 +142,7 @@ module SequelMapper
         )
       end
 
-      def has_many_through_mapper(mapping_name:, key:, foreign_key:, association_key:, association_foreign_key:, through_mapping_name:, through_dataset:)
+      def has_many_through_mapper(mapping_name:, key:, foreign_key:, association_key:, association_foreign_key:, through_mapping_name:, through_dataset:, order_fields:, order_direction:)
         ManyToManyAssociation.new(
           mapping_name: mapping_name,
           key: key,
@@ -145,6 +152,7 @@ module SequelMapper
           through_mapping_name: through_mapping_name,
           through_dataset: through_dataset,
           proxy_factory: collection_proxy_factory,
+          order: query_order(order_fields, order_direction),
         )
       end
 
@@ -167,6 +175,10 @@ module SequelMapper
             )
           )
         }
+      end
+
+      def query_order(fields, direction)
+        QueryOrder.new(fields: fields, direction: direction)
       end
     end
   end

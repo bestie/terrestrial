@@ -13,7 +13,7 @@ RSpec.shared_context "object graph setup" do
   end
 
   User ||= Struct.new(:id, :first_name, :last_name, :email, :posts, :comments)
-  Post ||= Struct.new(:id, :author, :subject, :body, :comments, :categories)
+  Post ||= Struct.new(:id, :author, :subject, :body, :comments, :categories, :created_at)
   Comment ||= Struct.new(:id, :post, :commenter, :body)
   Category ||= Struct.new(:id, :name, :posts)
 
@@ -66,6 +66,7 @@ RSpec.shared_context "object graph setup" do
       categories: [
         cat_biscuits_category,
       ],
+      created_at: Time.parse("2015-09-05T15:00:00+01:00"),
     )
   }
 
@@ -78,6 +79,7 @@ RSpec.shared_context "object graph setup" do
       categories: [
         chilling_category,
       ],
+      created_at: Time.parse("2015-09-02T15:00:00+01:00"),
     )
   }
 

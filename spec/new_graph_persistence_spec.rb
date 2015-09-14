@@ -22,19 +22,19 @@ RSpec.describe "Persist a new graph in empty datastore" do
     it "persists one to many related nodes 1 level deep" do
       user_mapper.save(hansel)
 
-      expect(datastore).to have_persisted(:posts, {
+      expect(datastore).to have_persisted(:posts, hash_including(
         id: "posts/1",
         subject: "Biscuits",
         body: "I like them",
         author_id: "users/1",
-      })
+      ))
 
-      expect(datastore).to have_persisted(:posts, {
+      expect(datastore).to have_persisted(:posts, hash_including(
         id: "posts/2",
         subject: "Sleeping",
         body: "I do it three times purrr day",
         author_id: "users/1",
-      })
+      ))
     end
 
     it "persists one to many related nodes 2 levels deep" do

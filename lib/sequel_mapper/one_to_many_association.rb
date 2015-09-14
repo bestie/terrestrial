@@ -2,17 +2,18 @@ require "sequel_mapper/dataset"
 
 module SequelMapper
   class OneToManyAssociation
-    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
+    def initialize(mapping_name:, foreign_key:, key:, order:, proxy_factory:)
       @mapping_name = mapping_name
       @foreign_key = foreign_key
       @key = key
+      @order = order
       @proxy_factory = proxy_factory
     end
 
     attr_reader :mapping_name
 
-    attr_reader :foreign_key, :key, :proxy_factory
-    private     :foreign_key, :key, :proxy_factory
+    attr_reader :foreign_key, :key, :order, :proxy_factory
+    private     :foreign_key, :key, :order, :proxy_factory
 
     def build_proxy(data_superset:, loader:, record:)
      proxy_factory.call(
@@ -42,7 +43,9 @@ module SequelMapper
     end
 
     def build_query(superset, record)
-      superset.where(foreign_key => record.fetch(key))
+      order.apply(
+        superset.where(foreign_key => record.fetch(key))
+      )
     end
   end
 end
