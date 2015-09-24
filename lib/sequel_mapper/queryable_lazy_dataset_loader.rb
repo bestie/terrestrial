@@ -1,4 +1,4 @@
-require "short_inspection_string"
+require "sequel_mapper/short_inspection_string"
 
 module SequelMapper
   class QueryableLazyDatasetLoader
