@@ -1,10 +1,16 @@
 # SequelMapper
 
+## TL;DR
+
+* A Ruby ORM that enables DDD and clean architectural styles.
+* Persists plain objects while supporting arbitrarily deeply nested / circular associations
+* Provides excellent database and query building support via the excellent [Sequel library](https://github.com/jeremyevans/sequel) and so has excellent database support and query building options.
+
 ## What is it?
 
 SequelMapper (working title) is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) implementation for Ruby.
 Put simply it takes data from a database and populates your objects with it while keeping them both isolated from one another.
-In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/activeRecord.html) implementations, domain objects can be free from persistence concerns, and can be plain Ruby objects with no special inherited or mixed in behaviour.
+In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/activeRecord.html) implementations, domain objects can be free from persistence concerns and require no special inherited or mixed in behavior in order to be persisted.
 
 Features include:
 * Associations (belongs_to, has_many, has_many_through)
@@ -12,17 +18,17 @@ Features include:
 * Lazy loading for database read efficiency
 * Dirty tracking for database write efficiency
 
-It is built on top of Jeremy Evans' [Sequel library](https://github.com/jeremyevans/sequel) and so has excellent database support.
+The initial version is built on top of Jeremy Evans' [Sequel library](https://github.com/jeremyevans/sequel) and so has excellent database support and query building options.
 
 ## Why is it?
 
 Since reading and hearing about Uncle Bob's clean architecture and Matt Wynne's
 hexagonal Rails I have dedicated a lot of time to building applications with
-this philosphy and honing the tricks and techniques that make them effective.
+this philosophy and honing the tricks and techniques that make them effective.
 
-Unfortunately Ruby's lack of persistence options means that truly achiveing the
+Unfortunately Ruby's lack of persistence options means that truly achieving the
 goals of the clean architectural style is rather difficult and have on more
-than one occassion resorted to implementing my own (simple) data mappers.
+than one occasion resorted to implementing my own (simple) data mappers.
 
 Of course this approach falls down extremely quickly when you have a complex
 data model and/or a deep object graph.
@@ -36,7 +42,7 @@ data model and/or a deep object graph.
   User = Struct.new(:id, :name, :email, :posts)
   Post = Struct.new(:id, :author, :subject, :body)
 
-  # Configure Sequel as usual
+  # Configure a Sequel database connection (you may already have one)
 
   database = Sequel.postgres(
     host: ENV.fetch("PGHOST"),
@@ -44,34 +50,37 @@ data model and/or a deep object graph.
     database: ENV.fetch("PGDATABASE"),
   )
 
-  # Configure mappings and associations seperately
+  # Configure mappings and associations separately
 
   mapper_config = SequelMapper.config(database)
-    .new(database)
     .setup_mapping(:users) do |config|
       config.has_many(:posts, foreign_key: :author_id)
     end
     .setup_mapping(:posts) do |config|
       config.belongs_to(:author, mapping_name: :users)
+      config.has_many_through(:categories)
+    end
+    .setup_mapping(:categories) do |config|
+      config.has_many_through(:posts)
     end
 
   # Create a mapper by combining a connection and a configuration
 
-  mapper = SequelMapper.mapper(
+  user_mapper = SequelMapper.mapper(
     datastore: database,
     config: mapper_config,
+    name: :users,
   )
 
   # We want to get a user by their ID
 
-  user = mapper[:users].where(id: 1).first
+  user = user_mapper.where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
   # => #<struct User
-  #  id="1",
+  #  id="2f0f791c-47cf-4a00-8676-e582075bcd65",
   #  first_name="Stephen",
   #  last_name="Best",
   #  email="bestie@gmail.com",
   #  posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
-  #  toots=#<SequelMapper::CollectionMutabilityProxy:7ff5719262d8 >>
 
   # And access their posts
 
@@ -81,29 +90,27 @@ data model and/or a deep object graph.
 
   user.posts.to_a
   # => [#<struct Post
-  #   id="post/1",
+  #   id="9b75fe2b-d694-4b90-9137-6201d426dda2",
   #   author=
   #    #<struct User
-  #     id="user/1",
+  #     id="2f0f791c-47cf-4a00-8676-e582075bcd65",
   #     first_name="Stephen",
   #     last_name="Best",
   #     email="bestie@gmail.com",
   #     posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
-  #     toots=#<SequelMapper::CollectionMutabilityProxy:7ff5719262d8 >>,
   #   subject="Object mapping",
   #   body="It is often tricky",
   #   comments=#<SequelMapper::CollectionMutabilityProxy:7ff571ccadf8 >,
   #   categories=#<SequelMapper::CollectionMutabilityProxy:7ff571cca678 >>,
   #  #<struct Post
-  #   id="post/2",
+  #   id="bd564cc0-b8f1-45e6-9287-1ae75878c665",
   #   author=
   #    #<struct User
-  #     id="user/1",
+  #     id="2f0f791c-47cf-4a00-8676-e582075bcd65",
   #     first_name="Stephen",
   #     last_name="Best",
   #     email="bestie@gmail.com",
   #     posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
-  #     toots=#<SequelMapper::CollectionMutabilityProxy:7ff5719262d8 >>,
   #   subject="Object mapping part 2",
   #   body="Lazy load all the things!",
   #   comments=#<SequelMapper::CollectionMutabilityProxy:7ff571cc9f48 >,
@@ -112,7 +119,7 @@ data model and/or a deep object graph.
   # We can go around in circles traversing the object graph
 
   post = user.posts.first.categories.first.posts.first
-  # => #<struct Post id="post/1", ...
+  # => #<struct Post id="9b75fe2b-d694-4b90-9137-6201d426dda2", ...
 
   # Now make some changes
 
@@ -194,7 +201,6 @@ data model and/or a deep object graph.
   mapper_config = SequelMapper.config(database)
     .setup_mapping(:users) do |config|
       config.has_many(:posts, foreign_key: :author_id)
-      config.has_many(:toots, foreign_key: :tooter_id)
     end
     .setup_mapping(:posts) do |config|
       config.belongs_to(:author, mapping_name: :users)
@@ -208,16 +214,14 @@ data model and/or a deep object graph.
     .setup_mapping(:categories) do |config|
       config.has_many_through(:posts)
     end
-    .setup_mapping(:toots) do |config|
-      config.belongs_to(:tooter, mapping_name: :users)
-    end
 
   # Finally we create our user mapper, passing it the database connection,
   # config and the name of the mapping we'd like it to expose.
 
-  mapper = SequelMapper.mapper(
+  user_mapper = SequelMapper.mapper(
     datastore: database,
     config: mapper_config,
+    name: :users,
   )
 
   # This would be perfect for when a user is authenticated and editing their
@@ -227,14 +231,13 @@ data model and/or a deep object graph.
 
   # We may want to find a user by their id
 
-  user = mapper[:users].where(id: 1).first
+  user = user_mapper.where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
   # => #<struct User
-  #  id="1",
+  #  id="2f0f791c-47cf-4a00-8676-e582075bcd65",
   #  first_name="Stephen",
   #  last_name="Best",
   #  email="bestie@gmail.com",
   #  posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
-  #  toots=#<SequelMapper::CollectionMutabilityProxy:7ff5719262d8 >>
 
   user.posts
   # => #<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >
@@ -242,29 +245,27 @@ data model and/or a deep object graph.
 
   user.posts.to_a
   # => [#<struct Post
-  #   id="post/1",
+  #   id="9b75fe2b-d694-4b90-9137-6201d426dda2",
   #   author=
   #    #<struct User
-  #     id="user/1",
+  #     id="2f0f791c-47cf-4a00-8676-e582075bcd65",
   #     first_name="Stephen",
   #     last_name="Best",
   #     email="bestie@gmail.com",
   #     posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
-  #     toots=#<SequelMapper::CollectionMutabilityProxy:7ff5719262d8 >>,
   #   subject="Object mapping",
   #   body="It is often tricky",
   #   comments=#<SequelMapper::CollectionMutabilityProxy:7ff571ccadf8 >,
   #   categories=#<SequelMapper::CollectionMutabilityProxy:7ff571cca678 >>,
   #  #<struct Post
-  #   id="post/2",
+  #   id="bd564cc0-b8f1-45e6-9287-1ae75878c665",
   #   author=
   #    #<struct User
-  #     id="user/1",
+  #     id="2f0f791c-47cf-4a00-8676-e582075bcd65",
   #     first_name="Stephen",
   #     last_name="Best",
   #     email="bestie@gmail.com",
   #     posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
-  #     toots=#<SequelMapper::CollectionMutabilityProxy:7ff5719262d8 >>,
   #   subject="Object mapping part 2",
   #   body="Lazy load all the things!",
   #   comments=#<SequelMapper::CollectionMutabilityProxy:7ff571cc9f48 >,
@@ -273,7 +274,7 @@ data model and/or a deep object graph.
   # We can go around in circles traversing the object graph
 
   post = user.posts.first.categories.first.posts.first
-  # => #<struct Post id="post/1", ...
+  # => #<struct Post id="9b75fe2b-d694-4b90-9137-6201d426dda2", ...
 
   # Now make some changes
 
