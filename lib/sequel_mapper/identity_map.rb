@@ -1,38 +1,22 @@
-require "forwardable"
-
 module SequelMapper
   class IdentityMap
-    extend Forwardable
-    def_delegators(:loader,
-      :dump,
-      :relation_name,
-      :fetch_association,
-      :add_association,
-      :mark_foreign_key,
-      :factory,
-      :get_query,
-    )
-
-    def initialize(loader, identity_map = {})
-      @loader = loader
-      @identity_map = identity_map
+    def initialize(storage)
+      @storage = storage
     end
 
-    attr_reader :loader, :identity_map
-    private     :loader, :identity_map
+    attr_reader :storage
+    private     :storage
 
-    def load(row)
-      ensure_loaded_once(row.fetch(:id)) {
-        loader.load(row)
+    def call(record, object)
+      storage.fetch(hash_key(record)) {
+        storage.store(hash_key(record), object)
       }
     end
 
     private
 
-    def ensure_loaded_once(id, &block)
-      identity_map.fetch(id) {
-        identity_map.store(id, block.call)
-      }
+    def hash_key(record)
+      [record.namespace, record.identity]
     end
   end
 end
