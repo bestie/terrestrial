@@ -1,6 +1,7 @@
 require "sequel_mapper/identity_map"
 require "sequel_mapper/dirty_map"
 require "sequel_mapper/mapper_facade"
+require "sequel_mapper/configurations/conventional_configuration"
 
 module SequelMapper
   module PublicConveniencies
