@@ -80,6 +80,14 @@ module SequelMapper
           @config_override.call(factory: string_class_or_callable)
         end
 
+        def class(entity_class)
+          @config_override.call(factory: class_to_factory(entity_class))
+        end
+
+        def class_name(class_name)
+          @config_override.call(factory: class_to_factory(lookup_class(class_name)))
+        end
+
         def serializer(serializer_func)
           @config_override.call(serializer: serializer_func)
         end
@@ -149,8 +157,8 @@ module SequelMapper
           relation_name: table_name,
           fields: get_fields(table_name),
           primary_key: get_primary_key(table_name),
-          factory: mapping_name,
-          serializer: null_serializer,
+          factory: lazy_default_factory(mapping_name),
+          serializer: hash_coercion_serializer,
           associations: {},
           queries: queries_proxy(@queries.fetch(mapping_name, {})),
         }
@@ -178,8 +186,8 @@ module SequelMapper
         (datastore.tables - [:schema_migrations])
       end
 
-      def null_serializer
-        ->(*_){}
+      def hash_coercion_serializer
+        ->(o) { o.to_h }
       end
 
       def queries_proxy(query_map)
@@ -209,10 +217,10 @@ module SequelMapper
         end
       end
 
-      NullFactory = Class.new do
-        def call(*_)
-          nil
-        end
+      def lazy_default_factory(name)
+        ->(attrs) {
+          class_to_factory(string_to_class(name)).call(attrs)
+        }
       end
 
       def ensure_factory(factory_argument)
@@ -220,14 +228,13 @@ module SequelMapper
         when String
         when Symbol
           ensure_factory(string_to_class(factory_argument))
-        when Struct
         when Class
           class_to_factory(factory_argument)
         else
           if factory_argument.respond_to?(:call)
             factory_argument
           else
-            NullFactory.new
+            ->(*) { raise FactoryNotFoundError.new(factory_argument) }
           end
         end
       end
@@ -245,8 +252,6 @@ module SequelMapper
 
         if Object.constants.include?(klass_name.to_sym)
           Object.const_get(klass_name)
-        else
-          warn "WARNING: Class not found #{string}" unless defined?(:RSpec)
         end
       end
     end

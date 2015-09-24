@@ -33,13 +33,13 @@ than one occasion resorted to implementing my own (simple) data mappers.
 Of course this approach falls down extremely quickly when you have a complex
 data model and/or a deep object graph.
 
-## A quick example
+## Basic setup and getting started
 
 ```ruby
 
   # Some structs
 
-  User = Struct.new(:id, :name, :email, :posts)
+  User = Struct.new(:id, :first_name, :last_name, :email, :posts)
   Post = Struct.new(:id, :author, :subject, :body)
 
   # Configure a Sequel database connection (you may already have one)

@@ -28,7 +28,7 @@ module SequelMapper
         record_identity(primary_key, serialized_record),
         serialized_record
           .select { |k, _v| fields.include?(k) }
-          .merge(foreign_key),
+          .merge(foreign_key)
       )
 
       if encountered_records.include?(current_record.identity)
