@@ -1,12 +1,17 @@
+require "pry"
 require "sequel"
 require "sequel_mapper"
 require_relative "../spec/support/sequel_test_support"
 
 module ExampleRunnerSupport
+  def example_eval_concat(code_strings)
+    example_eval(code_strings.join("\n"))
+  end
+
   def example_eval(code_string)
     example_module.module_eval(code_string)
   rescue Object => e
-    binding.pry
+    binding.pry if ENV["DEBUG"]
     raise e
   end
 
@@ -22,7 +27,7 @@ module ExampleRunnerSupport
     string
       .strip
       .gsub(/[\n\s]+/, " ")
-      .gsub(/[0-9a-f]{12}/, "<<object id removed>>")
+      .gsub(/\:[0-9a-f]{12}/, ":<<object id removed>>")
   end
 
   def parse_schema_table(string)

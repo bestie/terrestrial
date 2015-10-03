@@ -35,7 +35,11 @@ RSpec.describe "README examples" do
     it "executes" do
       File.open("./example1.rb", "w") { |f| f.puts(code_sample) }
 
+    begin
       Module.new.module_eval(code_sample)
+    rescue => e
+      binding.pry
+    end
     end
   end
 end
