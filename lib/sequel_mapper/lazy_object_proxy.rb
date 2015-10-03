@@ -1,5 +1,7 @@
 module SequelMapper
   class LazyObjectProxy
+    include ShortInspectionString
+
     def initialize(object_loader, known_fields)
       @object_loader = object_loader
       @known_fields = known_fields
@@ -37,6 +39,13 @@ module SequelMapper
 
     def lazy_object
       @lazy_object ||= object_loader.call
+    end
+
+    def inspectable_properties
+      [
+        :known_fields,
+        :lazy_object,
+      ]
     end
   end
 end
