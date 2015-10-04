@@ -55,6 +55,16 @@ module SequelMapper
       self
     end
 
+    def delete(object)
+      object_dump_pipeline.call(
+        graph_serializer.call(mapping_name, object)
+          .take(1)
+          .map { |record|
+            DeletedRecord.new(record.namespace, record.identity)
+          }
+      )
+    end
+
     private
 
     def eager_load_the_things(mapping, parent_dataset, association_name_map)
@@ -120,8 +130,8 @@ module SequelMapper
           ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
           ->(rs) {
             rs.each { |r|
-              r.if_upsert(&method(:upsert))
-               .if_delete(&method(:delete))
+              r.if_upsert(&method(:upsert_record))
+               .if_delete(&method(:delete_record))
             }
           },
         ].reduce(records) { |agg, operation|
@@ -150,7 +160,7 @@ module SequelMapper
       mappings.fetch(mapping_name)
     end
 
-    def upsert(record)
+    def upsert_record(record)
       # TODO I doubt this is really more performant but fewer queries register :)
       row_count = datastore[record.namespace]
         .where(record.identity)
@@ -163,7 +173,7 @@ module SequelMapper
       row_count
     end
 
-    def delete(record)
+    def delete_record(record)
       datastore[record.namespace].where(record.identity).delete
     end
   end
