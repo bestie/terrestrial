@@ -41,14 +41,16 @@ module SequelMapper
           )
         ) if block
 
+        # TODO: more madness in this silly config this, kill it with fire.
+        explicit_settings = @overrides[mapping_name] ||= {}
+        explicit_settings[:factory] ||= raise_if_not_found_factory(mapping_name)
+
         self
       end
 
       private
 
-      require "forwardable"
       class RelationConfigOptionsProxy
-        extend Forwardable
         def initialize(config_override, query_adder, association_register)
           @config_override = config_override
           @query_adder = query_adder
@@ -76,16 +78,16 @@ module SequelMapper
           @association_register.push([:belongs_to, args])
         end
 
-        def factory(string_class_or_callable)
-          @config_override.call(factory: string_class_or_callable)
+        def factory(callable)
+          @config_override.call(factory: callable)
         end
 
         def class(entity_class)
-          @config_override.call(factory: class_to_factory(entity_class))
+          @config_override.call('class': entity_class)
         end
 
         def class_name(class_name)
-          @config_override.call(factory: class_to_factory(lookup_class(class_name)))
+          @config_override.call(class_name: class_name)
         end
 
         def serializer(serializer_func)
@@ -129,7 +131,7 @@ module SequelMapper
               [
                 mapping_name,
                 mapping(
-                  **mapping_args(table_name, mapping_name).merge(overrides)
+                  **default_mapping_args(table_name, mapping_name).merge(overrides)
                 ),
               ]
             }
@@ -151,13 +153,13 @@ module SequelMapper
         end
       end
 
-      def mapping_args(table_name, mapping_name)
+      def default_mapping_args(table_name, mapping_name)
         {
           name: mapping_name,
           relation_name: table_name,
           fields: get_fields(table_name),
           primary_key: get_primary_key(table_name),
-          factory: lazy_default_factory(mapping_name),
+          factory: ok_if_it_doesnt_exist_factory(mapping_name),
           serializer: hash_coercion_serializer,
           associations: {},
           queries: queries_proxy(@queries.fetch(mapping_name, {})),
@@ -165,9 +167,28 @@ module SequelMapper
       end
 
       def overrides_for_table(table_name)
-        @overrides.find { |(_mapping_name, config)|
-          table_name == config.fetch(:relation_name, nil)
-        } || [table_name, @overrides.fetch(table_name, {})]
+        mapping_name, overrides = @overrides
+          .find { |(_mapping_name, config)|
+            table_name == config.fetch(:relation_name, nil)
+          } || [table_name, @overrides.fetch(table_name, {})]
+
+        [mapping_name, consolidate_overrides(overrides)]
+      end
+
+      def consolidate_overrides(opts)
+        new_opts = opts.dup
+
+        if new_opts.has_key?(:class_name)
+          new_opts.merge!(factory: string_to_factory(new_opts.fetch(:class_name)))
+          new_opts.delete(:class_name)
+        end
+
+        if new_opts.has_key?(:class)
+          new_opts.merge!(factory: class_to_factory(new_opts.fetch(:class)))
+          new_opts.delete(:class)
+        end
+
+        new_opts
       end
 
       def get_fields(table_name)
@@ -199,7 +220,7 @@ module SequelMapper
           name: name,
           namespace: relation_name,
           primary_key: primary_key,
-          factory: ensure_factory(factory),
+          factory: factory,
           serializer: serializer,
           fields: fields,
           associations: associations,
@@ -217,26 +238,17 @@ module SequelMapper
         end
       end
 
-      def lazy_default_factory(name)
+      def raise_if_not_found_factory(name)
         ->(attrs) {
           class_to_factory(string_to_class(name)).call(attrs)
         }
       end
 
-      def ensure_factory(factory_argument)
-        case factory_argument
-        when String
-        when Symbol
-          ensure_factory(string_to_class(factory_argument))
-        when Class
-          class_to_factory(factory_argument)
-        else
-          if factory_argument.respond_to?(:call)
-            factory_argument
-          else
-            ->(*) { raise FactoryNotFoundError.new(factory_argument) }
-          end
-        end
+      def ok_if_it_doesnt_exist_factory(name)
+        ->(attrs) {
+          factory = class_to_factory(string_to_class(name)) rescue nil
+          factory && factory.call(attrs)
+        }
       end
 
       def class_to_factory(klass)
@@ -250,9 +262,7 @@ module SequelMapper
       def string_to_class(string)
         klass_name = INFLECTOR.classify(string)
 
-        if Object.constants.include?(klass_name.to_sym)
-          Object.const_get(klass_name)
-        end
+        Object.const_get(klass_name)
       end
     end
   end

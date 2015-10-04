@@ -35,7 +35,7 @@ RSpec.describe "Configuration override" do
     context "with a Struct class" do
       before do
         mapper_config.setup_mapping(:users) do |config|
-          config.factory(user_subclass)
+          config.class(user_subclass)
         end
       end
 

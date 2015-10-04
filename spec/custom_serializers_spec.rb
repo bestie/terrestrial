@@ -54,7 +54,7 @@ RSpec.describe "Config override" do
 
     before do
       mapper_config.setup_mapping(:users) do |config|
-        config.factory(user_class)
+        config.class(user_class)
         config.serializer(user_serializer)
       end
     end
