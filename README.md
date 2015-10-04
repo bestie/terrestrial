@@ -22,7 +22,8 @@ In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/ac
 * Eager loading to avoid the `n + 1` query problem
 
 There are some [conspicuous missing features](https://github.com/bestie/sequel_mapper/blob/master/MissingFeatures.md)
-that you may want to read more about.
+that you may want to read more about. If you want to contribute to solving any
+of the problems listed please open an issue to discuss.
 
 SequelMapper does not reinvent the wheel with querying abstraction and
 migrations, instead these responsibilities are delegated to Sequel such that
@@ -34,6 +35,9 @@ and creating your [database connection](http://sequel.jeremyevans.net/rdoc/files
 see the Sequel documentation.
 
 ## Getting started
+
+Please try this out, experiment, open issues and pull requests. Please read the
+code of conduct first.
 
 ```ruby
 

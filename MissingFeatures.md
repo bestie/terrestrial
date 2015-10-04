@@ -3,6 +3,9 @@
 The following features not included in SequelMapper are omitted purposefully to
 keep the library simple and encourage good practices in application code.
 
+Please open an issue if you feel like any of these features are essential or if
+you think you can contribute to a solution please open an issue to discuss.
+
 ## Coercion
 
 Database supported types will be returned as expected, `Fixnum`, `DateTime`, `nil` etc.
