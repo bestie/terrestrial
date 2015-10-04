@@ -1,5 +1,6 @@
 require "pry"
 require "support/sequel_test_support"
+require "support/blog_schema"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -29,6 +30,7 @@ RSpec.configure do |config|
   # Kernel.srand config.seed
 
   config.before(:suite) do
-    SequelMapper::SequelTestSupport.truncate_tables
+    SequelMapper::SequelTestSupport.drop_tables
+    SequelMapper::SequelTestSupport.create_tables(BLOG_SCHEMA)
   end
 end
