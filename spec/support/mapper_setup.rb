@@ -82,7 +82,7 @@ RSpec.shared_context "mapper setup" do
             serializer: serializers.fetch(config.fetch(:serializer)).call(fields),
             associations: Hash[associations],
             factory: factories.fetch(name),
-            queries: SequelMapper::SubsetQueriesProxy.new(config.fetch(:queries, {}))
+            subsets: SequelMapper::SubsetQueriesProxy.new(config.fetch(:subsets, {}))
           )
         ]
       }
@@ -101,7 +101,7 @@ RSpec.shared_context "mapper setup" do
         SequelMapper::QueryableLazyDatasetLoader.new(
           query,
           loader,
-          mappings.fetch(mapping_name).queries,
+          mappings.fetch(mapping_name).subsets,
         )
       )
     }

@@ -40,5 +40,9 @@ RSpec.describe "Querying" do
     it "returns another collection" do
       expect(filtered_posts).not_to be(user.posts)
     end
+
+    it "returns an immutable collection" do
+      expect(filtered_posts.public_methods).not_to include(:push, :<<, :delete)
+    end
   end
 end

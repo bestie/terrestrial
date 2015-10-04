@@ -8,7 +8,6 @@ module SequelMapper
     def initialize(database_enum, loader, queries)
       @database_enum = database_enum
       @loader = loader
-      raise "nope" if queries.nil?
       @queries = queries
       @loaded = false
     end
@@ -20,9 +19,9 @@ module SequelMapper
       self.class.new(database_enum.where(criteria), loader, queries)
     end
 
-    def query(name)
+    def subset(name, *params)
       self.class.new(
-        queries.execute(name, database_enum),
+        queries.execute(database_enum, name, *params),
         loader,
         queries,
       )

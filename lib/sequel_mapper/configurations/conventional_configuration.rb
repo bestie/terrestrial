@@ -19,7 +19,7 @@ module SequelMapper
       def initialize(datastore)
         @datastore = datastore
         @overrides = {}
-        @queries = {}
+        @subset_queries = {}
         @associations_by_mapping = {}
       end
 
@@ -36,7 +36,7 @@ module SequelMapper
         block.call(
           RelationConfigOptionsProxy.new(
             method(:add_override).to_proc.curry.call(mapping_name),
-            method(:add_query).to_proc.curry.call(mapping_name),
+            method(:add_subset).to_proc.curry.call(mapping_name),
             @associations_by_mapping.fetch(mapping_name),
           )
         ) if block
@@ -51,9 +51,9 @@ module SequelMapper
       private
 
       class RelationConfigOptionsProxy
-        def initialize(config_override, query_adder, association_register)
+        def initialize(config_override, subset_adder, association_register)
           @config_override = config_override
-          @query_adder = query_adder
+          @subset_adder = subset_adder
           @association_register = association_register
         end
 
@@ -62,8 +62,8 @@ module SequelMapper
         end
         alias_method :table_name, :relation_name
 
-        def query(query_name, &block)
-          @query_adder.call(query_name, block)
+        def subset(subset_name, &block)
+          @subset_adder.call(subset_name, block)
         end
 
         def has_many(*args)
@@ -105,11 +105,11 @@ module SequelMapper
         @overrides.store(mapping_name, overrides)
       end
 
-      def add_query(mapping_name, query_name, block)
-        @queries.store(
+      def add_subset(mapping_name, subset_name, block)
+        @subset_queries.store(
           mapping_name,
-          @queries.fetch(mapping_name, {}).merge(
-            query_name => block,
+          @subset_queries.fetch(mapping_name, {}).merge(
+            subset_name => block,
           )
         )
       end
@@ -162,7 +162,7 @@ module SequelMapper
           factory: ok_if_it_doesnt_exist_factory(mapping_name),
           serializer: hash_coercion_serializer,
           associations: {},
-          queries: queries_proxy(@queries.fetch(mapping_name, {})),
+          subsets: subset_queries_proxy(@subset_queries.fetch(mapping_name, {})),
         }
       end
 
@@ -211,11 +211,11 @@ module SequelMapper
         ->(o) { o.to_h }
       end
 
-      def queries_proxy(query_map)
-        SubsetQueriesProxy.new(query_map)
+      def subset_queries_proxy(subset_map)
+        SubsetQueriesProxy.new(subset_map)
       end
 
-      def mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, queries:)
+      def mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, subsets:)
         RelationMapping.new(
           name: name,
           namespace: relation_name,
@@ -224,7 +224,7 @@ module SequelMapper
           serializer: serializer,
           fields: fields,
           associations: associations,
-          queries: queries,
+          subsets: subsets,
         )
       end
 

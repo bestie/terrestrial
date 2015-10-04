@@ -34,9 +34,9 @@ module SequelMapper
       )
     end
 
-    def query(name)
+    def subset(name, *params)
       new_with_dataset(
-        mapping.queries.execute(name, dataset)
+        mapping.subsets.execute(dataset, name, *params)
       )
     end
 

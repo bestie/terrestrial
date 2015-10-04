@@ -15,7 +15,7 @@ module SequelMapper
     private     :collection, :deleted_nodes, :added_nodes
 
     extend Forwardable
-    def_delegators :collection, :where, :query
+    def_delegators :collection, :where, :subset
 
     def each_loaded(&block)
       loaded_enum.each(&block)

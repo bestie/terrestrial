@@ -173,7 +173,7 @@ module SequelMapper
             QueryableLazyDatasetLoader.new(
               query,
               loader,
-              mappings.fetch(mapping_name).queries,
+              mappings.fetch(mapping_name).subsets,
             )
           )
         }

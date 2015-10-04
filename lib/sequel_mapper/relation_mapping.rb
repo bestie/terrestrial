@@ -1,6 +1,6 @@
 module SequelMapper
   class RelationMapping
-    def initialize(name:, namespace:, fields:, primary_key:, factory:, serializer:, associations:, queries:)
+    def initialize(name:, namespace:, fields:, primary_key:, factory:, serializer:, associations:, subsets:)
       @name = name
       @namespace = namespace
       @fields = fields
@@ -8,10 +8,10 @@ module SequelMapper
       @factory = factory
       @serializer = serializer
       @associations = associations
-      @queries = queries
+      @subsets = subsets
     end
 
-    attr_reader :name, :namespace, :fields, :primary_key, :factory, :serializer, :associations, :queries
+    attr_reader :name, :namespace, :fields, :primary_key, :factory, :serializer, :associations, :subsets
 
     def add_association(name, new_association)
       @associations = associations.merge(name => new_association)
@@ -28,7 +28,7 @@ module SequelMapper
         factory: factory,
         serializer: serializer,
         associations: new_associations,
-        queries: queries,
+        subsets: subsets,
       )
     end
   end

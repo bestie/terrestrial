@@ -4,8 +4,8 @@ module SequelMapper
       @query_map = query_map
     end
 
-    def execute(name, dataset)
-      @query_map.fetch(name).call(dataset)
+    def execute(superset, name, *params)
+      @query_map.fetch(name).call(superset, *params)
     end
   end
 end
