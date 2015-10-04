@@ -4,7 +4,7 @@ Feature: Basic setup
     Given the domain objects are defined
       """
         User = Struct.new(:id, :first_name, :last_name, :email, :posts)
-        Post = Struct.new(:id, :author, :subject, :body, :categories)
+        Post = Struct.new(:id, :author, :subject, :body, :created_at, :categories)
         Category = Struct.new(:id, :name, :posts)
       """
     And a conventionally similar database schema for table "users"
@@ -24,6 +24,7 @@ Feature: Basic setup
         author_id   | text
         subject     | text
         body        | text
+        created_at  | DateTime
       """
     And a conventionally similar database schema for table "categories"
       """
@@ -51,13 +52,16 @@ Feature: Basic setup
       """
       USER_MAPPER_CONFIG = SequelMapper.config(DB)
         .setup_mapping(:users) { |users|
+          users.class(User)
           users.has_many(:posts, foreign_key: :author_id)
         }
         .setup_mapping(:posts) { |posts|
+          posts.class(Post)
           posts.belongs_to(:author, mapping_name: :users)
           posts.has_many_through(:categories)
         }
         .setup_mapping(:categories) { |categories|
+          categories.class(Category)
           categories.has_many_through(:posts)
         }
       """
@@ -81,9 +85,10 @@ Feature: Basic setup
 
         user.posts << Post.new(
           "9b75fe2b-d694-4b90-9137-6201d426dda2",
-          nil,
+          user,
           "Things that I like",
           "I like fish and scratching",
+          Time.parse("2015-10-03 21:00:00 UTC"),
           [],
         )
       """
@@ -107,9 +112,10 @@ Feature: Basic setup
     And the user's posts will be loaded once the association proxy receives an Enumerable message
       """
         [#<struct Post id="9b75fe2b-d694-4b90-9137-6201d426dda2",
-          author=#<SequelMapper::LazyObjectProxy:7fc9a4989958 known_fields={:id=>"2f0f791c-47cf-4a00-8676-e582075bcd65"} lazy_object=nil>,
+          author=#<SequelMapper::LazyObjectProxy:7fec5ac2a5f8 known_fields={:id=>"2f0f791c-47cf-4a00-8676-e582075bcd65"} lazy_object=nil>,
           subject="Things that I like",
           body="I like fish and scratching",
-          categories=#<SequelMapper::CollectionMutabilityProxy:7fc9a4988b20
+          created_at=2015-10-03 21:00:00 UTC,
+          categories=#<SequelMapper::CollectionMutabilityProxy:7fec5ac296f8
         >>]
       """
