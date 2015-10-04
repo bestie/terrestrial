@@ -6,21 +6,23 @@
 * Persists plain objects while supporting arbitrarily deeply nested / circular associations
 * Provides excellent database and query building support courtesy of [Sequel library](https://github.com/jeremyevans/sequel)
 
-## What is it?
-
 SequelMapper (working title) is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) ORM implementation for Ruby.
 
 The aim is to provide a convenient way to query and persist graphs of Ruby objects (think models with associations), while keeping those object completely isolated and decoupled from the database.
 
 In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/activeRecord.html) implementations, domain objects require no special inherited or mixed in behavior in order to be persisted.
 
-Features include:
+## Features
+
 * Associations (belongs_to, has_many, has_many_through)
 * Automatic 'convention over configuration' that is fully customizable
 * Lazy loading for database read efficiency
 * Dirty tracking for database write efficiency
 * Predefined queries, scopes or subsets
 * Eager loading to avoid the `n + 1` query problem
+
+There are some [conspicuous missing features](https://github.com/bestie/sequel_mapper/blob/master/MissingFeatures.md)
+that you may want to read more about.
 
 SequelMapper does not reinvent the wheel with querying abstraction and
 migrations, instead these responsibilities are delegated to Sequel such that
