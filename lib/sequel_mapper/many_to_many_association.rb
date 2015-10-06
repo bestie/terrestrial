@@ -2,22 +2,22 @@ require "sequel_mapper/dataset"
 
 module SequelMapper
   class ManyToManyAssociation
-    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, through_mapping_name:, through_dataset:, order:)
+    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, join_mapping_name:, join_dataset:, order:)
       @mapping_name = mapping_name
       @foreign_key = foreign_key
       @key = key
       @proxy_factory = proxy_factory
       @association_foreign_key = association_foreign_key
       @association_key = association_key
-      @through_mapping_name = through_mapping_name
-      @through_dataset = through_dataset
+      @join_mapping_name = join_mapping_name
+      @join_dataset = join_dataset
       @order = order
     end
 
-    attr_reader :mapping_name, :through_mapping_name
+    attr_reader :mapping_name, :join_mapping_name
 
-    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset, :order
-    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :through_dataset, :order
+    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :join_dataset, :order
+    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :join_dataset, :order
 
     def build_proxy(data_superset:, loader:, record:)
      proxy_factory.call(
@@ -34,23 +34,23 @@ module SequelMapper
 
     def eager_superset(superset, associated_dataset)
       # TODO: All these keys can be confusing, write some focused tests.
-      join_dataset = Dataset.new(
-        through_dataset
+      eager_join_dataset = Dataset.new(
+        join_dataset
           .where(foreign_key => associated_dataset.select(association_key))
           .to_a
       )
 
       eager_dataset = superset
-        .where(key => join_dataset.select(association_foreign_key))
+        .where(key => eager_join_dataset.select(association_foreign_key))
         .to_a
 
-      JoinedDataset.new(eager_dataset, join_dataset)
+      JoinedDataset.new(eager_dataset, eager_join_dataset)
     end
 
     def build_query(superset, parent_record)
       order
         .apply(
-          superset.join(through_mapping_name, association_foreign_key => key)
+          superset.join(join_mapping_name, association_foreign_key => key)
             .where(foreign_key => foreign_key_value(parent_record))
         )
         .lazy.map { |record|
@@ -160,7 +160,7 @@ module SequelMapper
 
         join_records = records.take(1).flat_map { |record|
           fks = foreign_keys(parent_record, record)
-          block.call(through_mapping_name, fks, fks)
+          block.call(join_mapping_name, fks, fks)
         }
 
         records + join_records

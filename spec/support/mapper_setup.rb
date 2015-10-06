@@ -52,17 +52,17 @@ RSpec.shared_context "mapper setup" do
               SequelMapper::ManyToManyAssociation.new(
                 **assoc_defaults
                   .merge(
-                    through_mapping_name: assoc_config.fetch(:through_mapping_name),
-                    through_dataset: datastore[
+                    join_mapping_name: assoc_config.fetch(:join_mapping_name),
+                    join_dataset: datastore[
                       configs
-                        .fetch(assoc_config.fetch(:through_mapping_name))
+                        .fetch(assoc_config.fetch(:join_mapping_name))
                         .fetch(:namespace)
                     ],
                   )
                   .merge(
                     assoc_config.dup.tap { |h|
                       h.delete(:type)
-                      h.delete(:through_namespace)
+                      h.delete(:join_namespace)
                     }
                   )
               )
@@ -173,7 +173,7 @@ RSpec.shared_context "mapper setup" do
             foreign_key: :post_id,
             association_foreign_key: :category_id,
             association_key: :id,
-            through_mapping_name: :categories_to_posts,
+            join_mapping_name: :categories_to_posts,
             proxy_factory: has_many_proxy_factory,
           },
         },
@@ -216,7 +216,7 @@ RSpec.shared_context "mapper setup" do
             foreign_key: :category_id,
             association_foreign_key: :post_id,
             association_key: :id,
-            through_mapping_name: :categories_to_posts,
+            join_mapping_name: :categories_to_posts,
             proxy_factory: has_many_proxy_factory,
           },
         },

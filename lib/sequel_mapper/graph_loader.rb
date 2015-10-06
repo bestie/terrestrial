@@ -35,7 +35,7 @@ module SequelMapper
             data_superset: data_superset,
             loader: ->(associated_record, join_records = []) {
               join_records.map { |jr|
-                join_mapping = mappings.fetch(association.through_mapping_name)
+                join_mapping = mappings.fetch(association.join_mapping_name)
                 object_load_pipeline.call(join_mapping, jr)
               }
               call(association.mapping_name, associated_record, eager_data)

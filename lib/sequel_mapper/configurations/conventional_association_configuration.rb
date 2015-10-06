@@ -151,8 +151,8 @@ module SequelMapper
           foreign_key: foreign_key,
           association_key: association_key,
           association_foreign_key: association_foreign_key,
-          through_mapping_name: through_mapping_name,
-          through_dataset: through_dataset,
+          join_mapping_name: through_mapping_name,
+          join_dataset: through_dataset,
           proxy_factory: collection_proxy_factory,
           order: query_order(order_fields, order_direction),
         )
