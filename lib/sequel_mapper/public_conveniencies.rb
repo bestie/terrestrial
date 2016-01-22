@@ -10,7 +10,7 @@ module SequelMapper
     end
 
     def mapper(config:, name:, datastore:)
-      dataset = datastore[config.fetch(:users).namespace]
+      dataset = datastore[config.fetch(name).namespace]
       identity_map = IdentityMap.new({})
       dirty_map = DirtyMap.new({})
 
