@@ -167,8 +167,8 @@ care.
 
 Add the following to your `Gemfile`.
 
-```ruby
-gem "sequel_mapper", "0.0.1"
+```
+gem "sequel_mapper", "0.0.3"
 ```
 
 And then execute:
