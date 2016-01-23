@@ -129,8 +129,6 @@ RSpec.describe "Graph persistence efficiency" do
       end
     end
 
-    # mapper.eager_load([:posts, [:comments, [:author]]])
-
     context "with nested has many" do
       it "performs 1 read per table rather than n + 1" do
         expect {
@@ -176,6 +174,19 @@ RSpec.describe "Graph persistence efficiency" do
             .flat_map { |p| p.categories.to_a }
             .flat_map { |c| c.posts.to_a }
         }.to change { query_counter.read_count }.by(6)
+      end
+    end
+
+    context "mixed eager and lazy loading" do
+      it "lazy data can still be loaded while eager data remains efficient" do
+        expect {
+          user_query
+            .eager_load(:posts => { :categories => { :posts => [] }})
+            .flat_map { |u| u.posts.to_a }
+            .flat_map { |p| p.categories.to_a }
+            .flat_map { |c| c.posts.to_a }
+            .flat_map { |p| p.comments.to_a }
+        }.to change { query_counter.read_count }.by(8)
       end
     end
   end

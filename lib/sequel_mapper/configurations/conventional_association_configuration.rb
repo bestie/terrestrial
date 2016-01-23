@@ -147,12 +147,11 @@ module SequelMapper
       def has_many_through_mapper(mapping_name:, key:, foreign_key:, association_key:, association_foreign_key:, through_mapping_name:, through_dataset:, order_fields:, order_direction:)
         ManyToManyAssociation.new(
           mapping_name: mapping_name,
+          join_mapping_name: through_mapping_name,
           key: key,
           foreign_key: foreign_key,
           association_key: association_key,
           association_foreign_key: association_foreign_key,
-          join_mapping_name: through_mapping_name,
-          join_dataset: through_dataset,
           proxy_factory: collection_proxy_factory,
           order: query_order(order_fields, order_direction),
         )

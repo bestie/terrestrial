@@ -10,6 +10,9 @@ module SequelMapper
       @proxy_factory = proxy_factory
     end
 
+    def mapping_names
+      [mapping_name]
+    end
     attr_reader :mapping_name
 
     attr_reader :foreign_key, :key, :order, :proxy_factory
@@ -34,15 +37,17 @@ module SequelMapper
     end
     alias_method :delete, :dump
 
-    def eager_superset(superset, associated_dataset)
-      Dataset.new(
-        superset.where(
-          foreign_key => associated_dataset.select(key)
-        ).to_a
-      )
+    def eager_superset((superset), (associated_dataset))
+      [
+        Dataset.new(
+          superset.where(
+            foreign_key => associated_dataset.select(key)
+          ).to_a
+        )
+      ]
     end
 
-    def build_query(superset, record)
+    def build_query((superset), record)
       order.apply(
         superset.where(foreign_key => record.fetch(key))
       )

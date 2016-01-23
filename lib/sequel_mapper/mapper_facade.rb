@@ -72,8 +72,7 @@ module SequelMapper
         .flat_map { |name, deeper_association_names|
           association = mapping.associations.fetch(name)
           association_mapping = mappings.fetch(association.mapping_name)
-          association_namespace = association_mapping.namespace
-          association_dataset = get_eager_dataset(association, association_namespace, parent_dataset)
+          association_dataset = get_eager_dataset(association, parent_dataset)
 
           [
             [[mapping.name, name] , association_dataset]
@@ -81,11 +80,19 @@ module SequelMapper
         }
     end
 
-    def get_eager_dataset(association, association_namespace, parent_dataset)
-        association.eager_superset(
-          datastore[association_namespace],
-          parent_dataset,
-        )
+    def get_eager_dataset(association, parent_dataset)
+      association.eager_superset(
+        association_root_datasets(association),
+        parent_dataset,
+      )
+    end
+
+    def association_root_datasets(association)
+      association
+        .mapping_names
+        .map { |name| mappings.fetch(name) }
+        .map(&:namespace)
+        .map { |ns| datastore[ns] }
     end
 
     def new_with_dataset(new_dataset)

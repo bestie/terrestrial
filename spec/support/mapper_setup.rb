@@ -53,11 +53,6 @@ RSpec.shared_context "mapper setup" do
                 **assoc_defaults
                   .merge(
                     join_mapping_name: assoc_config.fetch(:join_mapping_name),
-                    join_dataset: datastore[
-                      configs
-                        .fetch(assoc_config.fetch(:join_mapping_name))
-                        .fetch(:namespace)
-                    ],
                   )
                   .merge(
                     assoc_config.dup.tap { |h|

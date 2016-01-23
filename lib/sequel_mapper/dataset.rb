@@ -16,9 +16,13 @@ module SequelMapper
 
     def where(criteria)
       new(
-        records.select { |row|
+        records.find_all { |row|
           criteria.all? { |k, v|
-            row.fetch(k, :nope) == v
+            if v.respond_to?(:include?)
+              test_inclusion_in_value(row, k, v)
+            else
+              test_equality(row, k, v)
+            end
           }
         }
       )
@@ -32,6 +36,14 @@ module SequelMapper
 
     def new(records)
       self.class.new(records)
+    end
+
+    def test_inclusion_in_value(row, field, values)
+      values.include?(row.fetch(field))
+    end
+
+    def test_equality(row, field, value)
+      value == row.fetch(field)
     end
   end
 end

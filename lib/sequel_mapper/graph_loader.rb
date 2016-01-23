@@ -25,7 +25,7 @@ module SequelMapper
     def load_associations(mapping, record, eager_data)
       mapping.associations.map { |name, association|
         data_superset = eager_data.fetch([mapping.name, name]) {
-          datasets[mappings.fetch(association.mapping_name).namespace]
+          load_from_datasets(association)
         }
 
         [
@@ -43,6 +43,14 @@ module SequelMapper
           )
         ]
       }
+    end
+
+    def load_from_datasets(association)
+      association
+      .mapping_names
+      .map { |name| mappings.fetch(name) }
+      .map(&:namespace)
+      .map { |ns| datasets[ns] }
     end
   end
 end

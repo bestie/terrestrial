@@ -1,23 +1,27 @@
+require "forwardable"
 require "sequel_mapper/dataset"
 
 module SequelMapper
   class ManyToManyAssociation
-    def initialize(mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, join_mapping_name:, join_dataset:, order:)
+    def initialize(mapping_name:, join_mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, order:)
       @mapping_name = mapping_name
+      @join_mapping_name = join_mapping_name
       @foreign_key = foreign_key
       @key = key
       @proxy_factory = proxy_factory
       @association_foreign_key = association_foreign_key
       @association_key = association_key
-      @join_mapping_name = join_mapping_name
-      @join_dataset = join_dataset
       @order = order
+    end
+
+    def mapping_names
+      [mapping_name, join_mapping_name]
     end
 
     attr_reader :mapping_name, :join_mapping_name
 
-    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :join_dataset, :order
-    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :join_dataset, :order
+    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
+    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
 
     def build_proxy(data_superset:, loader:, record:)
      proxy_factory.call(
@@ -32,106 +36,37 @@ module SequelMapper
       )
     end
 
-    def eager_superset(superset, associated_dataset)
-      # TODO: All these keys can be confusing, write some focused tests.
-      eager_join_dataset = Dataset.new(
-        join_dataset
+    def eager_superset((superset, join_superset), (associated_dataset))
+      join_data = Dataset.new(
+        join_superset
           .where(foreign_key => associated_dataset.select(association_key))
           .to_a
       )
 
-      eager_dataset = superset
-        .where(key => eager_join_dataset.select(association_foreign_key))
-        .to_a
+      eager_superset = Dataset.new(
+        superset.where(key => join_data.select(association_foreign_key)).to_a
+      )
 
-      JoinedDataset.new(eager_dataset, eager_join_dataset)
+      [
+        eager_superset,
+        join_data,
+      ]
     end
 
-    def build_query(superset, parent_record)
+    def build_query((superset, join_superset), parent_record)
+      ids = join_superset
+              .where(foreign_key => foreign_key_value(parent_record))
+              .select(association_foreign_key)
+
       order
         .apply(
-          superset.join(join_mapping_name, association_foreign_key => key)
-            .where(foreign_key => foreign_key_value(parent_record))
+          superset.where(
+            key => ids
+          )
         )
         .lazy.map { |record|
           [record, [foreign_keys(parent_record, record)]]
         }
-    end
-
-    class JoinedDataset < Dataset
-      def initialize(records, join_records)
-        @records = records
-        @join_records = join_records
-      end
-
-      def join(_relation_name, _conditions)
-        # TODO: This works for the current test suite but is probably too
-        # simplistic. Perhaps if the dataset was aware of its join conditions
-        # it would be able to intellegently skip joining or delegate
-        self
-      end
-
-      def where(criteria)
-        self.class.new(
-          *decompose_set(
-            find_like_sequel(criteria)
-          )
-        )
-      end
-
-      private
-
-      def decompose_set(set)
-        set.map(&:to_pair).transpose.+([ [], [] ]).take(2)
-      end
-
-      def find_like_sequel(criteria)
-        joined_records
-          .select { |record|
-            criteria.all? { |k, v|
-              record.fetch(k, :nope) == v
-            }
-          }
-      end
-
-      def joined_records
-        # TODO: there will inevitably nearly always be a mismatch between the
-        # number of records and unique join records. This zip/transpose
-        # approach may be too simplistic.
-        @joined_records ||= records
-          .zip(@join_records)
-          .map { |record, join_record|
-            JoinedRecord.new(record, join_record)
-          }
-      end
-
-      class JoinedRecord
-        def initialize(record, join_record)
-          @record = record
-          @join_record = join_record
-        end
-
-        attr_reader :record, :join_record
-        private      :record, :join_record
-
-        def to_pair
-          [record, join_record]
-        end
-
-        def to_h
-          @record
-        end
-
-        def fetch(key, default = NO_DEFAULT, &block)
-          args = [key, default].reject { |a| a == NO_DEFAULT }
-
-          @record.fetch(key) {
-            @join_record.fetch(*args, &block)
-          }
-        end
-
-        NO_DEFAULT = Module.new
-      end
     end
 
     def dump(parent_record, collection, &block)
