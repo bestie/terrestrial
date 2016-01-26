@@ -3,6 +3,7 @@ require "sequel_mapper/short_inspection_string"
 
 module SequelMapper
   class CollectionMutabilityProxy
+    extend Forwardable
     include ShortInspectionString
     include Enumerable
 
@@ -15,7 +16,6 @@ module SequelMapper
     attr_reader :collection, :deleted_nodes, :added_nodes
     private     :collection, :deleted_nodes, :added_nodes
 
-    extend Forwardable
     def_delegators :collection, :where, :subset
 
     def each_loaded(&block)

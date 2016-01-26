@@ -1,13 +1,13 @@
 module SequelMapper
   class Dataset
+    include Enumerable
+
     def initialize(records)
       @records = records
     end
 
     attr_reader :records
     private     :records
-
-    include Enumerable
 
     def each(&block)
       records.each(&block)

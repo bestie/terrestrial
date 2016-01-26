@@ -3,6 +3,8 @@ require "sequel_mapper/graph_loader"
 
 module SequelMapper
   class MapperFacade
+    include Enumerable
+
     def initialize(mappings:, mapping_name:, datastore:, dataset:, identity_map:, dirty_map:)
       @mappings = mappings
       @mapping_name = mapping_name
@@ -40,7 +42,6 @@ module SequelMapper
       )
     end
 
-    include Enumerable
     def each(&block)
       dataset
         .map { |record|
