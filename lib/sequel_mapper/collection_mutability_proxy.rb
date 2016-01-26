@@ -4,6 +4,7 @@ require "sequel_mapper/short_inspection_string"
 module SequelMapper
   class CollectionMutabilityProxy
     include ShortInspectionString
+    include Enumerable
 
     def initialize(collection)
       @collection = collection
@@ -25,7 +26,10 @@ module SequelMapper
       @deleted_nodes.each(&block)
     end
 
-    include Enumerable
+    def to_ary
+      to_a
+    end
+
     def each(&block)
       if block
         enum.each(&block)

@@ -27,6 +27,10 @@ module SequelMapper
       )
     end
 
+    def to_ary
+      to_a
+    end
+
     def each(&block)
       enum.each(&block)
     end

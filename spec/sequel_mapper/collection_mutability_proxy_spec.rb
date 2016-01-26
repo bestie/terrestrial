@@ -24,6 +24,16 @@ RSpec.describe SequelMapper::CollectionMutabilityProxy do
     end
   end
 
+  describe "#to_ary" do
+    it "is equivalent to the original enumeration" do
+      expect(proxy.to_ary).to eq(data_set.to_a)
+    end
+
+    it "implicitly coerces to Array" do
+      expect([-1].concat(proxy)).to eq([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    end
+  end
+
   describe "#each" do
     context "when called with a block" do
       it "returns self" do

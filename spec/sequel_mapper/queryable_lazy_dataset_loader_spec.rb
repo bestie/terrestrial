@@ -37,6 +37,22 @@ RSpec.describe SequelMapper::QueryableLazyDatasetLoader do
     }
   }
 
+  it "is Enumerable" do
+    expect(proxy).to be_a(Enumerable)
+  end
+
+  describe "#to_ary" do
+    it "is equivalent to the original enumeration" do
+      expect(proxy.to_ary).to eq([object1, object2])
+    end
+
+    it "implicitly coerces to Array" do
+      new_object = Object.new
+
+      expect([new_object].concat(proxy)).to eq([new_object, object1, object2])
+    end
+  end
+
   describe "#each" do
     it "iterates over all elements of the database_enum" do
       elements = []
