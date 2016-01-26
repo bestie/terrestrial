@@ -17,6 +17,7 @@ RSpec.shared_context "seed data setup" do
       [ :comments, biscuits_post_comment_record ],
       [ :categories, cat_biscuits_category_record ],
       [ :categories, eating_and_sleeping_category_record ],
+      [ :categories, hunting_category_record ],
       *categories_to_posts_records.map { |record|
         [ :categories_to_posts, record ]
       },
@@ -103,6 +104,13 @@ RSpec.shared_context "seed data setup" do
     }
   }
 
+  let(:hunting_category_record) {
+    {
+      id: "categories/3",
+      name: "Hunting",
+    }
+  }
+
   let(:categories_to_posts_records) {
     [
       {
@@ -116,6 +124,14 @@ RSpec.shared_context "seed data setup" do
       {
         post_id: "posts/2",
         category_id: "categories/2",
+      },
+      {
+        post_id: "posts/3",
+        category_id: "categories/2",
+      },
+      {
+        post_id: "posts/3",
+        category_id: "categories/3",
       },
     ]
   }

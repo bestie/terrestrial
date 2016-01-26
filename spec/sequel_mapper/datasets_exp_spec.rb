@@ -52,6 +52,7 @@ RSpec.describe "datasets and stuff" do
       categories: dataset(:categories, [
         cat_biscuits_category_record,
         eating_and_sleeping_category_record,
+        hunting_category_record,
       ]),
       categories_to_posts: dataset(:categories_to_posts, categories_to_posts_records),
     }

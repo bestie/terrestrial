@@ -80,7 +80,7 @@ RSpec.describe "Graph traversal" do
         .to match_array(["categories/1", "categories/2"])
 
       expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
-        .to match_array(["posts/1", "posts/2"])
+        .to match_array(["posts/1", "posts/2", "posts/3"])
     end
   end
 end

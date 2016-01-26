@@ -186,7 +186,7 @@ RSpec.describe "Graph persistence efficiency" do
             .flat_map(&:categories)
             .flat_map(&:posts)
             .flat_map(&:comments)
-        }.to change { query_counter.read_count }.by(8)
+        }.to change { query_counter.read_count }.by(9)
       end
     end
   end
