@@ -146,9 +146,9 @@ RSpec.describe "Graph persistence efficiency" do
         expect {
           user_query
             .eager_load(:posts => { :comments => { :commenter => [] }})
-            .flat_map { |u| u.posts.to_a }
-            .flat_map { |p| p.comments.to_a }
-            .flat_map { |c| c.commenter.id }
+            .flat_map(&:posts)
+            .flat_map(&:comments)
+            .flat_map(&:commenter)
         }.to change { query_counter.read_count }.by(4)
       end
     end
@@ -158,9 +158,9 @@ RSpec.describe "Graph persistence efficiency" do
         expect {
           user_query
             .eager_load(:posts => { :categories => [] })
-            .flat_map { |u| u.posts.to_a }
-            .flat_map { |p| p.categories.to_a }
-            .flat_map { |c| c.id }
+            .flat_map(&:posts)
+            .flat_map(&:categories)
+            .flat_map(&:id)
         }.to change { query_counter.read_count }.by(4)
       end
     end
@@ -170,9 +170,9 @@ RSpec.describe "Graph persistence efficiency" do
         expect {
           user_query
             .eager_load(:posts => { :categories => { :posts => [] }})
-            .flat_map { |u| u.posts.to_a }
-            .flat_map { |p| p.categories.to_a }
-            .flat_map { |c| c.posts.to_a }
+            .flat_map(&:posts)
+            .flat_map(&:categories)
+            .flat_map(&:posts)
         }.to change { query_counter.read_count }.by(6)
       end
     end
@@ -182,10 +182,10 @@ RSpec.describe "Graph persistence efficiency" do
         expect {
           user_query
             .eager_load(:posts => { :categories => { :posts => [] }})
-            .flat_map { |u| u.posts.to_a }
-            .flat_map { |p| p.categories.to_a }
-            .flat_map { |c| c.posts.to_a }
-            .flat_map { |p| p.comments.to_a }
+            .flat_map(&:posts)
+            .flat_map(&:categories)
+            .flat_map(&:posts)
+            .flat_map(&:comments)
         }.to change { query_counter.read_count }.by(8)
       end
     end
