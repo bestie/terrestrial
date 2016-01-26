@@ -24,7 +24,9 @@ module SequelMapper
 
     def load_associations(mapping, record, eager_data)
       mapping.associations.map { |name, association|
-        data_superset = eager_data.fetch([mapping.name, name]) {
+        assoc_eager_data = eager_data.fetch(name, {})
+
+        data_superset = assoc_eager_data.fetch(:superset) {
           load_from_datasets(association)
         }
 
@@ -38,7 +40,12 @@ module SequelMapper
                 join_mapping = mappings.fetch(association.join_mapping_name)
                 object_load_pipeline.call(join_mapping, jr)
               }
-              call(association.mapping_name, associated_record, eager_data)
+
+              call(
+                association.mapping_name,
+                associated_record,
+                assoc_eager_data.fetch(:associations, {})
+              )
             },
           )
         ]

@@ -45,13 +45,13 @@ module SequelMapper
     def each(&block)
       dataset
         .map { |record|
-          graph_loader.call(mapping_name, record, Hash[@eager_data])
+          graph_loader.call(mapping_name, record, @eager_data)
         }
         .each(&block)
     end
 
     def eager_load(association_name_map)
-      @eager_data = eager_load_the_things(mapping, dataset, association_name_map)
+      @eager_data = eager_load_associations(mapping, dataset, association_name_map)
 
       self
     end
@@ -68,17 +68,26 @@ module SequelMapper
 
     private
 
-    def eager_load_the_things(mapping, parent_dataset, association_name_map)
-      association_name_map
-        .flat_map { |name, deeper_association_names|
+    def eager_load_associations(mapping, parent_dataset, association_name_map)
+      Hash[
+        association_name_map.map { |name, deeper_association_names|
           association = mapping.associations.fetch(name)
           association_mapping = mappings.fetch(association.mapping_name)
           association_dataset = get_eager_dataset(association, parent_dataset)
 
           [
-            [[mapping.name, name] , association_dataset]
-          ] + eager_load_the_things(association_mapping, association_dataset, deeper_association_names)
+            name,
+            {
+              superset: association_dataset,
+              associations: eager_load_associations(
+                association_mapping,
+                association_dataset,
+                deeper_association_names,
+              ),
+            }
+          ]
         }
+      ]
     end
 
     def get_eager_dataset(association, parent_dataset)

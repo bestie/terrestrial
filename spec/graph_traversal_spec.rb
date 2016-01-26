@@ -82,5 +82,40 @@ RSpec.describe "Graph traversal" do
       expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
         .to match_array(["posts/1", "posts/2", "posts/3"])
     end
+
+    describe "eager_loading" do
+      it "returns the expected objects" do
+        expect(
+          user_query
+            .eager_load(:posts => { :categories => { :posts => [] }})
+            .flat_map(&:posts)
+            .flat_map(&:categories)
+            .map(&:posts)
+            .map { |collection| collection.map(&:id) }
+        ).to eq([["posts/1"]] + [["posts/1", "posts/2", "posts/3"]] * 2)
+      end
+
+      context "when traversing beyond the eager loaded data" do
+        it "returns the expected objects" do
+          expect(
+            user_query
+              .eager_load(:posts => { :categories => { :posts => [] }})
+              .flat_map(&:posts)
+              .flat_map(&:categories)
+              .flat_map(&:posts)
+              .flat_map(&:categories)
+              .flat_map(&:posts)
+              .flat_map(&:categories)
+              .uniq
+              .map(&:id)
+          ).to eq([
+            "categories/1",
+            "categories/2",
+            "categories/3",
+            "categories/4",
+          ])
+        end
+      end
+    end
   end
 end

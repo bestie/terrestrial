@@ -177,8 +177,24 @@ RSpec.describe "Graph persistence efficiency" do
       end
     end
 
+    context "eager load multiple associations at same level" do
+      it "performs 1 read per table (includiing join table) rather than n + 1" do
+        expect {
+          posts = user_query
+            .eager_load(:posts => { :comments => {}, :categories => {} })
+            .flat_map(&:posts)
+
+          categories = posts.flat_map(&:categories)
+          comments = posts.flat_map(&:comments)
+        }.to change { query_counter.read_count }.by(5)
+      end
+    end
+
     context "mixed eager and lazy loading" do
       it "lazy data can still be loaded while eager data remains efficient" do
+        eager_queries = 6
+        lazy_comment_queries = 3
+
         expect {
           user_query
             .eager_load(:posts => { :categories => { :posts => [] }})
@@ -186,7 +202,9 @@ RSpec.describe "Graph persistence efficiency" do
             .flat_map(&:categories)
             .flat_map(&:posts)
             .flat_map(&:comments)
-        }.to change { query_counter.read_count }.by(9)
+        }.to change {
+          query_counter.read_count
+        }.by(eager_queries + lazy_comment_queries)
       end
     end
   end

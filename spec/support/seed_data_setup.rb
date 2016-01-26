@@ -14,10 +14,12 @@ RSpec.shared_context "seed data setup" do
       [ :posts, biscuits_post_record ],
       [ :posts, sleep_post_record ],
       [ :posts, catch_frogs_post_record ],
+      [ :posts, chew_up_boxes_post_record ],
       [ :comments, biscuits_post_comment_record ],
       [ :categories, cat_biscuits_category_record ],
       [ :categories, eating_and_sleeping_category_record ],
       [ :categories, hunting_category_record ],
+      [ :categories, messing_stuff_up_category_record ],
       *categories_to_posts_records.map { |record|
         [ :categories_to_posts, record ]
       },
@@ -81,6 +83,16 @@ RSpec.shared_context "seed data setup" do
     }
   }
 
+  let(:chew_up_boxes_post_record) {
+    {
+      id: "posts/4",
+      subject: "Chewing up boxes",
+      body: "I love them, and yet I destory them",
+      author_id: "users/2",
+      created_at: Time.parse("2015-09-10T11:00:00+01:00"),
+    }
+  }
+
   let(:biscuits_post_comment_record) {
     {
       id: "comments/1",
@@ -111,6 +123,13 @@ RSpec.shared_context "seed data setup" do
     }
   }
 
+  let(:messing_stuff_up_category_record) {
+    {
+      id: "categories/4",
+      name: "Messing stuff up",
+    }
+  }
+
   let(:categories_to_posts_records) {
     [
       {
@@ -132,6 +151,14 @@ RSpec.shared_context "seed data setup" do
       {
         post_id: "posts/3",
         category_id: "categories/3",
+      },
+      {
+        post_id: "posts/4",
+        category_id: "categories/3",
+      },
+      {
+        post_id: "posts/4",
+        category_id: "categories/4",
       },
     ]
   }
