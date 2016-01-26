@@ -82,13 +82,5 @@ RSpec.describe "Graph traversal" do
       expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
         .to match_array(["posts/1", "posts/2"])
     end
-
-    it "flat maps associations" do
-      expect(user.posts.flat_map(&:categories).map(&:id)).to eq([
-        "categories/1",
-        "categories/2",
-        "categories/2",
-      ])
-    end
   end
 end

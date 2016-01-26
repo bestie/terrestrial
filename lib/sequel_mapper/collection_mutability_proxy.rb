@@ -1,12 +1,9 @@
 require "forwardable"
 require "sequel_mapper/short_inspection_string"
-require "sequel_mapper/flat_map_expandable"
 
 module SequelMapper
   class CollectionMutabilityProxy
     include ShortInspectionString
-    include Enumerable
-    include FlatMapExpandable
 
     def initialize(collection)
       @collection = collection
@@ -28,6 +25,7 @@ module SequelMapper
       @deleted_nodes.each(&block)
     end
 
+    include Enumerable
     def each(&block)
       if block
         enum.each(&block)
