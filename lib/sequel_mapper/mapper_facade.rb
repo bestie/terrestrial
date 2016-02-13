@@ -5,23 +5,23 @@ module SequelMapper
   class MapperFacade
     include Enumerable
 
-    def initialize(mappings:, mapping_name:, datastore:, dataset:, identity_map:, dirty_map:)
+    def initialize(mappings:, mapping_name:, datastore:, dataset:, load_pipeline:, dump_pipeline:)
       @mappings = mappings
       @mapping_name = mapping_name
       @datastore = datastore
       @dataset = dataset
-      @identity_map = identity_map
-      @dirty_map = dirty_map
+      @load_pipeline = load_pipeline
+      @dump_pipeline = dump_pipeline
       @eager_data = {}
     end
 
-    attr_reader :mappings, :mapping_name, :datastore, :dataset, :identity_map, :dirty_map
-    private     :mappings, :mapping_name, :datastore, :dataset, :identity_map, :dirty_map
+    attr_reader :mappings, :mapping_name, :datastore, :dataset, :load_pipeline, :dump_pipeline
+    private     :mappings, :mapping_name, :datastore, :dataset, :load_pipeline, :dump_pipeline
 
     def save(graph)
       record_dump = graph_serializer.call(mapping_name, graph)
 
-      object_dump_pipeline.call(record_dump)
+      dump_pipeline.call(record_dump)
 
       self
     end
@@ -57,7 +57,7 @@ module SequelMapper
     end
 
     def delete(object)
-      object_dump_pipeline.call(
+      dump_pipeline.call(
         graph_serializer.call(mapping_name, object)
           .take(1)
           .map { |record|
@@ -67,6 +67,10 @@ module SequelMapper
     end
 
     private
+
+    def mapping
+      mappings.fetch(mapping_name)
+    end
 
     def eager_load_associations(mapping, parent_dataset, association_name_map)
       Hash[
@@ -111,8 +115,8 @@ module SequelMapper
         mappings: mappings,
         mapping_name: mapping_name,
         datastore: datastore,
-        identity_map: identity_map,
-        dirty_map: dirty_map,
+        load_pipeline: load_pipeline,
+        dump_pipeline: dump_pipeline,
       )
     end
 
@@ -124,74 +128,8 @@ module SequelMapper
       GraphLoader.new(
         datasets: datastore,
         mappings: mappings,
-        object_load_pipeline: object_load_pipeline,
+        object_load_pipeline: load_pipeline,
       )
-    end
-
-    def object_load_pipeline
-      ->(mapping, record, other_attrs = {}) {
-        [
-          record_factory(mapping),
-          dirty_map.method(:load),
-          ->(r) { identity_map.call(r, mapping.factory.call(r.merge(other_attrs))) },
-        ].reduce(record) { |agg, operation|
-          operation.call(agg)
-        }
-      }
-    end
-
-    def object_dump_pipeline
-      ->(records) {
-        [
-          :uniq.to_proc,
-          ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
-          ->(rs) {
-            rs.each { |r|
-              r.if_upsert(&method(:upsert_record))
-               .if_delete(&method(:delete_record))
-            }
-          },
-        ].reduce(records) { |agg, operation|
-          operation.call(agg)
-        }
-      }
-    end
-
-    def record_factory(mapping)
-      ->(record_hash) {
-        identity = Hash[
-          mapping.primary_key.map { |field|
-            [field, record_hash.fetch(field)]
-          }
-        ]
-
-        SequelMapper::UpsertedRecord.new(
-          mapping.namespace,
-          identity,
-          record_hash,
-        )
-      }
-    end
-
-    def mapping
-      mappings.fetch(mapping_name)
-    end
-
-    def upsert_record(record)
-      # TODO I doubt this is really more performant but fewer queries register :)
-      row_count = datastore[record.namespace]
-        .where(record.identity)
-        .update(record.to_h)
-
-      if row_count < 1
-        row_count = datastore[record.namespace].insert(record.to_h)
-      end
-
-      row_count
-    end
-
-    def delete_record(record)
-      datastore[record.namespace].where(record.identity).delete
     end
   end
 end
