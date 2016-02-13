@@ -1,7 +1,7 @@
 require "sequel_mapper/short_inspection_string"
 
 module SequelMapper
-  class QueryableLazyDatasetLoader
+  class LazyCollection
     include ShortInspectionString
     include Enumerable
 

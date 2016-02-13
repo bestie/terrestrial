@@ -1,7 +1,7 @@
 require "sequel_mapper"
 require "sequel_mapper/mapper_facade"
 require "sequel_mapper/relation_mapping"
-require "sequel_mapper/queryable_lazy_dataset_loader"
+require "sequel_mapper/lazy_collection"
 require "sequel_mapper/collection_mutability_proxy"
 require "sequel_mapper/lazy_object_proxy"
 require "sequel_mapper/dataset"
@@ -93,7 +93,7 @@ RSpec.shared_context "mapper setup" do
   let(:has_many_proxy_factory) {
     ->(query:, loader:, mapping_name:) {
       SequelMapper::CollectionMutabilityProxy.new(
-        SequelMapper::QueryableLazyDatasetLoader.new(
+        SequelMapper::LazyCollection.new(
           query,
           loader,
           mappings.fetch(mapping_name).subsets,

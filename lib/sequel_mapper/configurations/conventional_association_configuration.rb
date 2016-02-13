@@ -6,7 +6,7 @@ module SequelMapper
     require "sequel_mapper/many_to_many_association"
     require "sequel_mapper/many_to_one_association"
     require "sequel_mapper/collection_mutability_proxy"
-    require "sequel_mapper/queryable_lazy_dataset_loader"
+    require "sequel_mapper/lazy_collection"
     require "sequel_mapper/lazy_object_proxy"
 
     class ConventionalAssociationConfiguration
@@ -169,7 +169,7 @@ module SequelMapper
       def collection_proxy_factory
         ->(query:, loader:, mapping_name:) {
           CollectionMutabilityProxy.new(
-            QueryableLazyDatasetLoader.new(
+            LazyCollection.new(
               query,
               loader,
               mappings.fetch(mapping_name).subsets,

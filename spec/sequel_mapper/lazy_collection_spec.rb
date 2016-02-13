@@ -1,10 +1,10 @@
 require "spec_helper"
 
-require "sequel_mapper/queryable_lazy_dataset_loader"
+require "sequel_mapper/lazy_collection"
 
-RSpec.describe SequelMapper::QueryableLazyDatasetLoader do
+RSpec.describe SequelMapper::LazyCollection do
   let(:proxy) {
-    SequelMapper::QueryableLazyDatasetLoader.new(
+    SequelMapper::LazyCollection.new(
       database_enum,
       loader,
       mapper,
