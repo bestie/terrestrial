@@ -108,7 +108,7 @@ RSpec.describe "Graph persistence" do
     end
   end
 
-  context "add a node to a has many assocation" do
+  context "add a node to a has many association" do
     let(:new_post_attrs) {
       {
         id: "posts/neu",

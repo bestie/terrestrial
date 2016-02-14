@@ -41,7 +41,7 @@ RSpec.describe "Proxying associations" do
       context "when iteratiing over a has many association" do
         before { posts }
 
-        it "does a single additional read for the assocation collection" do
+        it "does a single additional read for the association collection" do
           expect {
             user.posts.each { |x| x }
           }.to change { query_counter.read_count }.by(1)
@@ -60,7 +60,7 @@ RSpec.describe "Proxying associations" do
         end
       end
 
-      context "when getting a reference to a many to many assocation" do
+      context "when getting a reference to a many to many association" do
         before { post }
 
         let(:post) { user.posts.first }
@@ -72,7 +72,7 @@ RSpec.describe "Proxying associations" do
         end
       end
 
-      context "when iterating over a many to many assocation" do
+      context "when iterating over a many to many association" do
         let(:category_count) { 3 }
 
         it "does 1 read" do

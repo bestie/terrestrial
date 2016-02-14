@@ -53,7 +53,7 @@ RSpec.describe "Graph traversal" do
       end
     end
 
-    it "maps belongs to assocations" do
+    it "maps belongs to associations" do
       post = user.posts.first
       comment = post.comments.first
 
@@ -70,7 +70,7 @@ RSpec.describe "Graph traversal" do
       end
     end
 
-    it "maps deeply nested belongs to assocations" do
+    it "maps deeply nested belongs to associations" do
       expect(user_query.first.posts.first.comments.first.commenter.id)
         .to eq("users/1")
     end
