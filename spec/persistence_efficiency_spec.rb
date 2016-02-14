@@ -27,6 +27,15 @@ RSpec.describe "Graph persistence efficiency" do
           mapper.save(user)
         }.to change { query_counter.update_count }.by(1)
       end
+
+      it "sends only the updated fields to the datastore" do
+        mapper.save(user)
+        update_sql = query_counter.updates.last
+
+        expect(update_sql).to eq(
+          %{UPDATE "users" SET "email" = '#{modified_email}' WHERE ("id" = '#{user.id}')}
+        )
+      end
     end
   end
 

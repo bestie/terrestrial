@@ -59,6 +59,7 @@ module SequelMapper
         [
           :uniq.to_proc,
           ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
+          ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } },
           ->(rs) {
             rs.each { |r|
               r.if_upsert(&upsert)
@@ -90,7 +91,7 @@ module SequelMapper
     def upsert_record(datastore, record)
       row_count = datastore[record.namespace]
         .where(record.identity)
-        .update(record.to_h)
+        .update(record.attributes)
 
       if row_count < 1
         row_count = datastore[record.namespace].insert(record.to_h)

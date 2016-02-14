@@ -4,16 +4,13 @@ module SequelMapper
   class AbstractRecord
     extend Forwardable
 
-    def initialize(namespace, identity, raw_data = {})
+    def initialize(namespace, identity, attributes = {})
       @namespace = namespace
       @identity = identity
-      @raw_data = raw_data
+      @attributes = attributes
     end
 
-    attr_reader :namespace, :identity
-
-    attr_reader :raw_data
-    private     :raw_data
+    attr_reader :namespace, :identity, :attributes
 
     def_delegators :to_h, :fetch
 
@@ -26,11 +23,15 @@ module SequelMapper
     end
 
     def merge(more_data)
-      new_with_raw_data(raw_data.merge(more_data))
+      new_with_raw_data(attributes.merge(more_data))
+    end
+
+    def reject(&block)
+      new_with_raw_data(attributes.reject(&block))
     end
 
     def to_h
-      raw_data.merge(identity)
+      attributes.merge(identity)
     end
 
     def ==(other)
