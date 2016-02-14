@@ -86,9 +86,13 @@ module SequelMapper
       end
 
       def update_count
-        @info.count { |query|
-          /\A\([0-9\.]+s\) UPDATE/i === query
-        }
+        updates.count
+      end
+
+      def updates
+        @info
+          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
+          .select { |query| query.start_with?("UPDATE") }
       end
 
       def show_queries
