@@ -5,6 +5,9 @@ In no particular order
 ## General
 * Refactor, methods too big, objects missing
 * Name things better
+* Better support swapping out DB for in memory datasets
+* `#eager_load!` that raises an error when traversing outside the eagerly
+  loaded data
 
 ## Querying
 * Querying API, what would a repository with some arbitrary queries look like?
