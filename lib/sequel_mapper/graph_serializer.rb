@@ -5,14 +5,17 @@ module SequelMapper
   class GraphSerializer
     def initialize(mappings:)
       @mappings = mappings
-      @count = 0
-      @encountered_records = Set.new
+      @serialization_map = {}
     end
 
-    attr_reader :mappings, :encountered_records
-    private     :mappings, :encountered_records
+    attr_reader :mappings, :serialization_map
+    private     :mappings, :serialization_map
 
     def call(mapping_name, object, foreign_key = {})
+      if serialization_map.include?(object)
+        return [serialization_map.fetch(object)]
+      end
+
       # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
       serializer = mapping.serializer
@@ -31,11 +34,7 @@ module SequelMapper
           .merge(foreign_key)
       )
 
-      if encountered_records.include?(current_record.identity)
-        return [current_record]
-      else
-        encountered_records.add(current_record.identity)
-      end
+      serialization_map.store(object, current_record)
 
       [current_record] + associations_map
         .map { |name, association|
