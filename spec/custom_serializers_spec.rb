@@ -13,36 +13,9 @@ RSpec.describe "Config override" do
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-
-  subject(:user_mapper) {
-    SequelMapper.mapper(
-      config: mapper_config,
-      name: :users,
-      datastore: datastore,
-    )
-  }
-
-  let(:mapper_config) {
-    SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
-      .setup_mapping(:users) { |users|
-        users.has_many :posts, foreign_key: :author_id
-      }
-  }
-
   let(:user) { user_mapper.where(id: "users/1").first }
 
   context "with an object that has private fields" do
-    let(:user_class) {
-      Class.new(User) {
-        private :first_name
-        private :last_name
-
-        def full_name
-          [first_name, last_name].join(" ")
-        end
-      }
-    }
-
     let(:user_serializer) {
       ->(object) {
         object.to_h.merge(
@@ -53,10 +26,9 @@ RSpec.describe "Config override" do
     }
 
     before do
-      mapper_config.setup_mapping(:users) do |config|
-        config.class(user_class)
-        config.serializer(user_serializer)
-      end
+      mappings
+        .fetch(:users)
+        .instance_variable_set(:@serializer, user_serializer)
     end
 
     context "when saving the object" do

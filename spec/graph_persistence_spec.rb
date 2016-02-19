@@ -112,18 +112,16 @@ RSpec.describe "Graph persistence" do
     let(:new_post_attrs) {
       {
         id: "posts/neu",
-        author: user,
         subject: "I am new",
         body: "new body",
         comments: [],
         categories: [],
+        created_at: Time.now,
       }
     }
 
     let(:new_post) {
-      SequelMapper::StructFactory.new(
-        Post
-      ).call(new_post_attrs)
+      Post.new(new_post_attrs)
     }
 
     it "adds the object to the graph" do
@@ -257,26 +255,6 @@ RSpec.describe "Graph persistence" do
           }
         )
       end
-    end
-  end
-
-  context "when a save operation fails (some object is not persistable)" do
-    before do
-      user.posts.first.subject = "UNRELATED CHANGE THAT WILL FAIL"
-      user.email = unpersistable_object
-    end
-
-    let(:unpersistable_object) { ->() { } }
-
-    it "rolls back the transation" do
-      begin
-        mapper.save(user)
-      rescue Sequel::Error
-      end
-
-      expect(datastore).not_to have_persisted(:posts, hash_including(
-        subject: "UNRELATED CHANGE THAT WILL FAIL"
-      ))
     end
   end
 end

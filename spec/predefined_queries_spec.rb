@@ -13,31 +13,18 @@ RSpec.describe "Predefined subset queries" do
 
   subject(:users) { user_mapper }
 
-  subject(:user_mapper) {
-    SequelMapper.mapper(
-      config: mapper_config,
-      name: :users,
-      datastore: datastore,
-    )
-  }
-
-  let(:mapper_config) {
-    SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
-      .setup_mapping(:users) { |users|
-        users.has_many :posts, foreign_key: :author_id
-      }
-  }
-
   context "on the top level mapper" do
     context "subset is defined with a block" do
       before do
-        mapper_config.setup_mapping(:users) do |config|
-          config.subset(:tricketts) do |dataset|
-            dataset
-              .where(last_name: "Trickett")
-              .order(:first_name)
-          end
-        end
+        configs.fetch(:users).merge!(
+          subsets: {
+            tricketts: ->(dataset) {
+              dataset
+                .where(last_name: "Trickett")
+                .order(:first_name)
+            },
+          },
+        )
       end
 
       it "maps the result of the subset" do
@@ -51,11 +38,13 @@ RSpec.describe "Predefined subset queries" do
 
   context "on a has many association" do
     before do
-      mapper_config.setup_mapping(:posts) do |config|
-        config.subset(:body_contains) do |dataset, search_string|
-          dataset.where("body like '%#{search_string}%'")
-        end
-      end
+      configs.fetch(:posts).merge!(
+        subsets: {
+          body_contains: ->(dataset, search_string) {
+            dataset.where("body like '%#{search_string}%'")
+          },
+        },
+      )
     end
 
     let(:user) { users.first }

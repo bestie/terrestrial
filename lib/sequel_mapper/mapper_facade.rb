@@ -59,6 +59,7 @@ module SequelMapper
     def delete(object)
       dump_pipeline.call(
         graph_serializer.call(mapping_name, object)
+          .reverse
           .take(1)
           .map { |record|
             DeletedRecord.new(record.namespace, record.identity)

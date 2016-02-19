@@ -1,4 +1,5 @@
 require "spec_helper"
+require "ostruct"
 
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
@@ -24,6 +25,7 @@ RSpec.describe "Configuration override" do
     SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
       .setup_mapping(:users) { |users|
         users.has_many :posts, foreign_key: :author_id
+        users.fields([:id, :first_name, :last_name, :email])
       }
   }
 
@@ -35,14 +37,14 @@ RSpec.describe "Configuration override" do
     context "with a Struct class" do
       before do
         mapper_config.setup_mapping(:users) do |config|
-          config.class(user_subclass)
+          config.class(user_struct)
         end
       end
 
-      let(:user_subclass) { Class.new(User) }
+      let(:user_struct) { Struct.new(*User.members) }
 
       it "uses the class from the override" do
-        expect(user.class).to be(user_subclass)
+        expect(user.class).to be(user_struct)
       end
     end
   end
@@ -52,13 +54,14 @@ RSpec.describe "Configuration override" do
       before do
         mapper_config.setup_mapping(:posts) do |config|
           config.factory(override_post_factory)
+          config.fields([:id, :subject, :body, :created_at])
         end
       end
 
-      let(:post_subclass) { Class.new(Post) }
+      let(:post_class) { Class.new(OpenStruct) }
 
       let(:override_post_factory) {
-        SequelMapper::StructFactory.new(post_subclass)
+        post_class.method(:new)
       }
 
       let(:posts) {
@@ -66,7 +69,7 @@ RSpec.describe "Configuration override" do
       }
 
       it "uses the specified factory" do
-        expect(posts.first.class).to be(post_subclass)
+        expect(posts.first.class).to be(post_class)
       end
     end
   end
@@ -86,9 +89,9 @@ RSpec.describe "Configuration override" do
         .new(datastore)
         .setup_mapping(:users) do |config|
           config.relation_name unconventional_table_name
+          config.class(OpenStruct)
         end
       }
-
 
       let(:datastore) { db_connection }
 
@@ -128,15 +131,18 @@ RSpec.describe "Configuration override" do
       def setup_the_strange_table_name_mappings
         mapper_config
           .setup_mapping(:users) do |config|
+            config.class(OpenStruct)
             config.relation_name strange_table_name_map.fetch(:users)
             config.has_many(:posts, foreign_key: :author_id)
           end
           .setup_mapping(:posts) do |config|
+            config.class(OpenStruct)
             config.relation_name strange_table_name_map.fetch(:posts)
             config.belongs_to(:author, mapping_name: :users)
             config.has_many_through(:categories, through_mapping_name: strange_table_name_map.fetch(:categories_to_posts))
           end
           .setup_mapping(:categories) do |config|
+            config.class(OpenStruct)
             config.relation_name strange_table_name_map.fetch(:categories)
             config.has_many_through(:posts, through_mapping_name: strange_table_name_map.fetch(:categories_to_posts))
           end

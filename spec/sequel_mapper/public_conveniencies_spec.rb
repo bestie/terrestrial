@@ -19,6 +19,7 @@ RSpec.describe SequelMapper::PublicConveniencies do
         things: double(
           :thing_config,
           namespace: :things,
+          fields: [:id],
           associations: [],
           primary_key: [],
           factory: ->(x){x}

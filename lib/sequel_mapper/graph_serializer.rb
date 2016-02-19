@@ -87,7 +87,7 @@ module SequelMapper
       elsif collection.respond_to?(:each)
         collection.each
       else
-        collection
+        [collection]
       end
     end
 

@@ -11,24 +11,17 @@ RSpec.describe "Ordered associations" do
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:user_mapper) {
-    SequelMapper.mapper(
-      config: mapper_config,
-      name: :users,
-      datastore: datastore,
-    )
-  }
-
-
   context "one to many association ordered by `created_at DESC`" do
     let(:posts) { user_mapper.first.posts }
 
-    let(:mapper_config) {
-      SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
-        .setup_mapping(:users) { |users|
-          users.has_many(:posts, foreign_key: :author_id, order_fields: [:created_at], order_direction: "DESC")
-        }
-    }
+    before do
+      configs.fetch(:users).fetch(:associations).fetch(:posts).merge!(
+        order: SequelMapper::QueryOrder.new(
+          fields: [:created_at],
+          direction: "DESC",
+        )
+      )
+    end
 
     it "enumerates the objects in order specified in the config" do
       expect(posts.map(&:id)).to eq(
@@ -38,15 +31,14 @@ RSpec.describe "Ordered associations" do
   end
 
   context "many to many associatin ordered by reverse alphabetical name" do
-    let(:mapper_config) {
-      SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
-        .setup_mapping(:users) { |users|
-          users.has_many(:posts, foreign_key: :author_id)
-        }
-        .setup_mapping(:posts) { |posts|
-          posts.has_many_through(:categories, order_fields: [:name], order_direction: "DESC")
-        }
-    }
+    before do
+      configs.fetch(:posts).fetch(:associations).fetch(:categories).merge!(
+        order: SequelMapper::QueryOrder.new(
+          fields: [:name],
+          direction: "DESC",
+        )
+      )
+    end
 
     let(:categories) { user_mapper.first.posts.first.categories }
 

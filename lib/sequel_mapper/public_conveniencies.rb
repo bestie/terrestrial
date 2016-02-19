@@ -43,11 +43,18 @@ module SequelMapper
     end
 
     def build_load_pipeline(dirty_map:, identity_map:)
-      ->(mapping, record, other_attrs = {}) {
+      ->(mapping, record, associated_fields = {}) {
         [
           record_factory(mapping),
           dirty_map.method(:load),
-          ->(r) { identity_map.call(r, mapping.factory.call(r.merge(other_attrs))) },
+          ->(record) {
+            attributes = record.to_h.select { |k,_v|
+              mapping.fields.include?(k)
+            }
+
+            object = mapping.factory.call(attributes.merge(associated_fields))
+            identity_map.call(record, object)
+          },
         ].reduce(record) { |agg, operation|
           operation.call(agg)
         }

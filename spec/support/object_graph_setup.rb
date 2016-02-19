@@ -12,17 +12,46 @@ RSpec.shared_context "object graph setup" do
     cat_biscuits_category.posts = [ biscuits_post ]
   end
 
-  User ||= Struct.new(:id, :first_name, :last_name, :email, :posts, :comments)
-  Post ||= Struct.new(:id, :author, :subject, :body, :comments, :categories, :created_at)
-  Comment ||= Struct.new(:id, :post, :commenter, :body)
-  Category ||= Struct.new(:id, :name, :posts)
+  class PlainObject
+    def self.with_members(*list, &block)
+      Class.new(self).tap { |klass|
+        klass.instance_variable_set(:@members, list)
+        klass.class_exec(&block) if block
+        klass.send(:attr_accessor, *list)
+      }
+    end
+
+    def self.members
+      @members
+    end
+
+    def initialize(attrs)
+      members.sort == attrs.keys.sort or
+        raise(ArgumentError.new("Expected `#{self.class.members}` got `#{attrs.keys}"))
+
+      members.each { |member| send("#{member}=", attrs.fetch(member)) }
+    end
+
+    def members
+      self.class.members
+    end
+
+    def to_h
+      Hash[members.map { |field| [field, send(field)] }]
+    end
+  end
+
+  User ||= PlainObject.with_members(:id, :first_name, :last_name, :email, :posts)
+  Post ||= PlainObject.with_members(:id, :subject, :body, :comments, :categories, :created_at)
+  Comment ||= PlainObject.with_members(:id, :commenter, :body)
+  Category ||= PlainObject.with_members(:id, :name, :posts)
 
   let(:factories) {
     {
-      users: SequelMapper::StructFactory.new(User),
-      posts: SequelMapper::StructFactory.new(Post),
-      comments: SequelMapper::StructFactory.new(Comment),
-      categories: SequelMapper::StructFactory.new(Category),
+      users: User.method(:new),
+      posts: Post.method(:new),
+      comments: Comment.method(:new),
+      categories: Category.method(:new),
       categories_to_posts: ->(x){x},
       noop: ->(x){x},
     }
@@ -87,6 +116,7 @@ RSpec.shared_context "object graph setup" do
     factories.fetch(:comments).call(
       id: "comments/1",
       body: "oh noes",
+      commenter: nil,
     )
   }
 
@@ -94,6 +124,7 @@ RSpec.shared_context "object graph setup" do
     factories.fetch(:categories).call(
       id: "categories/1",
       name: "Cat biscuits",
+      posts: [],
     )
   }
 
@@ -101,6 +132,7 @@ RSpec.shared_context "object graph setup" do
     factories.fetch(:categories).call(
       id: "categories/2",
       name: "Chillaxing",
+      posts: [],
     )
   }
 end

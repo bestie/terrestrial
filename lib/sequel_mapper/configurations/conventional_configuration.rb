@@ -78,6 +78,10 @@ module SequelMapper
           @association_register.push([:belongs_to, args])
         end
 
+        def fields(field_names)
+          @config_override.call(fields: field_names)
+        end
+
         def factory(callable)
           @config_override.call(factory: callable)
         end
