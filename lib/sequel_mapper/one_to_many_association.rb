@@ -37,6 +37,10 @@ module SequelMapper
     end
     alias_method :delete, :dump
 
+    def extract_foreign_key(_record)
+      {}
+    end
+
     def eager_superset((superset), (associated_dataset))
       [
         Dataset.new(

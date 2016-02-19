@@ -26,6 +26,10 @@ module SequelMapper
       new_with_raw_data(attributes.merge(more_data))
     end
 
+    def merge!(more_data)
+      attributes.merge!(more_data)
+    end
+
     def reject(&block)
       new_with_raw_data(attributes.reject(&block))
     end

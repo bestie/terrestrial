@@ -37,15 +37,17 @@ RSpec.describe "Persist a new graph in empty datastore" do
       ))
     end
 
-    it "persists one to many related nodes 2 levels deep" do
-      user_mapper.save(hansel)
+    context "deep node with two foreign keys" do
+      it "persists the node with both foreign keys" do
+        user_mapper.save(hansel)
 
-      expect(datastore).to have_persisted(:comments, {
-        id: "comments/1",
-        body: "oh noes",
-        post_id: "posts/1",
-        commenter_id: "users/1",
-      })
+        expect(datastore).to have_persisted(:comments, {
+          id: "comments/1",
+          body: "oh noes",
+          post_id: "posts/1",
+          commenter_id: "users/1",
+        })
+      end
     end
 
     it "persists many to many related nodes" do

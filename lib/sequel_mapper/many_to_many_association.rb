@@ -73,6 +73,10 @@ module SequelMapper
       flat_list_of_records_and_join_records(parent_record, collection, &block)
     end
 
+    def extract_foreign_key(_record)
+      {}
+    end
+
     def delete(parent_record, collection, &block)
       flat_list_of_just_join_records(parent_record, collection, &block)
     end

@@ -11,7 +11,7 @@ module SequelMapper
     attr_reader :mappings, :serialization_map
     private     :mappings, :serialization_map
 
-    def call(mapping_name, object, foreign_key = {})
+    def call(mapping_name, object, parent_foreign_keys = {})
       if serialization_map.include?(object)
         return [serialization_map.fetch(object)]
       end
@@ -31,12 +31,12 @@ module SequelMapper
         record_identity(primary_key, serialized_record),
         serialized_record
           .select { |k, _v| fields.include?(k) }
-          .merge(foreign_key)
+          .merge(parent_foreign_keys)
       )
 
       serialization_map.store(object, current_record)
 
-      [current_record] + associations_map
+      associated_records = associations_map
         .map { |name, association|
           [serialized_record.fetch(name), association]
         }
@@ -47,13 +47,17 @@ module SequelMapper
           assoc_mapping = mappings.fetch(association.mapping_name)
 
           association.dump(current_record, nodes) { |assoc_mapping_name, assoc_object, foreign_key|
-            call(assoc_mapping_name, assoc_object, foreign_key)
+            call(assoc_mapping_name, assoc_object, foreign_key).tap { |associated_record, *_join_records|
+              # TODO: remove this mutation
+              current_record.merge!(association.extract_foreign_key(associated_record))
+            }
           } +
           association.delete(current_record, deleted_nodes) { |assoc_mapping_name, assoc_object, foreign_key|
             delete(assoc_mapping_name, assoc_object, foreign_key)
           }
         }
-        .flatten(1)
+
+      (associated_records + [current_record]).flatten(1)
     end
 
     private
