@@ -62,6 +62,36 @@ RSpec.describe SequelMapper::CollectionMutabilityProxy do
       end
     end
 
+    context "when a new element is pushed into the collection" do
+      let(:new_element) { double(:new_element) }
+
+      before do
+        proxy.push(new_element)
+      end
+
+      it "adds the new element to the enumeration" do
+        expect(proxy.to_a.last).to eq(new_element)
+      end
+    end
+  end
+
+  describe "#each_loaded" do
+    context "when called with a block" do
+      it "returns self" do
+        expect(proxy.each(&id)).to eq(proxy)
+      end
+
+      it "yields each element to the block" do
+        yielded = []
+
+        proxy.each do |element|
+          yielded.push(element)
+        end
+
+        expect(yielded).to eq(data_set.to_a)
+      end
+    end
+
     context "when called without a block" do
       it "returns an enumerator" do
         expect(proxy.each).to be_a(Enumerator)
