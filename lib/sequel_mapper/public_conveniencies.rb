@@ -96,9 +96,12 @@ module SequelMapper
     end
 
     def upsert_record(datastore, record)
-      row_count = datastore[record.namespace]
-        .where(record.identity)
-        .update(record.attributes)
+      row_count = 0
+      unless record.non_identity_attributes.empty?
+        row_count = datastore[record.namespace].
+          where(record.identity).
+          update(record.non_identity_attributes)
+      end
 
       if row_count < 1
         row_count = datastore[record.namespace].insert(record.to_h)

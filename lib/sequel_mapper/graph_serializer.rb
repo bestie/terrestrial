@@ -18,25 +18,20 @@ module SequelMapper
 
       # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
-      serializer = mapping.serializer
-      namespace = mapping.namespace
-      primary_key = mapping.primary_key
-      fields = mapping.fields
-      associations_map = mapping.associations
 
-      serialized_record = serializer.call(object)
+      serialized_record = mapping.serializer.call(object)
 
       current_record = UpsertedRecord.new(
-        namespace,
-        record_identity(primary_key, serialized_record),
+        mapping.namespace,
+        mapping.primary_key,
         serialized_record
-          .select { |k, _v| fields.include?(k) }
+          .select { |k, _v| mapping.fields.include?(k) }
           .merge(parent_foreign_keys)
       )
 
       serialization_map.store(object, current_record)
 
-      associated_records = associations_map
+      associated_records = mapping.associations
         .map { |name, association|
           [serialized_record.fetch(name), association]
         }
@@ -63,18 +58,14 @@ module SequelMapper
     private
 
     def delete(mapping_name, object, _foreign_key)
-      # TODO copypasta ¯\_(ツ)_/¯
       mapping = mappings.fetch(mapping_name)
-      primary_key = mapping.primary_key
-      serializer = mapping.serializer
-      namespace = mapping.namespace
-
-      serialized_record = serializer.call(object)
+      serialized_record = mapping.serializer.call(object)
 
       [
         DeletedRecord.new(
-          namespace,
-          record_identity(primary_key, serialized_record),
+          mapping.namespace,
+          mapping.primary_key,
+          serialized_record,
         )
       ]
     end
@@ -97,14 +88,6 @@ module SequelMapper
       else
         []
       end
-    end
-
-    def record_identity(primary_key, record)
-      Hash[
-        primary_key.map { |field|
-          [field, record.fetch(field)]
-        }
-      ]
     end
   end
 end

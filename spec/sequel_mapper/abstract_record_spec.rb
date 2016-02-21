@@ -4,22 +4,22 @@ require "sequel_mapper/abstract_record"
 
 RSpec.describe SequelMapper::AbstractRecord do
   subject(:record) {
-    SequelMapper::AbstractRecord.new(namespace, identity, raw_data)
+    SequelMapper::AbstractRecord.new(namespace, primary_key_fields, raw_data)
   }
 
   let(:namespace) { double(:namespace) }
-
-  let(:identity) {
-    { id: id }
-  }
+  let(:primary_key_fields) { [ :id1, :id2 ] }
 
   let(:raw_data) {
     {
+      id1: id1,
+      id2: id2,
       name: name,
     }
   }
 
-  let(:id) { double(:id) }
+  let(:id1) { double(:id1) }
+  let(:id2) { double(:id2) }
   let(:name) { double(:name) }
 
   describe "#namespace" do
@@ -29,14 +29,17 @@ RSpec.describe SequelMapper::AbstractRecord do
   end
 
   describe "#identity" do
-    it "returns the identity" do
-      expect(record.identity).to eq(identity)
+    it "returns the primary key fields" do
+      expect(record.identity).to eq(
+        id1: id1,
+        id2: id2,
+      )
     end
   end
 
   describe "#fetch" do
     it "delegates to the underlying Hash representation" do
-      expect(record.fetch(:id)).to eq(id)
+      expect(record.fetch(:id1)).to eq(id1)
       expect(record.fetch(:name)).to eq(name)
       expect(record.fetch(:not_there, "nope")).to eq("nope")
       expect(record.fetch(:not_there) { "lord no" }).to eq("lord no")
@@ -46,7 +49,8 @@ RSpec.describe SequelMapper::AbstractRecord do
   describe "#to_h" do
     it "returns a raw_data merged with identity" do
       expect(record.to_h).to eq(
-        id: id,
+        id1: id1,
+        id2: id2,
         name: name,
       )
     end
@@ -58,6 +62,12 @@ RSpec.describe SequelMapper::AbstractRecord do
         record.if_upsert { |_| }
       ).to be(record)
     end
+
+    it "does not call the block" do
+      expect {
+        record.if_upsert { |_| raise "Does not happen" }
+      }.not_to raise_error
+    end
   end
 
   describe "#if_delete" do
@@ -65,6 +75,12 @@ RSpec.describe SequelMapper::AbstractRecord do
       expect(
         record.if_delete { |_| }
       ).to be(record)
+    end
+
+    it "does not call the block" do
+      expect {
+        record.if_delete { |_| raise "Does not happen" }
+      }.not_to raise_error
     end
   end
 
@@ -78,9 +94,10 @@ RSpec.describe SequelMapper::AbstractRecord do
     let(:location) { double(:location) }
 
     it "returns a new record with same identity" do
-      expect(
-        record.merge(extra_data).identity
-      ).to eq(identity)
+      expect(record.merge(extra_data).identity).to eq(
+        id1: id1,
+        id2: id2,
+      )
     end
 
     it "returns a new record with same namespace" do
@@ -93,7 +110,8 @@ RSpec.describe SequelMapper::AbstractRecord do
       merged_record = record.merge(extra_data)
 
       expect(merged_record.to_h).to eq(
-        id: id,
+        id1: id1,
+        id2: id2,
         name: name,
         location: location,
       )
@@ -104,6 +122,21 @@ RSpec.describe SequelMapper::AbstractRecord do
         record.merge(extra_data)
       }.not_to change { record.to_h }
     end
+
+    context "when attempting to overwrite the existing identity" do
+      let(:extra_data) {
+        {
+          id1: double(:new_id),
+          location: location,
+        }
+      }
+
+      it "does not change the identity" do
+        expect {
+          record.merge(extra_data)
+        }.not_to change { record.identity }
+      end
+    end
   end
 
   describe "#==" do
@@ -111,14 +144,14 @@ RSpec.describe SequelMapper::AbstractRecord do
       let(:comparitor) { record.merge({}) }
 
       it "raises NotImplementedError" do
-        expect{ 
+        expect{
           record == comparitor
         }.to raise_error(NotImplementedError)
       end
 
       context "when subclassed" do
         subject(:record) {
-          record_subclass.new(namespace, identity, raw_data)
+          record_subclass.new(namespace, primary_key_fields, raw_data)
         }
 
         let(:record_subclass) {
@@ -157,7 +190,7 @@ RSpec.describe SequelMapper::AbstractRecord do
 
         context "when the operation name differs" do
           let(:comparitor) {
-            record_class_with_different_operation.new(namespace, identity, raw_data)
+            record_class_with_different_operation.new(namespace, primary_key_fields, raw_data)
           }
 
           let(:record_class_with_different_operation) {

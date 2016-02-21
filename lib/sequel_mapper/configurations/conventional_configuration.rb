@@ -82,6 +82,10 @@ module SequelMapper
           @config_override.call(fields: field_names)
         end
 
+        def primary_key(field_names)
+          @config_override.call(primary_key: field_names)
+        end
+
         def factory(callable)
           @config_override.call(factory: callable)
         end
