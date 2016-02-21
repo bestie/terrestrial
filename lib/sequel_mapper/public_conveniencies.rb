@@ -67,6 +67,7 @@ module SequelMapper
           :uniq.to_proc,
           ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
           ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } },
+          ->(rs) { rs.sort_by(&:depth) },
           ->(rs) {
             rs.each { |r|
               r.if_upsert(&upsert)

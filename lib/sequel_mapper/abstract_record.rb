@@ -3,14 +3,16 @@ require "forwardable"
 module SequelMapper
   class AbstractRecord
     extend Forwardable
+    include Comparable
 
-    def initialize(namespace, identity_fields, attributes = {})
+    def initialize(namespace, identity_fields, attributes = {}, depth = NoDepth)
       @namespace = namespace
       @identity_fields = identity_fields
       @attributes = attributes
+      @depth = depth
     end
 
-    attr_reader :namespace, :identity_fields, :attributes
+    attr_reader :namespace, :identity_fields, :attributes, :depth
     private :attributes
 
     def_delegators :to_h, :fetch
@@ -52,16 +54,23 @@ module SequelMapper
         [operation, to_h] == [other.operation, other.to_h]
     end
 
+    def <=>(other)
+      depth <=> other.depth
+    end
+
     protected
 
     def operation
-      raise NotImplementedError
+      NoOp
     end
 
     private
 
+    NoOp = Module.new
+    NoDepth = Module.new
+
     def new_with_raw_data(new_raw_data)
-      self.class.new(namespace, identity_fields, new_raw_data)
+      self.class.new(namespace, identity_fields, new_raw_data, depth)
     end
   end
 end

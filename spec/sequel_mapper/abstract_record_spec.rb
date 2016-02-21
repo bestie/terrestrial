@@ -4,11 +4,17 @@ require "sequel_mapper/abstract_record"
 
 RSpec.describe SequelMapper::AbstractRecord do
   subject(:record) {
-    SequelMapper::AbstractRecord.new(namespace, primary_key_fields, raw_data)
+    SequelMapper::AbstractRecord.new(
+      namespace,
+      primary_key_fields,
+      raw_data,
+      depth,
+    )
   }
 
   let(:namespace) { double(:namespace) }
   let(:primary_key_fields) { [ :id1, :id2 ] }
+  let(:depth) { 0 }
 
   let(:raw_data) {
     {
@@ -139,14 +145,40 @@ RSpec.describe SequelMapper::AbstractRecord do
     end
   end
 
+  describe "#<=>" do
+    let(:deep_record) {
+      SequelMapper::AbstractRecord.new(
+        namespace,
+        primary_key_fields,
+        raw_data,
+        _depth = 5,
+      )
+    }
+
+    let(:shallow_record) {
+      SequelMapper::AbstractRecord.new(
+        namespace,
+        primary_key_fields,
+        raw_data,
+        _depth = 1,
+      )
+    }
+
+    context "when other record has deeper depth" do
+      it "is sortable by depth" do
+        expect([shallow_record, record, deep_record].sort).to eq(
+          [record, deep_record, shallow_record]
+        )
+      end
+    end
+  end
+
   describe "#==" do
     context "super class contract" do
       let(:comparitor) { record.merge({}) }
 
-      it "raises NotImplementedError" do
-        expect{
-          record == comparitor
-        }.to raise_error(NotImplementedError)
+      it "compares" do
+        record == comparitor
       end
 
       context "when subclassed" do

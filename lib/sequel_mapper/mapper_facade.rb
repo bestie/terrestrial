@@ -56,9 +56,10 @@ module SequelMapper
       self
     end
 
-    def delete(object)
+    def delete(object, cascade: false)
       dump_pipeline.call(
         graph_serializer.call(mapping_name, object)
+          .select { |record| record.depth == 0 }
           .reverse
           .take(1)
           .map { |record|

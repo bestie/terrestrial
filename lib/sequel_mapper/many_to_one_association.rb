@@ -40,9 +40,9 @@ module SequelMapper
       superset.where(key => foreign_key_value(record))
     end
 
-    def dump(parent_record, collection, &block)
+    def dump(parent_record, collection, depth, &block)
       collection.flat_map { |object|
-        block.call(mapping_name, object, _foreign_key_does_not_go_here = {})
+        block.call(mapping_name, object, _foreign_key_does_not_go_here = {}, depth + depth_modifier)
       }
     end
     alias_method :delete, :dump
@@ -57,6 +57,10 @@ module SequelMapper
 
     def foreign_key_value(record)
       record.fetch(foreign_key)
+    end
+
+    def depth_modifier
+      -1
     end
   end
 end

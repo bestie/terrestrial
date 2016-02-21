@@ -23,7 +23,7 @@ RSpec.describe "Deletion" do
 
   describe "Deleting the root" do
     it "deletes the root object" do
-      mapper.delete(user)
+      mapper.delete(user, cascade: true)
 
       expect(datastore).not_to have_persisted(
         :users,
@@ -90,15 +90,12 @@ RSpec.describe "Deletion" do
     end
 
     it "does not cascade delete" do
-      user.posts.delete(post)
-      mapper.save(user)
-
-      expect(datastore).to have_persisted(
-        :comments,
-        hash_including(
-          post_id: "posts/1",
-        )
-      )
+      expect {
+        user.posts.delete(post)
+        mapper.save(user)
+      }.not_to change {
+        datastore[:comments].map { |r| r.fetch(:id) }
+      }
     end
   end
 end

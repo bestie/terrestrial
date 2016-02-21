@@ -26,13 +26,13 @@ module SequelMapper
       )
     end
 
-    def dump(parent_record, collection, &block)
+    def dump(parent_record, collection, depth, &block)
       foreign_key_pair = {
         foreign_key => parent_record.fetch(key),
       }
 
       collection.flat_map { |associated_object|
-        block.call(mapping_name, associated_object, foreign_key_pair)
+        block.call(mapping_name, associated_object, foreign_key_pair, depth + depth_modifier)
       }
     end
     alias_method :delete, :dump
@@ -55,6 +55,12 @@ module SequelMapper
       order.apply(
         superset.where(foreign_key => record.fetch(key))
       )
+    end
+
+    private
+
+    def depth_modifier
+      +1
     end
   end
 end

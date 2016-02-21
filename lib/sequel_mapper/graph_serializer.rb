@@ -11,7 +11,7 @@ module SequelMapper
     attr_reader :mappings, :serialization_map
     private     :mappings, :serialization_map
 
-    def call(mapping_name, object, parent_foreign_keys = {})
+    def call(mapping_name, object, depth = 0, parent_foreign_keys = {})
       if serialization_map.include?(object)
         return [serialization_map.fetch(object)]
       end
@@ -20,13 +20,15 @@ module SequelMapper
       mapping = mappings.fetch(mapping_name)
 
       serialized_record = mapping.serializer.call(object)
+      mapped_fields_only = serialized_record
+        .select { |k, _v| mapping.fields.include?(k) }
+        .merge(parent_foreign_keys)
 
       current_record = UpsertedRecord.new(
         mapping.namespace,
         mapping.primary_key,
-        serialized_record
-          .select { |k, _v| mapping.fields.include?(k) }
-          .merge(parent_foreign_keys)
+        mapped_fields_only,
+        depth,
       )
 
       serialization_map.store(object, current_record)
@@ -41,23 +43,23 @@ module SequelMapper
         .map { |nodes, deleted_nodes, association|
           assoc_mapping = mappings.fetch(association.mapping_name)
 
-          association.dump(current_record, nodes) { |assoc_mapping_name, assoc_object, foreign_key|
-            call(assoc_mapping_name, assoc_object, foreign_key).tap { |associated_record, *_join_records|
+          association.dump(current_record, nodes, depth) { |assoc_mapping_name, assoc_object, foreign_key, assoc_depth|
+            call(assoc_mapping_name, assoc_object, assoc_depth, foreign_key).tap { |associated_record, *_join_records|
               # TODO: remove this mutation
               current_record.merge!(association.extract_foreign_key(associated_record))
             }
           } +
-          association.delete(current_record, deleted_nodes) { |assoc_mapping_name, assoc_object, foreign_key|
-            delete(assoc_mapping_name, assoc_object, foreign_key)
+          association.delete(current_record, deleted_nodes, depth) { |assoc_mapping_name, assoc_object, foreign_key, assoc_depth|
+            delete(assoc_mapping_name, assoc_object, assoc_depth, foreign_key)
           }
         }
 
-      (associated_records + [current_record]).flatten(1)
+      ([current_record] + associated_records).flatten(1)
     end
 
     private
 
-    def delete(mapping_name, object, _foreign_key)
+    def delete(mapping_name, object, depth, _foreign_key)
       mapping = mappings.fetch(mapping_name)
       serialized_record = mapping.serializer.call(object)
 
@@ -66,6 +68,7 @@ module SequelMapper
           mapping.namespace,
           mapping.primary_key,
           serialized_record,
+          depth,
         )
       ]
     end

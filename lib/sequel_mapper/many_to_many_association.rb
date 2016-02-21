@@ -69,40 +69,50 @@ module SequelMapper
         }
     end
 
-    def dump(parent_record, collection, &block)
-      flat_list_of_records_and_join_records(parent_record, collection, &block)
+    def dump(parent_record, collection, depth, &block)
+      flat_list_of_records_and_join_records(parent_record, collection, depth, &block)
     end
 
     def extract_foreign_key(_record)
       {}
     end
 
-    def delete(parent_record, collection, &block)
-      flat_list_of_just_join_records(parent_record, collection, &block)
+    def delete(parent_record, collection, depth, &block)
+      flat_list_of_just_join_records(parent_record, collection, depth, &block)
     end
 
     private
 
-    def flat_list_of_records_and_join_records(parent_record, collection, &block)
-      record_join_record_pairs(parent_record, collection, &block).flatten(1)
+    def flat_list_of_records_and_join_records(parent_record, collection, depth, &block)
+      record_join_record_pairs(parent_record, collection, depth, &block).flatten(1)
     end
 
-    def flat_list_of_just_join_records(parent_record, collection, &block)
-      record_join_record_pairs(parent_record, collection, &block)
+    def flat_list_of_just_join_records(parent_record, collection, depth, &block)
+      record_join_record_pairs(parent_record, collection, depth, &block)
         .map { |(_records, join_records)| join_records }
         .flatten(1)
     end
 
-    def record_join_record_pairs(parent_record, collection, &block)
+    def record_join_record_pairs(parent_record, collection, depth, &block)
       (collection || []).map { |associated_object|
-        records = block.call(mapping_name, associated_object, _no_foreign_key = {})
+        record, *other_join_records = block.call(
+          mapping_name,
+          associated_object,
+          no_foreign_key = {},
+          depth + depth_modifier,
+        )
 
-        join_records = records.take(1).flat_map { |record|
-          fks = foreign_keys(parent_record, record)
-          block.call(join_mapping_name, fks, fks)
-        }
+        fks = foreign_keys(parent_record, record)
+        join_record_depth = depth + join_record_depth_modifier
 
-        records + join_records
+        join_records = block.call(
+          join_mapping_name,
+          fks,
+          fks,
+          join_record_depth
+        ).flatten(1)
+
+        [record] + other_join_records + join_records
       }
     end
 
@@ -115,6 +125,14 @@ module SequelMapper
 
     def foreign_key_value(record)
       record.fetch(key)
+    end
+
+    def depth_modifier
+      0
+    end
+
+    def join_record_depth_modifier
+      +1
     end
   end
 end
