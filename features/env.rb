@@ -35,7 +35,7 @@ module ExampleRunnerSupport
       name, type = line.split("|").map(&:strip)
       {
         name: name,
-        type: type,
+        type: Object.const_get(type),
       }
     }
   end
@@ -44,7 +44,10 @@ end
 module DatabaseSupport
   def create_table(name, schema)
     SequelMapper::SequelTestSupport.create_tables(
-      name => schema,
+      tables: {
+        name => schema,
+      },
+      foreign_keys: [],
     )
   end
 end

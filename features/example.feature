@@ -11,34 +11,34 @@ Feature: Basic setup
       """
         Column      | Type
        ------------ +---------
-        id          | text
-        first_name  | text
-        last_name   | text
-        email       | text
+        id          | String
+        first_name  | String
+        last_name   | String
+        email       | String
       """
     And a conventionally similar database schema for table "posts"
       """
         Column      | Type
        -------------+---------
-        id          | text
-        author_id   | text
-        subject     | text
-        body        | text
+        id          | String
+        author_id   | String
+        subject     | String
+        body        | String
         created_at  | DateTime
       """
     And a conventionally similar database schema for table "categories"
       """
         Column      | Type
        -------------+---------
-        id          | text
-        name        | text
+        id          | String
+        name        | String
       """
     And a conventionally similar database schema for table "categories_to_posts"
       """
         Column      | Type
        -------------+---------
-        post_id     | text
-        category_id | text
+        post_id     | String
+        category_id | String
       """
     And a database connection is established
       """

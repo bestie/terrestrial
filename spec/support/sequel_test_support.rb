@@ -12,15 +12,15 @@ module SequelMapper
     end
     module_function :drop_database
 
-    def drop_tables
-      db_connection.tables.each do |table_name|
+    def drop_tables(tables = db_connection.tables)
+      tables.each do |table_name|
         db_connection.drop_table(table_name, cascade: true)
       end
     end
     module_function :drop_tables
 
-    def truncate_tables
-      db_connection.tables.each do |table_name|
+    def truncate_tables(tables = db_connection.tables)
+      tables.each do |table_name|
         db_connection[table_name].truncate(cascade: true)
       end
     end
@@ -37,18 +37,14 @@ module SequelMapper
     module_function :db_connection
 
     def create_tables(schema)
-      options_map = {
-        id: { primary_key: true },
-      }
-
       schema.fetch(:tables).each do |table_name, fields|
         db_connection.create_table(table_name) do
           fields.each do |field|
             type = field.fetch(:type)
             name = field.fetch(:name)
-            options = options_map.fetch(name, {})
+            options = field.fetch(:options, {})
 
-            send(type, name, options)
+            column(name, type, options)
           end
         end
       end
@@ -58,6 +54,8 @@ module SequelMapper
           add_foreign_key([fk_col], foreign_table, key: key_col, deferrable: false, on_delete: :set_null)
         end
       end
+
+      schema.fetch(:tables).keys
     end
     module_function :create_tables
 
