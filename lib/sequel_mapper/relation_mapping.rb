@@ -17,19 +17,34 @@ module SequelMapper
       @associations = associations.merge(name => new_association)
     end
 
-    private
+    def serialize(object, depth, foreign_keys = {})
+      object_attributes = serializer.call(object)
 
-    def new_with_associations(new_associations)
-      self.class.new(
-        name: name,
-        namespace: namespace,
-        fields: fields,
-        primary_key: primary_key,
-        factory: factory,
-        serializer: serializer,
-        associations: new_associations,
-        subsets: subsets,
+      [
+        record(object_attributes, depth, foreign_keys),
+        extract_associations(object_attributes)
+      ]
+    end
+
+    def record(attributes, depth, foreign_keys)
+      UpsertedRecord.new(
+        namespace,
+        primary_key,
+        select_mapped_fields(attributes).merge(foreign_keys),
+        depth,
       )
+    end
+
+    def extract_associations(attributes)
+      Hash[
+        associations.map { |name, _association|
+          [ name, attributes.fetch(name) ]
+        }
+      ]
+    end
+
+    def select_mapped_fields(attributes)
+      attributes.select { |name, _value| fields.include?(name) }
     end
   end
 end

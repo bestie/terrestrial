@@ -19,23 +19,17 @@ module SequelMapper
       # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
 
-      serialized_record = mapping.serializer.call(object)
-      mapped_fields_only = serialized_record
-        .select { |k, _v| mapping.fields.include?(k) }
-        .merge(parent_foreign_keys)
-
-      current_record = UpsertedRecord.new(
-        mapping.namespace,
-        mapping.primary_key,
-        mapped_fields_only,
+      current_record, association_fields = mapping.serialize(
+        object,
         depth,
+        parent_foreign_keys,
       )
 
       serialization_map.store(object, current_record)
 
       associated_records = mapping.associations
         .map { |name, association|
-          [serialized_record.fetch(name), association]
+          [association_fields.fetch(name), association]
         }
         .map { |collection, association|
           [nodes(collection), deleted_nodes(collection), association]
