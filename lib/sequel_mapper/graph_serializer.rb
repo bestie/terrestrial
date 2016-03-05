@@ -35,8 +35,6 @@ module SequelMapper
           [nodes(collection), deleted_nodes(collection), association]
         }
         .map { |nodes, deleted_nodes, association|
-          assoc_mapping = mappings.fetch(association.mapping_name)
-
           association.dump(current_record, nodes, depth) { |assoc_mapping_name, assoc_object, foreign_key, assoc_depth|
             call(assoc_mapping_name, assoc_object, assoc_depth, foreign_key).tap { |associated_record, *_join_records|
               # TODO: remove this mutation
