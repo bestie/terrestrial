@@ -6,12 +6,12 @@ RSpec.describe SequelMapper::LazyObjectProxy do
   subject(:proxy) {
     SequelMapper::LazyObjectProxy.new(
       object_loader,
-      known_fields,
+      key_fields,
     )
   }
 
   let(:id) { double(:id) }
-  let(:known_fields) { { id: id } }
+  let(:key_fields)      { { id: id } }
   let(:object_loader)   { double(:object_loader, call: proxied_object) }
   let(:proxied_object)  { double(:proxied_object, name: name) }
   let(:name)            { double(:name) }
@@ -90,8 +90,8 @@ RSpec.describe SequelMapper::LazyObjectProxy do
     end
   end
 
-  describe "known fields" do
-    context "when fields are known before load (such as from foreign key)" do
+  describe "key fields" do
+    context "when key fields are provided before load (such as from foreign key)" do
       it "does not load the object when that field is accessed" do
         proxy.id
 
@@ -105,7 +105,7 @@ RSpec.describe SequelMapper::LazyObjectProxy do
   end
 
   describe "#respond_to?" do
-    context "when method corresponds to a known field" do
+    context "when method corresponds to a key field" do
       it "does not the load the object" do
         proxy.respond_to?(:id)
 
@@ -117,7 +117,7 @@ RSpec.describe SequelMapper::LazyObjectProxy do
       end
     end
 
-    context "when the method is not a known field" do
+    context "when the method is not a key field" do
       it "loads the object" do
         proxy.respond_to?(:something_arbitrary)
 

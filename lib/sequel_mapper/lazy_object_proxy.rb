@@ -2,18 +2,18 @@ module SequelMapper
   class LazyObjectProxy
     include ShortInspectionString
 
-    def initialize(object_loader, known_fields)
+    def initialize(object_loader, key_fields)
       @object_loader = object_loader
-      @known_fields = known_fields
+      @key_fields = key_fields
       @lazy_object = nil
     end
 
-    attr_reader :object_loader, :known_fields
-    private     :object_loader, :known_fields
+    attr_reader :object_loader
+    private     :object_loader
 
     def method_missing(method_id, *args, &block)
-      if args.empty? && known_fields.include?(method_id)
-        known_fields.fetch(method_id)
+      if args.empty? && __key_fields.include?(method_id)
+        __key_fields.fetch(method_id)
       else
         lazy_object.public_send(method_id, *args, &block)
       end
@@ -28,13 +28,17 @@ module SequelMapper
     end
 
     def each_loaded(&block)
-      [self].select(&:loaded?).each(&block)
+      [self].each(&block)
+    end
+
+    def __key_fields
+      @key_fields
     end
 
     private
 
     def respond_to_missing?(method_id, _include_private = false)
-      known_fields.include?(method_id) || lazy_object.respond_to?(method_id)
+      __key_fields.include?(method_id) || lazy_object.respond_to?(method_id)
     end
 
     def lazy_object
@@ -43,7 +47,7 @@ module SequelMapper
 
     def inspectable_properties
       [
-        :known_fields,
+        :key_fields,
         :lazy_object,
       ]
     end
