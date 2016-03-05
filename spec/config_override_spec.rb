@@ -13,15 +13,11 @@ RSpec.describe "Configuration override" do
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:user_mapper) {
-    SequelMapper.mapper(
-      config: mapper_config,
-      name: :users,
-      datastore: datastore,
-    )
+  let(:mappers) {
+    SequelMapper.mappers(mappings: override_config, datastore: datastore)
   }
 
-  let(:mapper_config) {
+  let(:override_config) {
     SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
       .setup_mapping(:users) { |users|
         users.has_many :posts, foreign_key: :author_id
@@ -36,7 +32,7 @@ RSpec.describe "Configuration override" do
   context "override the root mapper factory" do
     context "with a Struct class" do
       before do
-        mapper_config.setup_mapping(:users) do |config|
+        override_config.setup_mapping(:users) do |config|
           config.class(user_struct)
         end
       end
@@ -52,7 +48,7 @@ RSpec.describe "Configuration override" do
   context "override an association" do
     context "with a callable factory" do
       before do
-        mapper_config.setup_mapping(:posts) do |config|
+        override_config.setup_mapping(:posts) do |config|
           config.factory(override_post_factory)
           config.fields([:id, :subject, :body, :created_at])
         end
@@ -84,7 +80,7 @@ RSpec.describe "Configuration override" do
         datastore.rename_table(unconventional_table_name, :users)
       end
 
-      let(:mapper_config) {
+      let(:override_config) {
         SequelMapper::Configurations::ConventionalConfiguration
         .new(datastore)
         .setup_mapping(:users) do |config|
@@ -129,7 +125,7 @@ RSpec.describe "Configuration override" do
       end
 
       def setup_the_strange_table_name_mappings
-        mapper_config
+        override_config
           .setup_mapping(:users) do |config|
             config.class(OpenStruct)
             config.relation_name strange_table_name_map.fetch(:users)

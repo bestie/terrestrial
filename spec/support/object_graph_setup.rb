@@ -26,8 +26,9 @@ RSpec.shared_context "object graph setup" do
     end
 
     def initialize(attrs)
-      members.sort == attrs.keys.sort or
+      members.sort == attrs.keys.sort or (
         raise(ArgumentError.new("Expected `#{self.class.members}` got `#{attrs.keys}"))
+      )
 
       members.each { |member| send("#{member}=", attrs.fetch(member)) }
     end

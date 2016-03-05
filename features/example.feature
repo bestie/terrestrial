@@ -50,7 +50,7 @@ Feature: Basic setup
       """
     And the associations are defined in the mapper configuration
       """
-      USER_MAPPER_CONFIG = SequelMapper.config(DB)
+      MAPPINGS_CONFIG = SequelMapper.config(DB)
         .setup_mapping(:users) { |users|
           users.class(User)
           users.has_many(:posts, foreign_key: :author_id)
@@ -67,10 +67,9 @@ Feature: Basic setup
       """
     And a mapper is instantiated
       """
-        USER_MAPPER = SequelMapper.mapper(
+        MAPPERS = SequelMapper.mappers(
           datastore: DB,
-          config: USER_MAPPER_CONFIG,
-          name: :users,
+          mappings: MAPPINGS_CONFIG,
         )
       """
     When a new graph of objects are created
@@ -94,11 +93,11 @@ Feature: Basic setup
       """
     And the new graph is saved
       """
-        USER_MAPPER.save(user)
+        MAPPERS[:users].save(user)
       """
     And the following query is executed
       """
-        user = USER_MAPPER.where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
+        user = MAPPERS[:users].where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
       """
     Then the persisted user object is returned with lazy associations
       """

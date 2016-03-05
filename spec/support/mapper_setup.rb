@@ -16,18 +16,10 @@ RSpec.shared_context "mapper setup" do
   include_context "object graph setup"
 
   let(:mappers) {
-    {
-      users: user_mapper,
-    }
+    SequelMapper.mappers(mappings: mappings, datastore: datastore)
   }
 
-  let(:user_mapper) {
-    SequelMapper.mapper(
-      config: mappings,
-      name: :users,
-      datastore: datastore,
-    )
-  }
+  let(:user_mapper) { mappers[:users] }
 
   let(:mappings) {
     Hash[

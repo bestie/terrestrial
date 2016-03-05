@@ -7,7 +7,7 @@ RSpec.describe SequelMapper::PublicConveniencies do
     Module.new.extend(SequelMapper::PublicConveniencies)
   }
 
-  describe "#mapper" do
+  describe "#mappers" do
     let(:datastore) {
       {
         things: [ thing_record ],
@@ -36,14 +36,13 @@ RSpec.describe SequelMapper::PublicConveniencies do
     }
 
     it "returns a mapper for the specified mapping" do
+      mappers = conveniences.mappers(
+        mappings: mapper_config,
+        datastore: datastore,
+      )
+
       expect(
-        conveniences
-          .mapper(
-            config: mapper_config,
-            datastore: datastore,
-            name: mapping_name,
-          )
-          .all.first.fetch(:id)
+        mappers[:things].all.first.fetch(:id)
       ).to eq("THE THING")
     end
   end

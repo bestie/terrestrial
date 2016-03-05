@@ -10,13 +10,31 @@ module SequelMapper
       Configurations::ConventionalConfiguration.new(database_connection)
     end
 
-    def mapper(config:, name:, datastore:)
-      dataset = datastore[config.fetch(name).namespace]
-      identity_map = build_identity_map
+    def mappers(mappings:, datastore:)
       dirty_map = build_dirty_map
+      identity_map = build_identity_map
+
+      Hash[mappings.map { |name, _mapping|
+        [
+          name,
+          mapper(
+            mappings: mappings ,
+            name: name,
+            datastore: datastore,
+            identity_map: identity_map,
+            dirty_map: dirty_map,
+          )
+        ]
+      }]
+    end
+
+    private
+
+    def mapper(mappings:, name:, datastore:, identity_map:, dirty_map:)
+      dataset = datastore[mappings.fetch(name).namespace]
 
       MapperFacade.new(
-        mappings: config,
+        mappings: mappings,
         mapping_name: name,
         datastore: datastore,
         dataset: dataset,

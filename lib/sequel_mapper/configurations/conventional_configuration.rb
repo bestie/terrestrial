@@ -30,6 +30,11 @@ module SequelMapper
         mappings[mapping_name]
       end
 
+      include Enumerable
+      def each(&block)
+        mappings.each(&block)
+      end
+
       def setup_mapping(mapping_name, &block)
         @associations_by_mapping[mapping_name] ||= []
 
