@@ -4,6 +4,7 @@ module SequelMapper
   class AbstractRecord
     extend Forwardable
     include Comparable
+    include Enumerable
 
     def initialize(namespace, identity_fields, attributes = {}, depth = NoDepth)
       @namespace = namespace
@@ -23,6 +24,14 @@ module SequelMapper
 
     def if_delete(&block)
       self
+    end
+
+    def each(&block)
+      to_h.each(&block)
+    end
+
+    def keys
+      attributes.keys
     end
 
     def identity
@@ -47,6 +56,10 @@ module SequelMapper
 
     def to_h
       attributes.to_h
+    end
+
+    def empty?
+      non_identity_attributes.empty?
     end
 
     def ==(other)
