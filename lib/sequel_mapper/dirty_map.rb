@@ -16,8 +16,7 @@ module SequelMapper
       record_as_loaded = storage.fetch(hash_key(record), NotFound)
       return true if record_as_loaded == NotFound
 
-      unknown_keys?(record_as_loaded, record) ||
-        record_changed?(record_as_loaded, record)
+      !record.subset?(record_as_loaded)
     end
 
     def reject_unchanged_fields(record)
@@ -31,12 +30,6 @@ module SequelMapper
     private
 
     NotFound = Module.new
-
-    def record_changed?(previous, current)
-      !!(current.keys & previous.keys).detect { |key|
-        current.fetch(key) != previous.fetch(key)
-      }
-    end
 
     def hash_key(record)
       deep_clone([record.namespace, record.identity])

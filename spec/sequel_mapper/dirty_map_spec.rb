@@ -76,6 +76,21 @@ RSpec.describe SequelMapper::DirtyMap do
         end
       end
 
+      context "when the record is deleted" do
+        let(:deleted_record) {
+          SequelMapper::DeletedRecord.new(
+            namespace,
+            identity_fields,
+            attributes,
+            depth,
+          )
+        }
+
+        it "is always dirty" do
+          expect(dirty_map.dirty?(deleted_record)).to be(true)
+        end
+      end
+
       context "when the record's attributes hash is mutated" do
         before do
           attributes.merge!(name: "new_value")

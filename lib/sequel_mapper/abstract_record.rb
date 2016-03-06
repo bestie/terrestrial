@@ -1,4 +1,5 @@
 require "forwardable"
+require "set"
 
 module SequelMapper
   class AbstractRecord
@@ -71,10 +72,19 @@ module SequelMapper
       depth <=> other.depth
     end
 
+    def subset?(other_record)
+      namespace == other_record.namespace &&
+        to_set.subset?(other_record.to_set)
+    end
+
     protected
 
     def operation
       NoOp
+    end
+
+    def to_set
+      Set.new(attributes.to_a)
     end
 
     private

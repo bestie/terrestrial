@@ -7,6 +7,10 @@ module SequelMapper
       self
     end
 
+    def subset?(_other)
+      false
+    end
+
     protected
 
     def operation
