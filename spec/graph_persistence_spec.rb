@@ -256,5 +256,38 @@ RSpec.describe "Graph persistence" do
         )
       end
     end
+
+    context "node loaded as root has undefined one to many association" do
+      let(:post_mapper) { mappers[:posts] }
+      let(:post) { post_mapper.where(id: "posts/1").first }
+
+      it "persists the changes to the root node" do
+        post.body = "modified body"
+
+        post_mapper.save(post)
+
+        expect(datastore).to have_persisted(
+          :posts,
+          hash_including(
+            id: "posts/1",
+            body: "modified body",
+          )
+        )
+      end
+
+      it "does not overwrite unused foreign key" do
+        post.body = "modified body"
+
+        post_mapper.save(post)
+
+        expect(datastore).to have_persisted(
+          :posts,
+          hash_including(
+            id: "posts/1",
+            author_id: "users/1",
+          )
+        )
+      end
+    end
   end
 end
