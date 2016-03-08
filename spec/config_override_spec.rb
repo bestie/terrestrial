@@ -166,4 +166,28 @@ RSpec.describe "Configuration override" do
       end
     end
   end
+
+  context "multiple mappings for single table" do
+    TypeOneUser = Class.new(OpenStruct)
+    TypeTwoUser = Class.new(OpenStruct)
+
+    let(:override_config) {
+      SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
+        .setup_mapping(:t1_users) { |c|
+          c.class(TypeOneUser)
+          c.table_name(:users)
+        }
+        .setup_mapping(:t2_users) { |c|
+          c.class(TypeTwoUser)
+          c.table_name(:users)
+        }
+    }
+
+    it "provides access to the same data via the different configs" do
+      expect(mappers[:t1_users].first.id).to eq("users/1")
+      expect(mappers[:t1_users].first).to be_a(TypeOneUser)
+      expect(mappers[:t2_users].first.id).to eq("users/1")
+      expect(mappers[:t2_users].first).to be_a(TypeTwoUser)
+    end
+  end
 end

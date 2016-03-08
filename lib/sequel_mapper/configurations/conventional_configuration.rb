@@ -136,19 +136,27 @@ module SequelMapper
       end
 
       def generate_mappings
-        Hash[
-          tables
-            .map { |table_name|
-              mapping_name, overrides = overrides_for_table(table_name)
+        custom_mappings = @overrides.map { |mapping_name, overrides|
+          [mapping_name, {relation_name: mapping_name}.merge(consolidate_overrides(overrides))]
+        }
 
-              [
-                mapping_name,
-                mapping(
-                  **default_mapping_args(table_name, mapping_name).merge(overrides)
-                ),
-              ]
-            }
-        ].tap { |mappings|
+        table_mappings = (tables - @overrides.keys).map { |table_name|
+          [table_name, overrides_for_table(table_name)]
+        }
+
+        Hash[
+          (table_mappings + custom_mappings).map { |(mapping_name, overrides)|
+            table_name = overrides.fetch(:relation_name) { raise no_table_error(mapping_name) }
+
+            [
+              mapping_name,
+              mapping(
+                **default_mapping_args(table_name, mapping_name).merge(overrides)
+              ),
+            ]
+          }
+        ]
+        .tap { |mappings|
           generate_associations_config(mappings)
         }
       end
@@ -180,12 +188,13 @@ module SequelMapper
       end
 
       def overrides_for_table(table_name)
-        mapping_name, overrides = @overrides
-          .find { |(_mapping_name, config)|
-            table_name == config.fetch(:relation_name, nil)
-          } || [table_name, @overrides.fetch(table_name, {})]
+        overrides = @overrides.values.detect { |config|
+          table_name == config.fetch(:relation_name, nil)
+        } || {}
 
-        [mapping_name, consolidate_overrides(overrides)]
+        { relation_name: table_name }.merge(
+          consolidate_overrides(overrides)
+        )
       end
 
       def consolidate_overrides(opts)
@@ -251,6 +260,13 @@ module SequelMapper
         end
       end
 
+      TableNameNotSpecifiedError = Class.new(StandardError) do
+        def initialize(mapping_name)
+          @message = "Error defining custom mapping `#{mapping_name}`." +
+            " You must provide the `table_name` configuration option."
+        end
+      end
+
       def raise_if_not_found_factory(name)
         ->(attrs) {
           class_to_factory(string_to_class(name)).call(attrs)
@@ -276,6 +292,10 @@ module SequelMapper
         klass_name = INFLECTOR.classify(string)
 
         Object.const_get(klass_name)
+      end
+
+      def no_table_error(table_name)
+        TableNameNotSpecifiedError.new(table_name)
       end
     end
   end

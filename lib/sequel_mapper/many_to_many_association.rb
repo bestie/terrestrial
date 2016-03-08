@@ -24,7 +24,7 @@ module SequelMapper
     private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
 
     def build_proxy(data_superset:, loader:, record:)
-     proxy_factory.call(
+      proxy_factory.call(
         query: build_query(data_superset, record),
         loader: ->(record_list) {
           record = record_list.first
