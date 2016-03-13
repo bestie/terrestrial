@@ -18,6 +18,7 @@ RSpec.describe SequelMapper::PublicConveniencies do
       {
         things: double(
           :thing_config,
+          name: mapping_name,
           namespace: :things,
           fields: [:id],
           associations: [],

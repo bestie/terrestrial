@@ -71,7 +71,7 @@ module SequelMapper
             }
 
             object = mapping.factory.call(attributes.merge(associated_fields))
-            identity_map.call(record, object)
+            identity_map.call(mapping, record, object)
           },
         ].reduce(record) { |agg, operation|
           operation.call(agg)
