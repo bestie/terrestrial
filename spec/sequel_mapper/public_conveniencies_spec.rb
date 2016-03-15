@@ -7,11 +7,19 @@ RSpec.describe SequelMapper::PublicConveniencies do
     Module.new.extend(SequelMapper::PublicConveniencies)
   }
 
+  class MockDatastore < DelegateClass(Hash)
+    def transaction(&block)
+      block.call
+    end
+  end
+
   describe "#mappers" do
     let(:datastore) {
-      {
-        things: [ thing_record ],
-      }
+      MockDatastore.new(
+        {
+          things: [ thing_record ],
+        }
+      )
     }
 
     let(:mapper_config) {

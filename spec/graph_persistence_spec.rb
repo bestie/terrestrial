@@ -290,4 +290,24 @@ RSpec.describe "Graph persistence" do
       end
     end
   end
+
+  context "when a save operation fails (some object is not persistable)" do
+    let(:unpersistable_object) { ->() { } }
+
+    it "rolls back the transaction" do
+      pre_change = datastore[:users].to_a.map(&:to_a).sort
+
+      begin
+        user.first_name = "this will be rolled back"
+        user.posts.first.subject = unpersistable_object
+
+        mapper.save(user)
+      rescue Sequel::Error
+      end
+
+      post_change = datastore[:users].to_a.map(&:to_a).sort
+
+      expect(pre_change).to eq(post_change)
+    end
+  end
 end

@@ -44,6 +44,7 @@ module SequelMapper
         ),
         dump_pipeline: build_dump_pipeline(
           dirty_map: dirty_map,
+          transaction: datastore.method(:transaction),
           upsert: method(:upsert_record).curry.call(datastore),
           delete: method(:delete_record).curry.call(datastore),
         )
@@ -79,7 +80,7 @@ module SequelMapper
       }
     end
 
-    def build_dump_pipeline(dirty_map:, upsert:, delete:)
+    def build_dump_pipeline(dirty_map:, transaction:, upsert:, delete:)
       ->(records) {
         [
           :uniq.to_proc,
@@ -87,9 +88,11 @@ module SequelMapper
           ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } },
           ->(rs) { rs.sort_by(&:depth) },
           ->(rs) {
-            rs.each { |r|
-              r.if_upsert(&upsert)
-               .if_delete(&delete)
+            transaction.call {
+              rs.each { |r|
+                r.if_upsert(&upsert)
+                 .if_delete(&delete)
+              }
             }
           },
         ].reduce(records) { |agg, operation|
