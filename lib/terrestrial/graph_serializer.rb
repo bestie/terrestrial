@@ -16,7 +16,6 @@ module Terrestrial
         return [serialization_map.fetch(object)]
       end
 
-      # TODO may need some attention :)
       mapping = mappings.fetch(mapping_name)
 
       current_record, association_fields = mapping.serialize(
@@ -27,7 +26,15 @@ module Terrestrial
 
       serialization_map.store(object, current_record)
 
-      associated_records = mapping.associations
+      (
+        [current_record] + associated_records(mapping, current_record, association_fields, depth)
+      ).flatten(1)
+    end
+
+    private
+
+    def associated_records(mapping, current_record, association_fields, depth)
+      mapping.associations
         .map { |name, association|
           [association_fields.fetch(name), association]
         }
@@ -45,11 +52,7 @@ module Terrestrial
             delete(assoc_mapping_name, assoc_object, assoc_depth, foreign_key)
           }
         }
-
-      ([current_record] + associated_records).flatten(1)
     end
-
-    private
 
     def delete(mapping_name, object, depth, _foreign_key)
       mapping = mappings.fetch(mapping_name)
