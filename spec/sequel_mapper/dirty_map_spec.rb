@@ -4,9 +4,9 @@ require "sequel_mapper/dirty_map"
 require "sequel_mapper/upserted_record"
 require "sequel_mapper/deleted_record"
 
-RSpec.describe SequelMapper::DirtyMap do
+RSpec.describe Terrestrial::DirtyMap do
   subject(:dirty_map) {
-    SequelMapper::DirtyMap.new(storage)
+    Terrestrial::DirtyMap.new(storage)
   }
 
   let(:storage) { {} }
@@ -78,7 +78,7 @@ RSpec.describe SequelMapper::DirtyMap do
 
       context "when the record is deleted" do
         let(:deleted_record) {
-          SequelMapper::DeletedRecord.new(
+          Terrestrial::DeletedRecord.new(
             namespace,
             identity_fields,
             attributes,
@@ -204,7 +204,7 @@ RSpec.describe SequelMapper::DirtyMap do
   end
 
   def create_record(namespace, identity_fields, attributes, depth)
-    SequelMapper::UpsertedRecord.new(
+    Terrestrial::UpsertedRecord.new(
       namespace,
       identity_fields,
       attributes,

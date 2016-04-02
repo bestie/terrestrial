@@ -3,7 +3,7 @@ require "sequel_mapper/relation_mapping"
 require "sequel_mapper/subset_queries_proxy"
 require "sequel_mapper/struct_factory"
 
-module SequelMapper
+module Terrestrial
   module Configurations
     require "active_support/inflector"
     class Inflector

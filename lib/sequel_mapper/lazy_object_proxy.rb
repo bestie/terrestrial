@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class LazyObjectProxy
     include ShortInspectionString
 

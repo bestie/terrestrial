@@ -1,4 +1,4 @@
-class SequelMapper::MockSequel
+class Terrestrial::MockSequel
   def initialize(relations)
     @relations = {}
 

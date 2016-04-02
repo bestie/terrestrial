@@ -1,7 +1,7 @@
 require "forwardable"
 require "sequel_mapper/short_inspection_string"
 
-module SequelMapper
+module Terrestrial
   class CollectionMutabilityProxy
     extend Forwardable
     include ShortInspectionString

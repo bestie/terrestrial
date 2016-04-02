@@ -4,7 +4,7 @@ require "sequel_mapper/upserted_record"
 require "sequel_mapper/mapper_facade"
 require "sequel_mapper/configurations/conventional_configuration"
 
-module SequelMapper
+module Terrestrial
   module PublicConveniencies
     def config(database_connection)
       Configurations::ConventionalConfiguration.new(database_connection)

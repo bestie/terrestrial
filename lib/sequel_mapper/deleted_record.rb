@@ -1,6 +1,6 @@
 require "sequel_mapper/abstract_record"
 
-module SequelMapper
+module Terrestrial
   class DeletedRecord < AbstractRecord
     def if_delete(&block)
       block.call(self)

@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   module ShortInspectionString
     def inspect
       "\#<#{self.class.name}:#{self.object_id.<<(1).to_s(16)} " +

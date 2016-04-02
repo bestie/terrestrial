@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class DirtyMap
     def initialize(storage)
       @storage = storage

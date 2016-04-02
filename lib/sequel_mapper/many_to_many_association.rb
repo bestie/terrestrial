@@ -1,7 +1,7 @@
 require "forwardable"
 require "sequel_mapper/dataset"
 
-module SequelMapper
+module Terrestrial
   class ManyToManyAssociation
     def initialize(mapping_name:, join_mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, order:)
       @mapping_name = mapping_name

@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class StructFactory
     def initialize(struct_class)
       @constructor = struct_class.method(:new)

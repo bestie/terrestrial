@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/upserted_record"
 
-RSpec.describe SequelMapper::UpsertedRecord do
+RSpec.describe Terrestrial::UpsertedRecord do
   subject(:record) {
-    SequelMapper::UpsertedRecord.new(namespace, identity, raw_data)
+    Terrestrial::UpsertedRecord.new(namespace, identity, raw_data)
   }
 
   let(:namespace) { double(:namespace) }
@@ -43,7 +43,7 @@ RSpec.describe SequelMapper::UpsertedRecord do
 
     context "with another record that does not upsert" do
       let(:comparitor) {
-        Class.new(SequelMapper::AbstractRecord) do
+        Class.new(Terrestrial::AbstractRecord) do
           protected
           def operation
             :something_else

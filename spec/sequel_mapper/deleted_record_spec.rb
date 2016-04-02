@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/deleted_record"
 
-RSpec.describe SequelMapper::DeletedRecord do
+RSpec.describe Terrestrial::DeletedRecord do
   subject(:record) {
-    SequelMapper::DeletedRecord.new(namespace, identity, raw_data)
+    Terrestrial::DeletedRecord.new(namespace, identity, raw_data)
   }
 
   let(:namespace) { double(:namespace) }
@@ -43,7 +43,7 @@ RSpec.describe SequelMapper::DeletedRecord do
 
     context "with another record that does not delete" do
       let(:comparitor) {
-        Class.new(SequelMapper::AbstractRecord) do
+        Class.new(Terrestrial::AbstractRecord) do
           protected
           def operation
             :something_else

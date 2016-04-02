@@ -50,7 +50,7 @@ Feature: Basic setup
       """
     And the associations are defined in the mapper configuration
       """
-      MAPPINGS_CONFIG = SequelMapper.config(DB)
+      MAPPINGS_CONFIG = Terrestrial.config(DB)
         .setup_mapping(:users) { |users|
           users.class(User)
           users.has_many(:posts, foreign_key: :author_id)
@@ -67,7 +67,7 @@ Feature: Basic setup
       """
     And a mapper is instantiated
       """
-        MAPPERS = SequelMapper.mappers(
+        MAPPERS = Terrestrial.mappers(
           datastore: DB,
           mappings: MAPPINGS_CONFIG,
         )
@@ -105,16 +105,16 @@ Feature: Basic setup
           first_name="Hansel",
           last_name="Trickett",
           email="hansel@tricketts.org",
-          posts=#<SequelMapper::CollectionMutabilityProxy:7fa4817aa148
+          posts=#<Terrestrial::CollectionMutabilityProxy:7fa4817aa148
         >>
       """
     And the user's posts will be loaded once the association proxy receives an Enumerable message
       """
         [#<struct Post id="9b75fe2b-d694-4b90-9137-6201d426dda2",
-          author=#<SequelMapper::LazyObjectProxy:7fec5ac2a5f8 key_fields={:id=>"2f0f791c-47cf-4a00-8676-e582075bcd65"} lazy_object=nil>,
+          author=#<Terrestrial::LazyObjectProxy:7fec5ac2a5f8 key_fields={:id=>"2f0f791c-47cf-4a00-8676-e582075bcd65"} lazy_object=nil>,
           subject="Things that I like",
           body="I like fish and scratching",
           created_at=2015-10-03 21:00:00 UTC,
-          categories=#<SequelMapper::CollectionMutabilityProxy:7fec5ac296f8
+          categories=#<Terrestrial::CollectionMutabilityProxy:7fec5ac296f8
         >>]
       """

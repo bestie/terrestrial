@@ -1,7 +1,7 @@
 require "support/sequel_test_support"
 
 RSpec.shared_context "sequel persistence setup" do
-  include SequelMapper::SequelTestSupport
+  include Terrestrial::SequelTestSupport
 
   before { truncate_tables }
 
@@ -14,6 +14,6 @@ RSpec.shared_context "sequel persistence setup" do
   }
 
   let(:query_counter) {
-    SequelMapper::SequelTestSupport::QueryCounter.new
+    Terrestrial::SequelTestSupport::QueryCounter.new
   }
 end

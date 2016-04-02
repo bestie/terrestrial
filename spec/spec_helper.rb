@@ -30,7 +30,7 @@ RSpec.configure do |config|
   # Kernel.srand config.seed
 
   config.before(:suite) do
-    SequelMapper::SequelTestSupport.drop_tables
-    SequelMapper::SequelTestSupport.create_tables(BLOG_SCHEMA)
+    Terrestrial::SequelTestSupport.drop_tables
+    Terrestrial::SequelTestSupport.create_tables(BLOG_SCHEMA)
   end
 end

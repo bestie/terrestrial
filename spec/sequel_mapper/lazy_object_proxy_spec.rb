@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/lazy_object_proxy"
 
-RSpec.describe SequelMapper::LazyObjectProxy do
+RSpec.describe Terrestrial::LazyObjectProxy do
   subject(:proxy) {
-    SequelMapper::LazyObjectProxy.new(
+    Terrestrial::LazyObjectProxy.new(
       object_loader,
       key_fields,
     )

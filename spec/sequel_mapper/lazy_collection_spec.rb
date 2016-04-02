@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/lazy_collection"
 
-RSpec.describe SequelMapper::LazyCollection do
+RSpec.describe Terrestrial::LazyCollection do
   let(:proxy) {
-    SequelMapper::LazyCollection.new(
+    Terrestrial::LazyCollection.new(
       database_enum,
       loader,
       mapper,

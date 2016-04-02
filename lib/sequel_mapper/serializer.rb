@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class Serializer
     def initialize(field_names, object)
       @field_names = field_names

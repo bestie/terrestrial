@@ -1,7 +1,7 @@
 require "sequel_mapper/graph_serializer"
 require "sequel_mapper/graph_loader"
 
-module SequelMapper
+module Terrestrial
   class MapperFacade
     include Enumerable
 

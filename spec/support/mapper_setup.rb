@@ -16,7 +16,7 @@ RSpec.shared_context "mapper setup" do
   include_context "object graph setup"
 
   let(:mappers) {
-    SequelMapper.mappers(mappings: mappings, datastore: datastore)
+    Terrestrial.mappers(mappings: mappings, datastore: datastore)
   }
 
   let(:user_mapper) { mappers[:users] }
@@ -31,17 +31,17 @@ RSpec.shared_context "mapper setup" do
             assoc_name,
             case assoc_config.fetch(:type)
             when :one_to_many
-              SequelMapper::OneToManyAssociation.new(
+              Terrestrial::OneToManyAssociation.new(
                 **assoc_defaults.merge(
                   assoc_config.dup.tap { |h| h.delete(:type) }
                 )
               )
             when :many_to_one
-              SequelMapper::ManyToOneAssociation.new(
+              Terrestrial::ManyToOneAssociation.new(
                 assoc_config.dup.tap { |h| h.delete(:type) }
               )
             when :many_to_many
-              SequelMapper::ManyToManyAssociation.new(
+              Terrestrial::ManyToManyAssociation.new(
                 **assoc_defaults
                   .merge(
                     join_mapping_name: assoc_config.fetch(:join_mapping_name),
@@ -61,7 +61,7 @@ RSpec.shared_context "mapper setup" do
 
         [
           name,
-          SequelMapper::RelationMapping.new(
+          Terrestrial::RelationMapping.new(
             name: name,
             namespace: config.fetch(:namespace),
             fields: config.fetch(:fields),
@@ -69,7 +69,7 @@ RSpec.shared_context "mapper setup" do
             serializer: serializers.fetch(config.fetch(:serializer)).call(fields),
             associations: Hash[associations],
             factory: factories.fetch(name),
-            subsets: SequelMapper::SubsetQueriesProxy.new(config.fetch(:subsets, {}))
+            subsets: Terrestrial::SubsetQueriesProxy.new(config.fetch(:subsets, {}))
           )
         ]
       }
@@ -78,14 +78,14 @@ RSpec.shared_context "mapper setup" do
 
   def assoc_defaults
     {
-      order: SequelMapper::QueryOrder.new(fields: [], direction: "ASC")
+      order: Terrestrial::QueryOrder.new(fields: [], direction: "ASC")
     }
   end
 
   let(:has_many_proxy_factory) {
     ->(query:, loader:, mapping_name:) {
-      SequelMapper::CollectionMutabilityProxy.new(
-        SequelMapper::LazyCollection.new(
+      Terrestrial::CollectionMutabilityProxy.new(
+        Terrestrial::LazyCollection.new(
           query,
           loader,
           mappings.fetch(mapping_name).subsets,
@@ -96,7 +96,7 @@ RSpec.shared_context "mapper setup" do
 
   let(:many_to_one_proxy_factory) {
     ->(query:, loader:, preloaded_data:) {
-      SequelMapper::LazyObjectProxy.new(
+      Terrestrial::LazyObjectProxy.new(
         ->{ loader.call(query.first) },
         preloaded_data,
       )

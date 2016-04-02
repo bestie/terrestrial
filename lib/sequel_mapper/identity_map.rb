@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class IdentityMap
     def initialize(storage)
       @storage = storage

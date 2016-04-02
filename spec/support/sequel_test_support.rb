@@ -1,6 +1,6 @@
 require "sequel"
 
-module SequelMapper
+module Terrestrial
   module SequelTestSupport
     def create_database
       `psql postgres --command "CREATE DATABASE $PGDATABASE;"`

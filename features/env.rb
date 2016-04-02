@@ -43,7 +43,7 @@ end
 
 module DatabaseSupport
   def create_table(name, schema)
-    SequelMapper::SequelTestSupport.create_tables(
+    Terrestrial::SequelTestSupport.create_tables(
       tables: {
         name => schema,
       },
@@ -53,7 +53,7 @@ module DatabaseSupport
 end
 
 Before do
-  SequelMapper::SequelTestSupport.drop_tables
+  Terrestrial::SequelTestSupport.drop_tables
 end
 
 World(ExampleRunnerSupport)

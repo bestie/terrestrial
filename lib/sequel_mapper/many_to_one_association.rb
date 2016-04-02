@@ -1,6 +1,6 @@
 require "sequel_mapper/dataset"
 
-module SequelMapper
+module Terrestrial
   class ManyToOneAssociation
     def initialize(mapping_name:, foreign_key:, key:, proxy_factory:)
       @mapping_name = mapping_name

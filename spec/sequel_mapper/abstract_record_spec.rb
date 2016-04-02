@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/abstract_record"
 
-RSpec.describe SequelMapper::AbstractRecord do
+RSpec.describe Terrestrial::AbstractRecord do
   subject(:record) {
-    SequelMapper::AbstractRecord.new(
+    Terrestrial::AbstractRecord.new(
       namespace,
       primary_key_fields,
       raw_data,
@@ -147,7 +147,7 @@ RSpec.describe SequelMapper::AbstractRecord do
 
   describe "#<=>" do
     let(:deep_record) {
-      SequelMapper::AbstractRecord.new(
+      Terrestrial::AbstractRecord.new(
         namespace,
         primary_key_fields,
         raw_data,
@@ -156,7 +156,7 @@ RSpec.describe SequelMapper::AbstractRecord do
     }
 
     let(:shallow_record) {
-      SequelMapper::AbstractRecord.new(
+      Terrestrial::AbstractRecord.new(
         namespace,
         primary_key_fields,
         raw_data,
@@ -187,7 +187,7 @@ RSpec.describe SequelMapper::AbstractRecord do
         }
 
         let(:record_subclass) {
-          Class.new(SequelMapper::AbstractRecord) {
+          Class.new(Terrestrial::AbstractRecord) {
             protected
 
             def operation
@@ -226,7 +226,7 @@ RSpec.describe SequelMapper::AbstractRecord do
           }
 
           let(:record_class_with_different_operation) {
-            Class.new(SequelMapper::AbstractRecord) {
+            Class.new(Terrestrial::AbstractRecord) {
               protected
               def operation
                 :do_a_different_thing

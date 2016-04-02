@@ -15,7 +15,7 @@ require_relative "spec/support/sequel_test_support"
 require_relative "spec/support/blog_schema"
 
 namespace :db do
-  include SequelMapper::SequelTestSupport
+  include Terrestrial::SequelTestSupport
 
   task :setup => [:create] do
     create_tables(BLOG_SCHEMA)

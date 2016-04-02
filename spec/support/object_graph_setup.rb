@@ -61,7 +61,7 @@ RSpec.shared_context "object graph setup" do
   let(:default_serializer) {
     ->(fields) {
       ->(object) {
-        SequelMapper::Serializer.new(fields, object).to_h
+        Terrestrial::Serializer.new(fields, object).to_h
       }
     }
   }

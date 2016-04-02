@@ -16,7 +16,7 @@ RSpec.describe "Ordered associations" do
 
     before do
       configs.fetch(:users).fetch(:associations).fetch(:posts).merge!(
-        order: SequelMapper::QueryOrder.new(
+        order: Terrestrial::QueryOrder.new(
           fields: [:created_at],
           direction: "DESC",
         )
@@ -33,7 +33,7 @@ RSpec.describe "Ordered associations" do
   context "many to many associatin ordered by reverse alphabetical name" do
     before do
       configs.fetch(:posts).fetch(:associations).fetch(:categories).merge!(
-        order: SequelMapper::QueryOrder.new(
+        order: Terrestrial::QueryOrder.new(
           fields: [:name],
           direction: "DESC",
         )

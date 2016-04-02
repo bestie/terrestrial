@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class GraphLoader
     def initialize(datasets:, mappings:, object_load_pipeline:)
       @datasets = datasets

@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   module AssociationLoaders
     class OneToMany
       def initialize(type:, mapping_name:, foreign_key:, key:, proxy_factory:)

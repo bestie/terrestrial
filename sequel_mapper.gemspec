@@ -5,7 +5,7 @@ require 'sequel_mapper/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "sequel_mapper"
-  spec.version       = SequelMapper::VERSION
+  spec.version       = Terrestrial::VERSION
   spec.authors       = ["Stephen Best"]
   spec.email         = ["bestie@gmail.com"]
   spec.summary       = %q{A data mapper built on top of the Sequel database toolkit}

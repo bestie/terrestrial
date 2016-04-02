@@ -1,7 +1,7 @@
 require "sequel_mapper/upserted_record"
 require "sequel_mapper/deleted_record"
 
-module SequelMapper
+module Terrestrial
   class GraphSerializer
     def initialize(mappings:)
       @mappings = mappings

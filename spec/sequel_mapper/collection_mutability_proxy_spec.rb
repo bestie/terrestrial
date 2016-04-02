@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/collection_mutability_proxy"
 
-RSpec.describe SequelMapper::CollectionMutabilityProxy do
+RSpec.describe Terrestrial::CollectionMutabilityProxy do
   let(:proxy) {
-    SequelMapper::CollectionMutabilityProxy.new(lazy_enum)
+    Terrestrial::CollectionMutabilityProxy.new(lazy_enum)
   }
 
   let(:lazy_enum) { data_set.each.lazy }

@@ -1,7 +1,7 @@
 require "forwardable"
 require "set"
 
-module SequelMapper
+module Terrestrial
   class AbstractRecord
     extend Forwardable
     include Comparable

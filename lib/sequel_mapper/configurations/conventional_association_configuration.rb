@@ -1,6 +1,6 @@
 require "sequel_mapper/query_order"
 
-module SequelMapper
+module Terrestrial
   module Configurations
     require "sequel_mapper/one_to_many_association"
     require "sequel_mapper/many_to_many_association"

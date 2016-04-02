@@ -1,6 +1,6 @@
 require "sequel_mapper/abstract_record"
 
-module SequelMapper
+module Terrestrial
   class UpsertedRecord < AbstractRecord
     def if_upsert(&block)
       block.call(self)

@@ -1,4 +1,4 @@
-# SequelMapper
+# Terrestrial
 
 ## TL;DR
 
@@ -6,7 +6,7 @@
 * Persists plain objects while supporting arbitrarily deeply nested / circular associations
 * Provides excellent database and query building support courtesy of [Sequel library](https://github.com/jeremyevans/sequel)
 
-SequelMapper (working title) is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) ORM implementation for Ruby.
+Terrestrial (working title) is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) ORM implementation for Ruby.
 
 The aim is to provide a convenient way to query and persist graphs of Ruby objects (think models with associations), while keeping those object completely isolated and decoupled from the database.
 
@@ -25,7 +25,7 @@ There are some [conspicuous missing features](https://github.com/bestie/sequel_m
 that you may want to read more about. If you want to contribute to solving any
 of the problems listed please open an issue to discuss.
 
-SequelMapper does not reinvent the wheel with querying abstraction and
+Terrestrial does not reinvent the wheel with querying abstraction and
 migrations, instead these responsibilities are delegated to Sequel such that
 its full power can be utilised.
 
@@ -69,7 +69,7 @@ code of conduct first.
   ## This is kept separate from your domain models as knowledge of the schema
   ## is required to wire them up.
 
-  USER_MAPPER_CONFIG = SequelMapper.config(DB)
+  USER_MAPPER_CONFIG = Terrestrial.config(DB)
     .setup_mapping(:users) { |users|
       users.has_many(:posts, foreign_key: :author_id)
     }
@@ -83,7 +83,7 @@ code of conduct first.
 
   # 4. Create a mapper by combining a connection and a configuration
 
-  USER_MAPPER = SequelMapper.mapper(
+  USER_MAPPER = Terrestrial.mapper(
     datastore: DB,
     config: USER_MAPPER_CONFIG,
     name: :users,
@@ -128,7 +128,7 @@ code of conduct first.
   #  first_name="Stephen",
   #  last_name="Best",
   #  email="bestie@gmail.com",
-  #  posts=#<SequelMapper::CollectionMutabilityProxy:7ff57192d510 >,
+  #  posts=#<Terrestrial::CollectionMutabilityProxy:7ff57192d510 >,
 
 ```
 

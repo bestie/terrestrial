@@ -14,11 +14,11 @@ RSpec.describe "Configuration override" do
   include_context "seed data setup"
 
   let(:mappers) {
-    SequelMapper.mappers(mappings: override_config, datastore: datastore)
+    Terrestrial.mappers(mappings: override_config, datastore: datastore)
   }
 
   let(:override_config) {
-    SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
+    Terrestrial::Configurations::ConventionalConfiguration.new(datastore)
       .setup_mapping(:users) { |users|
         users.has_many :posts, foreign_key: :author_id
         users.fields([:id, :first_name, :last_name, :email])
@@ -81,7 +81,7 @@ RSpec.describe "Configuration override" do
       end
 
       let(:override_config) {
-        SequelMapper::Configurations::ConventionalConfiguration
+        Terrestrial::Configurations::ConventionalConfiguration
         .new(datastore)
         .setup_mapping(:users) do |config|
           config.relation_name unconventional_table_name
@@ -172,7 +172,7 @@ RSpec.describe "Configuration override" do
     TypeTwoUser = Class.new(OpenStruct)
 
     let(:override_config) {
-      SequelMapper::Configurations::ConventionalConfiguration.new(datastore)
+      Terrestrial::Configurations::ConventionalConfiguration.new(datastore)
         .setup_mapping(:t1_users) { |c|
           c.class(TypeOneUser)
           c.table_name(:users)

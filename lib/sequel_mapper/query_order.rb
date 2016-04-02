@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class QueryOrder
     def initialize(fields:, direction:)
       @fields = fields

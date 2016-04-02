@@ -2,9 +2,9 @@ require "spec_helper"
 
 require "sequel_mapper/public_conveniencies"
 
-RSpec.describe SequelMapper::PublicConveniencies do
+RSpec.describe Terrestrial::PublicConveniencies do
   subject(:conveniences) {
-    Module.new.extend(SequelMapper::PublicConveniencies)
+    Module.new.extend(Terrestrial::PublicConveniencies)
   }
 
   class MockDatastore < DelegateClass(Hash)

@@ -1,6 +1,6 @@
 # Missing features
 
-The following features not included in SequelMapper are omitted purposefully to
+The following features not included in Terrestrial are omitted purposefully to
 keep the library simple and encourage good practices in application code.
 
 Please open an issue if you feel like any of these features are essential or if
@@ -18,7 +18,7 @@ before instantiating the domain object.
 ## Validation
 
 This is the concern of your domain model and/or application boundaries.
-SequelMapper allows you to persist any object you wish assuming schema
+Terrestrial allows you to persist any object you wish assuming schema
 compatibility.
 
 ## Database column name aliasing
@@ -52,13 +52,13 @@ used in your domain they should be pushed from explicitly from application
 layer. You should again find this affords you more flexibility and decoupling.
 
 There is absolutely nothing wrong with data added at time of persistence for
-auditing purposes but SequelMapper will make you actively decide whether this
+auditing purposes but Terrestrial will make you actively decide whether this
 data should be available to the domain and what should be explicitly added.
 
 \* Transforming row data
 
 Adding a custom factory method to transform row data before passing it to the
 domain layer is highly encouraged. However, ensure that for each custom factory
-a serializer function is also supplied that SequelMapper can use to reverse the
+a serializer function is also supplied that Terrestrial can use to reverse the
 operation for persistence.
 

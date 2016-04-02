@@ -1,7 +1,7 @@
 require "logger"
 require "sequel_mapper/public_conveniencies"
 
-module SequelMapper
+module Terrestrial
   extend PublicConveniencies
 
   LOGGER = Logger.new(STDERR)

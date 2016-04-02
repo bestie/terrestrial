@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class SubsetQueriesProxy
     def initialize(query_map)
       @query_map = query_map

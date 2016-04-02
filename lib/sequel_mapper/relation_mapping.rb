@@ -1,4 +1,4 @@
-module SequelMapper
+module Terrestrial
   class RelationMapping
     def initialize(name:, namespace:, fields:, primary_key:, factory:, serializer:, associations:, subsets:)
       @name = name
