@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/upserted_record"
+require "terrestrial/upserted_record"
 
 RSpec.describe Terrestrial::UpsertedRecord do
   subject(:record) {

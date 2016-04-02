@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/deleted_record"
+require "terrestrial/deleted_record"
 
 RSpec.describe Terrestrial::DeletedRecord do
   subject(:record) {

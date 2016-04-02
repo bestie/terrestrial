@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/lazy_collection"
+require "terrestrial/lazy_collection"
 
 RSpec.describe Terrestrial::LazyCollection do
   let(:proxy) {

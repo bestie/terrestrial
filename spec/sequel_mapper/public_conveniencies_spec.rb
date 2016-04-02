@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/public_conveniencies"
+require "terrestrial/public_conveniencies"
 
 RSpec.describe Terrestrial::PublicConveniencies do
   subject(:conveniences) {

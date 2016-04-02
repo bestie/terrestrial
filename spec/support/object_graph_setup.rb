@@ -1,5 +1,5 @@
-require "sequel_mapper/serializer"
-require "sequel_mapper/struct_factory"
+require "terrestrial/serializer"
+require "terrestrial/struct_factory"
 
 RSpec.shared_context "object graph setup" do
 

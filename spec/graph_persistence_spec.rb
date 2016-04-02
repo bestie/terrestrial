@@ -4,7 +4,7 @@ require "support/have_persisted_matcher"
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
-require "sequel_mapper"
+require "terrestrial"
 
 RSpec.describe "Graph persistence" do
   include_context "mapper setup"

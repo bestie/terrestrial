@@ -1,8 +1,8 @@
-require "sequel_mapper/identity_map"
-require "sequel_mapper/dirty_map"
-require "sequel_mapper/upserted_record"
-require "sequel_mapper/mapper_facade"
-require "sequel_mapper/configurations/conventional_configuration"
+require "terrestrial/identity_map"
+require "terrestrial/dirty_map"
+require "terrestrial/upserted_record"
+require "terrestrial/mapper_facade"
+require "terrestrial/configurations/conventional_configuration"
 
 module Terrestrial
   module PublicConveniencies

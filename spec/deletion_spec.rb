@@ -4,7 +4,7 @@ require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "support/have_persisted_matcher"
-require "sequel_mapper"
+require "terrestrial"
 
 RSpec.describe "Deletion" do
   include_context "mapper setup"

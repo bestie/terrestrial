@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/abstract_record"
+require "terrestrial/abstract_record"
 
 RSpec.describe Terrestrial::AbstractRecord do
   subject(:record) {

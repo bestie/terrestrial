@@ -21,7 +21,7 @@ In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/ac
 * Predefined queries, scopes or subsets
 * Eager loading to avoid the `n + 1` query problem
 
-There are some [conspicuous missing features](https://github.com/bestie/sequel_mapper/blob/master/MissingFeatures.md)
+There are some [conspicuous missing features](https://github.com/bestie/terrestrial/blob/master/MissingFeatures.md)
 that you may want to read more about. If you want to contribute to solving any
 of the problems listed please open an issue to discuss.
 
@@ -168,7 +168,7 @@ care.
 Add the following to your `Gemfile`.
 
 ```
-gem "sequel_mapper", "0.0.3"
+gem "terrestrial", "0.0.3"
 ```
 
 And then execute:
@@ -177,5 +177,5 @@ And then execute:
 
 Or install it manually:
 
-    $ gem install sequel_mapper
+    $ gem install terrestrial
 

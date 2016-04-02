@@ -1,5 +1,5 @@
-require "sequel_mapper/graph_serializer"
-require "sequel_mapper/graph_loader"
+require "terrestrial/graph_serializer"
+require "terrestrial/graph_loader"
 
 module Terrestrial
   class MapperFacade

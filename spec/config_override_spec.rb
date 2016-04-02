@@ -4,9 +4,9 @@ require "ostruct"
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
-require "sequel_mapper"
+require "terrestrial"
 
-require "sequel_mapper/configurations/conventional_configuration"
+require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Configuration override" do
   include_context "mapper setup"

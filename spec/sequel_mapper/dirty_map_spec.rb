@@ -1,8 +1,8 @@
 require "spec_helper"
 
-require "sequel_mapper/dirty_map"
-require "sequel_mapper/upserted_record"
-require "sequel_mapper/deleted_record"
+require "terrestrial/dirty_map"
+require "terrestrial/upserted_record"
+require "terrestrial/deleted_record"
 
 RSpec.describe Terrestrial::DirtyMap do
   subject(:dirty_map) {

@@ -1,5 +1,5 @@
-require "sequel_mapper/upserted_record"
-require "sequel_mapper/deleted_record"
+require "terrestrial/upserted_record"
+require "terrestrial/deleted_record"
 
 module Terrestrial
   class GraphSerializer

@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/collection_mutability_proxy"
+require "terrestrial/collection_mutability_proxy"
 
 RSpec.describe Terrestrial::CollectionMutabilityProxy do
   let(:proxy) {

@@ -3,14 +3,14 @@ require "spec_helper"
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
-require "sequel_mapper"
+require "terrestrial"
 
 require "spec_helper"
 
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
-require "sequel_mapper"
+require "terrestrial"
 
 RSpec.describe "README examples" do
   include_context "sequel persistence setup"

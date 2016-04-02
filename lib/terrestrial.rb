@@ -1,5 +1,5 @@
 require "logger"
-require "sequel_mapper/public_conveniencies"
+require "terrestrial/public_conveniencies"
 
 module Terrestrial
   extend PublicConveniencies

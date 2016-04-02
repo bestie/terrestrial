@@ -1,4 +1,4 @@
-require "sequel_mapper/dataset"
+require "terrestrial/dataset"
 
 module Terrestrial
   class OneToManyAssociation

@@ -1,4 +1,4 @@
-require "sequel_mapper/abstract_record"
+require "terrestrial/abstract_record"
 
 module Terrestrial
   class DeletedRecord < AbstractRecord

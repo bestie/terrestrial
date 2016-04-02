@@ -1,6 +1,6 @@
 require "pry"
 require "sequel"
-require "sequel_mapper"
+require "terrestrial"
 require_relative "../spec/support/sequel_test_support"
 
 module ExampleRunnerSupport

@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'sequel_mapper/version'
+require 'terrestrial/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "sequel_mapper"
+  spec.name          = "terrestrial"
   spec.version       = Terrestrial::VERSION
   spec.authors       = ["Stephen Best"]
   spec.email         = ["bestie@gmail.com"]
   spec.summary       = %q{A data mapper built on top of the Sequel database toolkit}
   spec.description   = %q{}
-  spec.homepage      = "https://github.com/bestie/sequel_mapper"
+  spec.homepage      = "https://github.com/bestie/terrestrial"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")

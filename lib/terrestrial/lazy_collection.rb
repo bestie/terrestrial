@@ -1,4 +1,4 @@
-require "sequel_mapper/short_inspection_string"
+require "terrestrial/short_inspection_string"
 
 module Terrestrial
   class LazyCollection

@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "sequel_mapper/lazy_object_proxy"
+require "terrestrial/lazy_object_proxy"
 
 RSpec.describe Terrestrial::LazyObjectProxy do
   subject(:proxy) {

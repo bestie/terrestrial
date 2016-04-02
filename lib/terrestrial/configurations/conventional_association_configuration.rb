@@ -1,13 +1,13 @@
-require "sequel_mapper/query_order"
+require "terrestrial/query_order"
 
 module Terrestrial
   module Configurations
-    require "sequel_mapper/one_to_many_association"
-    require "sequel_mapper/many_to_many_association"
-    require "sequel_mapper/many_to_one_association"
-    require "sequel_mapper/collection_mutability_proxy"
-    require "sequel_mapper/lazy_collection"
-    require "sequel_mapper/lazy_object_proxy"
+    require "terrestrial/one_to_many_association"
+    require "terrestrial/many_to_many_association"
+    require "terrestrial/many_to_one_association"
+    require "terrestrial/collection_mutability_proxy"
+    require "terrestrial/lazy_collection"
+    require "terrestrial/lazy_object_proxy"
 
     class ConventionalAssociationConfiguration
       def initialize(mapping_name, mappings, datastore)

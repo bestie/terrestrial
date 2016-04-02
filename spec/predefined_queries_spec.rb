@@ -3,8 +3,8 @@ require "spec_helper"
 require "support/mapper_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
-require "sequel_mapper"
-require "sequel_mapper/configurations/conventional_configuration"
+require "terrestrial"
+require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Predefined subset queries" do
   include_context "mapper setup"
