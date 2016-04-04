@@ -50,26 +50,26 @@ Feature: Basic setup
       """
     And the associations are defined in the mapper configuration
       """
-      MAPPINGS_CONFIG = Terrestrial.config(DB)
-        .setup_mapping(:users) { |users|
-          users.class(User)
-          users.has_many(:posts, foreign_key: :author_id)
-        }
-        .setup_mapping(:posts) { |posts|
-          posts.class(Post)
-          posts.belongs_to(:author, mapping_name: :users)
-          posts.has_many_through(:categories)
-        }
-        .setup_mapping(:categories) { |categories|
-          categories.class(Category)
-          categories.has_many_through(:posts)
-        }
+        MAPPINGS = Terrestrial.config(DB)
+          .setup_mapping(:users) { |users|
+            users.class(User)
+            users.has_many(:posts, foreign_key: :author_id)
+          }
+          .setup_mapping(:posts) { |posts|
+            posts.class(Post)
+            posts.belongs_to(:author, mapping_name: :users)
+            posts.has_many_through(:categories)
+          }
+          .setup_mapping(:categories) { |categories|
+            categories.class(Category)
+            categories.has_many_through(:posts)
+          }
       """
     And a mapper is instantiated
       """
         MAPPERS = Terrestrial.mappers(
           datastore: DB,
-          mappings: MAPPINGS_CONFIG,
+          mappings: MAPPINGS,
         )
       """
     When a new graph of objects are created
