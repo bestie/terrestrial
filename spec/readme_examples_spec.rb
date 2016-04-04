@@ -29,6 +29,7 @@ RSpec.describe "README examples" do
       rescue => e
         File.open("./example#{i}.rb", "w") { |f| f.puts(code_sample) }
         binding.pry if ENV["DEBUG"]
+        raise e
       end
     end
   end
