@@ -69,24 +69,26 @@ code of conduct first.
   ## This is kept separate from your domain models as knowledge of the schema
   ## is required to wire them up.
 
-  USER_MAPPER_CONFIG = Terrestrial.config(DB)
+  MAPPINGS = Terrestrial.config(DB)
     .setup_mapping(:users) { |users|
+      users.class(User)
       users.has_many(:posts, foreign_key: :author_id)
     }
     .setup_mapping(:posts) { |posts|
+      posts.class(Post)
       posts.belongs_to(:author, mapping_name: :users)
       posts.has_many_through(:categories)
     }
     .setup_mapping(:categories) { |categories|
+      categories.class(Category)
       categories.has_many_through(:posts)
     }
 
   # 4. Create a mapper by combining a connection and a configuration
 
-  USER_MAPPER = Terrestrial.mapper(
+  MAPPERS = Terrestrial.mappers(
     datastore: DB,
-    config: USER_MAPPER_CONFIG,
-    name: :users,
+    mappings: MAPPINGS,
   )
 
   ## You are not limted to one mapper configuration or one database connection.
@@ -115,13 +117,13 @@ code of conduct first.
 
   # 6. Save them
 
-  USER_MAPPER.save(user)
+  MAPPERS[:users].save(user)
 
   ## Only the (aggregate) root object needs to be passed to the mapper.
 
   # 7. Query
 
-  user = USER_MAPPER.where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
+  user = MAPPERS[:users].where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
 
   # => #<struct User
   #  id="2f0f791c-47cf-4a00-8676-e582075bcd65",
