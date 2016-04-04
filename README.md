@@ -6,7 +6,7 @@
 * Persists plain objects while supporting arbitrarily deeply nested / circular associations
 * Provides excellent database and query building support courtesy of [Sequel library](https://github.com/jeremyevans/sequel)
 
-Terrestrial (working title) is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) ORM implementation for Ruby.
+Terrestrial is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) ORM implementation for Ruby.
 
 The aim is to provide a convenient way to query and persist graphs of Ruby objects (think models with associations), while keeping those object completely isolated and decoupled from the database.
 
@@ -55,7 +55,7 @@ code of conduct first.
 
   # 2. Configure a Sequel database connection
 
-  ## Sequel Mapper does not manage your connection for you.
+  ## Terrestrial does not manage your connection for you.
   ## Example assumes Postgres however Sequel supports many other databases.
 
   DB = Sequel.postgres(
