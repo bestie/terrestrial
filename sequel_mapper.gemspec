@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Terrestrial::VERSION
   spec.authors       = ["Stephen Best"]
   spec.email         = ["bestie@gmail.com"]
-  spec.summary       = %q{A data mapping ORM to make your objects feel less alien}
-  spec.description   = %q{Terrestial persists your POROs while keeping them free of database concerns.}
+  spec.summary       = %q{A data mapper ORM for Ruby}
+  spec.description   = %q{A data mapper ORM for Ruby. Persists POROs, enables DDD and fast tests. Makes your objects less alien.}
   spec.homepage      = "https://github.com/bestie/terrestrial"
   spec.license       = "MIT"
 
