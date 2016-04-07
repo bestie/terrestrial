@@ -23,4 +23,27 @@ module Terrestrial
       ].join("\n")
     end
   end
+
+  class SerializationError < RuntimeError
+    include Error
+
+    def initialize(relation_name, serializer, object, original_error)
+      @relation_name = relation_name
+      @serializer = serializer
+      @object = object
+      @original_error = original_error
+    end
+
+    attr_reader :relation_name, :serializer, :object, :original_error
+    private :relation_name, :serializer, :object, :original_error
+
+    def message
+      [
+        "Error serializing object with mapping `#{relation_name}` `#{object.inspect}`.",
+        "Using serializer: `#{serializer.inspect}`.",
+        "Check the specified serializer can transform objects into a Hash.",
+        "Got Error: #{original_error.class.name} #{original_error.message}",
+      ].join("\n")
+    end
+  end
 end

@@ -56,13 +56,13 @@ module Terrestrial
 
     def delete(mapping_name, object, depth, _foreign_key)
       mapping = mappings.fetch(mapping_name)
-      serialized_record = mapping.serializer.call(object)
+      serialized_record, _associated_records = mapping.serialize(object, depth)
 
       [
         DeletedRecord.new(
           mapping.namespace,
           mapping.primary_key,
-          serialized_record,
+          serialized_record.to_h,
           depth,
         )
       ]

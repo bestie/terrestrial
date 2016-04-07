@@ -14,7 +14,7 @@ module Terrestrial
     end
 
     attr_reader :name, :namespace, :fields, :primary_key, :factory, :serializer, :associations, :subsets
-    private :factory
+    private :factory, :serializer
 
     def add_association(name, new_association)
       @associations = associations.merge(name => new_association)
@@ -33,6 +33,8 @@ module Terrestrial
         record(object_attributes, depth, foreign_keys),
         extract_associations(object_attributes)
       ]
+    rescue => e
+      raise SerializationError.new(name, serializer, object, e)
     end
 
     def record(attributes, depth, foreign_keys)
