@@ -1,29 +1,29 @@
 require "spec_helper"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "support/have_persisted_matcher"
 require "terrestrial"
 
 RSpec.describe "Deletion" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:mapper) { user_mapper }
+  subject(:user_store) { object_store[:users] }
 
   let(:user) {
-    mapper.where(id: "users/1").first
+    user_store.where(id: "users/1").first
   }
 
   let(:reloaded_user) {
-    mapper.where(id: "users/1").first
+    user_store.where(id: "users/1").first
   }
 
   describe "Deleting the root" do
     it "deletes the root object" do
-      mapper.delete(user, cascade: true)
+      user_store.delete(user, cascade: true)
 
       expect(datastore).not_to have_persisted(
         :users,
@@ -37,7 +37,7 @@ RSpec.describe "Deletion" do
       end
 
       it "deletes the root object" do
-        mapper.delete(user)
+        user_store.delete(user)
 
         expect(datastore).not_to have_persisted(
           :users,
@@ -47,7 +47,7 @@ RSpec.describe "Deletion" do
 
       it "does not delete the child objects" do
         expect {
-          mapper.delete(user)
+          user_store.delete(user)
         }.not_to change { [datastore[:posts], datastore[:comments]].map(&:count) }
       end
     end
@@ -64,7 +64,7 @@ RSpec.describe "Deletion" do
 
     it "deletes the specified node" do
       user.posts.delete(post)
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).not_to have_persisted(
         :posts,
@@ -74,7 +74,7 @@ RSpec.describe "Deletion" do
 
     it "does not delete the parent object" do
       user.posts.delete(post)
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).to have_persisted(
         :users,
@@ -84,7 +84,7 @@ RSpec.describe "Deletion" do
 
     it "does not delete the sibling objects" do
       user.posts.delete(post)
-      mapper.save(user)
+      user_store.save(user)
 
       expect(reloaded_user.posts.count).to be > 0
     end
@@ -92,7 +92,7 @@ RSpec.describe "Deletion" do
     it "does not cascade delete" do
       expect {
         user.posts.delete(post)
-        mapper.save(user)
+        user_store.save(user)
       }.not_to change {
         datastore[:comments].map { |r| r.fetch(:id) }
       }

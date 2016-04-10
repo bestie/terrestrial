@@ -84,17 +84,18 @@ code of conduct first.
       categories.has_many_through(:posts)
     }
 
-  # 4. Create a mapper by combining a connection and a configuration
+  # 4. Create an object store by combining a connection and a configuration
 
-  MAPPERS = Terrestrial.mappers(
+  OBJECT_STORE = Terrestrial.object_store(
     datastore: DB,
     mappings: MAPPINGS,
   )
 
-  ## You are not limted to one mapper configuration or one database connection.
-  ## To handle complex situations you may create several segregated mappings
-  ## for your separate aggregate roots, potentially utilising multiple
-  ## databases and different domain object classes/compositions.
+  ## You are not limted to one object store configuration or one database
+  ## connection. To handle complex situations you may create several segregated
+  ## mappings and object stores for your separate aggregate roots, potentially
+  ## utilising multiple databases and different domain object
+  ## classes/compositions.
 
   # 5. Create some objects
 
@@ -117,13 +118,13 @@ code of conduct first.
 
   # 6. Save them
 
-  MAPPERS[:users].save(user)
+  OBJECT_STORE[:users].save(user)
 
   ## Only the (aggregate) root object needs to be passed to the mapper.
 
   # 7. Query
 
-  user = MAPPERS[:users].where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
+  user = OBJECT_STORE[:users].where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
 
   # => #<struct User
   #  id="2f0f791c-47cf-4a00-8676-e582075bcd65",

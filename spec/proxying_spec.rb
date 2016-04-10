@@ -1,22 +1,17 @@
 require "spec_helper"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
 RSpec.describe "Proxying associations" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
   context "of type `has_many`" do
-    subject(:mapper) { user_mapper }
-
-    let(:user) {
-      mapper.where(id: "users/1").first
-    }
-
+    let(:user) { object_store[:users].where(id: "users/1").first }
     let(:posts) { user.posts }
 
     describe "limiting datastore reads" do

@@ -1,19 +1,19 @@
 require "spec_helper"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
 RSpec.describe "Querying" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:mapper) { user_mapper }
+  subject(:user_store) { object_store[:users] }
 
   let(:user) {
-    mapper.where(id: "users/1").first
+    user_store.where(id: "users/1").first
   }
 
   let(:query_criteria) {

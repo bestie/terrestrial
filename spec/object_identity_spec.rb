@@ -1,18 +1,18 @@
 require "spec_helper"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
 RSpec.describe "Object identity" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:mapper) { mappers.fetch(:users) }
+  subject(:user_store) { object_store.fetch(:users) }
 
-  let(:user) { mapper.where(id: "users/1").first }
+  let(:user) { user_store.where(id: "users/1").first }
   let(:post) { user.posts.first }
 
   context "when using arbitrary where query" do
@@ -46,7 +46,7 @@ RSpec.describe "Object identity" do
     end
 
     context "when eager loading" do
-      let(:user_query) { mapper.where(id: "users/1") }
+      let(:user_query) { user_store.where(id: "users/1") }
 
       let(:eager_category) {
         user_query

@@ -48,7 +48,7 @@ Feature: Basic setup
           database: ENV.fetch("PGDATABASE"),
         )
       """
-    And the associations are defined in the mapper configuration
+    And the associations are defined in the configuration
       """
         MAPPINGS = Terrestrial.config(DB)
           .setup_mapping(:users) { |users|
@@ -65,9 +65,9 @@ Feature: Basic setup
             categories.has_many_through(:posts)
           }
       """
-    And a mapper is instantiated
+    And a object store is instantiated
       """
-        MAPPERS = Terrestrial.mappers(
+        OBJECT_STORE = Terrestrial.object_store(
           datastore: DB,
           mappings: MAPPINGS,
         )
@@ -93,11 +93,11 @@ Feature: Basic setup
       """
     And the new graph is saved
       """
-        MAPPERS[:users].save(user)
+        OBJECT_STORE[:users].save(user)
       """
     And the following query is executed
       """
-        user = MAPPERS[:users].where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
+        user = OBJECT_STORE[:users].where(id: "2f0f791c-47cf-4a00-8676-e582075bcd65").first
       """
     Then the persisted user object is returned with lazy associations
       """

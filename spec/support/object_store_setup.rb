@@ -1,5 +1,5 @@
 require "terrestrial"
-require "terrestrial/mapper_facade"
+require "terrestrial/relational_store"
 require "terrestrial/relation_mapping"
 require "terrestrial/lazy_collection"
 require "terrestrial/collection_mutability_proxy"
@@ -12,14 +12,14 @@ require "terrestrial/many_to_many_association"
 require "terrestrial/subset_queries_proxy"
 require "support/object_graph_setup"
 
-RSpec.shared_context "mapper setup" do
+RSpec.shared_context "object store setup" do
   include_context "object graph setup"
 
-  let(:mappers) {
-    Terrestrial.mappers(mappings: mappings, datastore: datastore)
+  let(:object_store) {
+    Terrestrial.object_store(mappings: mappings, datastore: datastore)
   }
 
-  let(:user_mapper) { mappers[:users] }
+  let(:user_store) { object_store[:users] }
 
   let(:mappings) {
     Hash[

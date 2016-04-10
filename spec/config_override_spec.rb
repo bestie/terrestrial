@@ -1,7 +1,7 @@
 require "spec_helper"
 require "ostruct"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
@@ -9,12 +9,12 @@ require "terrestrial"
 require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Configuration override" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  let(:mappers) {
-    Terrestrial.mappers(mappings: override_config, datastore: datastore)
+  let(:object_store) {
+    Terrestrial.object_store(mappings: override_config, datastore: datastore)
   }
 
   let(:override_config) {
@@ -26,7 +26,7 @@ RSpec.describe "Configuration override" do
   }
 
   let(:user) {
-    user_mapper.where(id: "users/1").first
+    object_store[:users].where(id: "users/1").first
   }
 
   context "override the root mapper factory" do
@@ -97,7 +97,7 @@ RSpec.describe "Configuration override" do
 
       it "maps data from the specified relation" do
         expect(
-          user_mapper.map(&:id)
+          object_store[:users].map(&:id)
         ).to eq(["users/1", "users/2", "users/3"])
       end
     end
@@ -184,10 +184,10 @@ RSpec.describe "Configuration override" do
     }
 
     it "provides access to the same data via the different configs" do
-      expect(mappers[:t1_users].first.id).to eq("users/1")
-      expect(mappers[:t1_users].first).to be_a(TypeOneUser)
-      expect(mappers[:t2_users].first.id).to eq("users/1")
-      expect(mappers[:t2_users].first).to be_a(TypeTwoUser)
+      expect(object_store[:t1_users].first.id).to eq("users/1")
+      expect(object_store[:t1_users].first).to be_a(TypeOneUser)
+      expect(object_store[:t2_users].first.id).to eq("users/1")
+      expect(object_store[:t2_users].first).to be_a(TypeTwoUser)
     end
   end
 end
