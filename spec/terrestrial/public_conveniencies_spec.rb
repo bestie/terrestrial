@@ -13,7 +13,7 @@ RSpec.describe Terrestrial::PublicConveniencies do
     end
   end
 
-  describe "#mappers" do
+  describe "#object_store" do
     let(:datastore) {
       MockDatastore.new(
         {
@@ -22,7 +22,7 @@ RSpec.describe Terrestrial::PublicConveniencies do
       )
     }
 
-    let(:mapper_config) {
+    let(:mappings) {
       {
         things: double(
           :thing_config,
@@ -44,14 +44,14 @@ RSpec.describe Terrestrial::PublicConveniencies do
       }
     }
 
-    it "returns a mapper for the specified mapping" do
-      mappers = conveniences.mappers(
-        mappings: mapper_config,
+    it "returns an object store for given mappings" do
+      object_store = conveniences.object_store(
+        mappings: mappings,
         datastore: datastore,
       )
 
       expect(
-        mappers[:things].all.first.fetch(:id)
+        object_store[:things].all.first.fetch(:id)
       ).to eq("THE THING")
     end
   end

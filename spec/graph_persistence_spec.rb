@@ -1,20 +1,20 @@
 require "spec_helper"
 
 require "support/have_persisted_matcher"
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
 RSpec.describe "Graph persistence" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  subject(:mapper) { mappers.fetch(:users) }
+  subject(:user_store) { object_store.fetch(:users) }
 
   let(:user) {
-    mapper.where(id: "users/1").first
+    user_store.where(id: "users/1").first
   }
 
   context "without associations" do
@@ -22,7 +22,7 @@ RSpec.describe "Graph persistence" do
 
     it "saves the root object" do
       user.email = modified_email
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).to have_persisted(
         :users,
@@ -35,7 +35,7 @@ RSpec.describe "Graph persistence" do
 
     it "doesn't send associated objects to the database as columns" do
       user.email = modified_email
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).not_to have_persisted(
         :users,
@@ -50,7 +50,7 @@ RSpec.describe "Graph persistence" do
       it "saves the object" do
         user.email << "MUTATED"
 
-        mapper.save(user)
+        user_store.save(user)
 
         expect(datastore).to have_persisted(
           :users,
@@ -69,7 +69,7 @@ RSpec.describe "Graph persistence" do
 
     it "saves the associated object" do
       post.body = modified_post_body
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).to have_persisted(
         :posts,
@@ -92,7 +92,7 @@ RSpec.describe "Graph persistence" do
 
     it "saves the associated object" do
       comment.body = modified_comment_body
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).to have_persisted(
         :comments,
@@ -133,7 +133,7 @@ RSpec.describe "Graph persistence" do
     it "persists the object" do
       user.posts.push(new_post)
 
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).to have_persisted(
         :posts,
@@ -157,7 +157,7 @@ RSpec.describe "Graph persistence" do
 
     it "delete the object from the datastore on save" do
       user.posts.delete(post)
-      mapper.save(user)
+      user_store.save(user)
 
       expect(datastore).not_to have_persisted(
         :posts,
@@ -182,7 +182,7 @@ RSpec.describe "Graph persistence" do
       it "deletes the 'join table' record" do
         category = post.categories.first
         post.categories.delete(category)
-        mapper.save(user)
+        user_store.save(user)
 
         expect(datastore).not_to have_persisted(
           :categories_to_posts,
@@ -196,7 +196,7 @@ RSpec.describe "Graph persistence" do
       it "does not delete the object" do
         category = post.categories.first
         post.categories.delete(category)
-        mapper.save(user)
+        user_store.save(user)
 
         expect(datastore).to have_persisted(
           :categories,
@@ -220,7 +220,7 @@ RSpec.describe "Graph persistence" do
 
       it "persists the change" do
         post_with_one_category.categories.push(new_category)
-        mapper.save(user)
+        user_store.save(user)
 
         expect(datastore).to have_persisted(
           :categories_to_posts,
@@ -245,7 +245,7 @@ RSpec.describe "Graph persistence" do
 
       it "persists the change" do
         category.name = modified_category_name
-        mapper.save(user)
+        user_store.save(user)
 
         expect(datastore).to have_persisted(
           :categories,
@@ -258,13 +258,13 @@ RSpec.describe "Graph persistence" do
     end
 
     context "node loaded as root has undefined one to many association" do
-      let(:post_mapper) { mappers[:posts] }
-      let(:post) { post_mapper.where(id: "posts/1").first }
+      let(:post_store) { object_store[:posts] }
+      let(:post) { post_store.where(id: "posts/1").first }
 
       it "persists the changes to the root node" do
         post.body = "modified body"
 
-        post_mapper.save(post)
+        post_store.save(post)
 
         expect(datastore).to have_persisted(
           :posts,
@@ -278,7 +278,7 @@ RSpec.describe "Graph persistence" do
       it "does not overwrite unused foreign key" do
         post.body = "modified body"
 
-        post_mapper.save(post)
+        post_store.save(post)
 
         expect(datastore).to have_persisted(
           :posts,
@@ -301,7 +301,7 @@ RSpec.describe "Graph persistence" do
         user.first_name = "this will be rolled back"
         user.posts.first.subject = unpersistable_object
 
-        mapper.save(user)
+        user_store.save(user)
       rescue Sequel::Error
       end
 

@@ -7,7 +7,7 @@ RSpec.describe Terrestrial::LazyCollection do
     Terrestrial::LazyCollection.new(
       database_enum,
       loader,
-      mapper,
+      queries,
     )
   }
 
@@ -24,8 +24,7 @@ RSpec.describe Terrestrial::LazyCollection do
   let(:collection_size) { row_object_map.size }
 
   let(:database_enum) { [row1, row2].each.lazy }
-
-  let(:mapper) { double(:mapper) }
+  let(:queries) { {} }
 
   let(:loader_count) { @loader_count }
   let(:loader) {

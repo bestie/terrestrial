@@ -1,9 +1,11 @@
 require "terrestrial/graph_serializer"
 require "terrestrial/graph_loader"
+require "terrestrial/short_inspection_string"
 
 module Terrestrial
-  class MapperFacade
+  class RelationalStore
     include Enumerable
+    include ShortInspectionString
 
     def initialize(mappings:, mapping_name:, datastore:, dataset:, load_pipeline:, dump_pipeline:)
       @mappings = mappings
@@ -132,6 +134,14 @@ module Terrestrial
         mappings: mappings,
         object_load_pipeline: load_pipeline,
       )
+    end
+
+    def inspectable_properties
+      [
+        :mapping_name,
+        :dataset,
+        :eager_load,
+      ]
     end
   end
 end

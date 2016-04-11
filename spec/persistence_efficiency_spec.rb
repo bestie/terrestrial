@@ -1,17 +1,17 @@
 require "spec_helper"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
 RSpec.describe "Graph persistence efficiency" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  let(:mapper) { user_mapper }
-  let(:user_query) { mapper.where(id: "users/1") }
+  let(:user_store) { object_store[:users] }
+  let(:user_query) { user_store.where(id: "users/1") }
   let(:user) { user_query.first }
 
   context "when modifying the root node" do
@@ -24,12 +24,12 @@ RSpec.describe "Graph persistence efficiency" do
 
       it "performs 1 update" do
         expect {
-          mapper.save(user)
+          user_store.save(user)
         }.to change { query_counter.update_count }.by(1)
       end
 
       it "sends only the updated fields to the datastore" do
-        mapper.save(user)
+        user_store.save(user)
         update_sql = query_counter.updates.last
 
         expect(update_sql).to eq(
@@ -48,19 +48,19 @@ RSpec.describe "Graph persistence efficiency" do
 
     it "performs 1 update" do
       expect {
-        mapper.save(user)
+        user_store.save(user)
       }.to change { query_counter.update_count }.by(1)
     end
 
     it "performs 0 deletes" do
       expect {
-        mapper.save(user)
+        user_store.save(user)
       }.to change { query_counter.delete_count }.by(0)
     end
 
     it "performs 0 additional reads" do
       expect {
-        mapper.save(user)
+        user_store.save(user)
       }.to change { query_counter.read_count }.by(0)
     end
   end
@@ -77,7 +77,7 @@ RSpec.describe "Graph persistence efficiency" do
 
       it "performs 1 write" do
         expect {
-          mapper.save(user)
+          user_store.save(user)
         }.to change { query_counter.update_count }.by(1)
       end
     end
@@ -91,7 +91,7 @@ RSpec.describe "Graph persistence efficiency" do
 
       it "performs 1 update" do
         expect {
-          mapper.save(user)
+          user_store.save(user)
         }.to change { query_counter.update_count }.by(1)
       end
     end
@@ -106,7 +106,7 @@ RSpec.describe "Graph persistence efficiency" do
 
       it "performs 2 updates" do
         expect {
-          mapper.save(user)
+          user_store.save(user)
         }.to change { query_counter.update_count }.by(2)
       end
     end
@@ -122,7 +122,7 @@ RSpec.describe "Graph persistence efficiency" do
 
     it "performs 1 write" do
         expect {
-          mapper.save(user)
+          user_store.save(user)
         }.to change { query_counter.update_count }.by(1)
     end
   end
@@ -131,7 +131,7 @@ RSpec.describe "Graph persistence efficiency" do
     context "on root node" do
       it "performs 1 read per table rather than n + 1" do
         expect {
-          mapper.eager_load(:posts => []).all.map { |user|
+          user_store.eager_load(:posts => []).all.map { |user|
             [user.id, user.posts.map(&:id)]
           }
         }.to change { query_counter.read_count }.by(2)

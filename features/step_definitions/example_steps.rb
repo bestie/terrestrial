@@ -6,11 +6,11 @@ Given(/^a database connection is established$/) do |code_sample|
   example_eval(code_sample)
 end
 
-Given(/^the associations are defined in the mapper configuration$/) do |code_sample|
+Given(/^the associations are defined in the configuration$/) do |code_sample|
   example_eval(code_sample)
 end
 
-Given(/^a mapper is instantiated$/) do |code_sample|
+Given(/^a object store is instantiated$/) do |code_sample|
   example_eval(code_sample)
 end
 

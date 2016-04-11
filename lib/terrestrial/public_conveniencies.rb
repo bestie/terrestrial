@@ -1,23 +1,48 @@
 require "terrestrial/identity_map"
 require "terrestrial/dirty_map"
 require "terrestrial/upserted_record"
-require "terrestrial/mapper_facade"
+require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
+require "terrestrial/short_inspection_string"
 
 module Terrestrial
+  class ObjectStore
+    include Fetchable
+    include ShortInspectionString
+
+    def initialize(stores)
+      @mappings = stores.keys
+      @stores = stores
+    end
+
+    def [](mapping_name)
+      @stores[mapping_name]
+    end
+
+    def from(mapping_name)
+      fetch(mapping_name)
+    end
+
+    private
+
+    def inspectable_properties
+      [ :mappings ]
+    end
+  end
+
   module PublicConveniencies
     def config(database_connection)
       Configurations::ConventionalConfiguration.new(database_connection)
     end
 
-    def mappers(mappings:, datastore:)
+    def object_store(mappings:, datastore:)
       dirty_map = Private.build_dirty_map
       identity_map = Private.build_identity_map
 
-      Hash[mappings.map { |name, _mapping|
+      stores = Hash[mappings.map { |name, _mapping|
         [
           name,
-          Private.mapper(
+          Private.single_type_store(
             mappings: mappings ,
             name: name,
             datastore: datastore,
@@ -26,15 +51,17 @@ module Terrestrial
           )
         ]
       }]
+
+      ObjectStore.new(stores)
     end
 
     module Private
       module_function
 
-      def mapper(mappings:, name:, datastore:, identity_map:, dirty_map:)
+      def single_type_store(mappings:, name:, datastore:, identity_map:, dirty_map:)
         dataset = datastore[mappings.fetch(name).namespace]
 
-        MapperFacade.new(
+        RelationalStore.new(
           mappings: mappings,
           mapping_name: name,
           datastore: datastore,

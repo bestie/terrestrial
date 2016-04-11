@@ -1,7 +1,7 @@
 require "spec_helper"
 
 require "support/have_persisted_matcher"
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
@@ -9,11 +9,11 @@ require "terrestrial"
 require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Config override" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
-  let(:user) { user_mapper.where(id: "users/1").first }
+  let(:user) { object_store[:users].where(id: "users/1").first }
 
   context "with an object that has private fields" do
     let(:user_serializer) {
@@ -36,7 +36,7 @@ RSpec.describe "Config override" do
         user.first_name = "This won't work"
         user.last_name = "because the serialzer is weird"
 
-        user_mapper.save(user)
+        object_store[:users].save(user)
 
         expect(datastore).to have_persisted(:users, hash_including(
           id: user.id,

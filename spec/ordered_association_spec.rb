@@ -1,18 +1,18 @@
 require "spec_helper"
 
-require "support/mapper_setup"
+require "support/object_store_setup"
 require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Ordered associations" do
-  include_context "mapper setup"
+  include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
 
   context "one to many association ordered by `created_at DESC`" do
-    let(:posts) { user_mapper.first.posts }
+    let(:posts) { object_store[:users].first.posts }
 
     before do
       configs.fetch(:users).fetch(:associations).fetch(:posts).merge!(
@@ -40,7 +40,7 @@ RSpec.describe "Ordered associations" do
       )
     end
 
-    let(:categories) { user_mapper.first.posts.first.categories }
+    let(:categories) { object_store[:users].first.posts.first.categories }
 
     it "enumerates the objects in order specified in the config" do
       expect(categories.map(&:id)).to eq(
