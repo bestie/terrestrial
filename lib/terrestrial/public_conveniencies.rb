@@ -97,7 +97,7 @@ module Terrestrial
                 mapping.fields.include?(k)
               }
 
-              object = mapping.factory.call(attributes.merge(associated_fields))
+              object = mapping.load(attributes.merge(associated_fields))
               identity_map.call(mapping, record, object)
             },
           ].reduce(record) { |agg, operation|

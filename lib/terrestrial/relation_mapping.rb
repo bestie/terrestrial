@@ -12,9 +12,14 @@ module Terrestrial
     end
 
     attr_reader :name, :namespace, :fields, :primary_key, :factory, :serializer, :associations, :subsets
+    private :factory
 
     def add_association(name, new_association)
       @associations = associations.merge(name => new_association)
+    end
+
+    def load(record)
+      factory.call(record)
     end
 
     def serialize(object, depth, foreign_keys = {})
