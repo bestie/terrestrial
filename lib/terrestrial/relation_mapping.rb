@@ -1,3 +1,5 @@
+require "terrestrial/error"
+
 module Terrestrial
   class RelationMapping
     def initialize(name:, namespace:, fields:, primary_key:, factory:, serializer:, associations:, subsets:)
@@ -20,6 +22,8 @@ module Terrestrial
 
     def load(record)
       factory.call(record)
+    rescue => e
+      raise LoadError.new(namespace, factory, record, e)
     end
 
     def serialize(object, depth, foreign_keys = {})
