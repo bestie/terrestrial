@@ -1,0 +1,26 @@
+module Terrestrial
+  Error = Module.new
+
+  class LoadError < RuntimeError
+    include Error
+
+    def initialize(relation_name, factory, record, original_error)
+      @relation_name = relation_name
+      @factory = factory
+      @record = record
+      @original_error = original_error
+    end
+
+    attr_reader :relation_name, :factory, :record, :original_error
+    private :relation_name, :factory, :record, :original_error
+
+    def message
+      [
+        "Error loading record from `#{relation_name}` relation `#{record.inspect}`.",
+        "Using: `#{factory.inspect}`.",
+        "Check that the factory is compatible.",
+        "Got Error: #{original_error.class.name} #{original_error.message}",
+      ].join("\n")
+    end
+  end
+end

@@ -1,3 +1,5 @@
+require "terrestrial/error"
+
 module Terrestrial
   class RelationMapping
     def initialize(name:, namespace:, fields:, primary_key:, factory:, serializer:, associations:, subsets:)
@@ -12,9 +14,16 @@ module Terrestrial
     end
 
     attr_reader :name, :namespace, :fields, :primary_key, :factory, :serializer, :associations, :subsets
+    private :factory
 
     def add_association(name, new_association)
       @associations = associations.merge(name => new_association)
+    end
+
+    def load(record)
+      factory.call(record)
+    rescue => e
+      raise LoadError.new(namespace, factory, record, e)
     end
 
     def serialize(object, depth, foreign_keys = {})

@@ -1,6 +1,7 @@
 require "spec_helper"
 
 require "terrestrial/public_conveniencies"
+require "ostruct"
 
 RSpec.describe Terrestrial::PublicConveniencies do
   subject(:conveniences) {
@@ -31,7 +32,7 @@ RSpec.describe Terrestrial::PublicConveniencies do
           fields: [:id],
           associations: [],
           primary_key: [],
-          factory: ->(x){x}
+          load: thing_object,
         )
       }
     }
@@ -44,6 +45,10 @@ RSpec.describe Terrestrial::PublicConveniencies do
       }
     }
 
+    let(:thing_object) {
+      OpenStruct.new(thing_record)
+    }
+
     it "returns an object store for given mappings" do
       object_store = conveniences.object_store(
         mappings: mappings,
@@ -51,7 +56,7 @@ RSpec.describe Terrestrial::PublicConveniencies do
       )
 
       expect(
-        object_store[:things].all.first.fetch(:id)
+        object_store[:things].all.first.id
       ).to eq("THE THING")
     end
   end
