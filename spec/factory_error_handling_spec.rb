@@ -37,7 +37,7 @@ RSpec.describe "factory error handling" do
           "Error loading record from `users` relation `#{record.inspect}`.",
           "Using: `#{no_parameters_factory.inspect}`.",
           "Check that the factory is compatible.",
-          "Got Error: ArgumentError wrong number of arguments (given 1, expected 0)",
+          "Got Error: ArgumentError wrong number of arguments (1 for 0)",
         ].join("\n")
       )
     end
