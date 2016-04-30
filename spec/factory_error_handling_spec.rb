@@ -50,7 +50,7 @@ RSpec.describe "factory error handling" do
   def override_user_factory_with(factory)
     config = Terrestrial.config(datastore)
       .setup_mapping(:users) { |users|
-        users.factory(no_parameters_factory)
+        users.factory(factory)
       }
 
     @object_store = Terrestrial.object_store(
