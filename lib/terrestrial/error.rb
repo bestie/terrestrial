@@ -1,6 +1,26 @@
 module Terrestrial
   Error = Module.new
 
+  class UpsertError < RuntimeError
+    include Error
+
+    def initialize(relation_name, record, original_error)
+      @relation_name = relation_name
+      @record = record
+      @original_error = original_error
+    end
+
+    attr_reader :relation_name, :record, :original_error
+    private :relation_name, :record, :original_error
+
+    def message
+      [
+        "Error upserting record into `#{relation_name}` with data `#{record.inspect}`.",
+        "Got Error: #{original_error.class.name} #{original_error.message}",
+      ].join("\n")
+    end
+  end
+
   class LoadError < RuntimeError
     include Error
 

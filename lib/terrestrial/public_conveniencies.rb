@@ -156,6 +156,8 @@ module Terrestrial
         end
 
         row_count
+      rescue Object => e
+        raise UpsertError.new(record.namespace, record.to_h, e)
       end
 
       def delete_record(datastore, record)
