@@ -29,24 +29,14 @@ module Terrestrial
         data_superset = assoc_eager_data.fetch(:superset) {
           load_from_datasets(association)
         }
+        eager_association_data = assoc_eager_data.fetch(:associations, {})
 
         [
           name,
           association.build_proxy(
             record: record,
             data_superset: data_superset,
-            loader: ->(associated_record, join_records = []) {
-              join_records.map { |jr|
-                join_mapping = mappings.fetch(association.join_mapping_name)
-                object_load_pipeline.call(join_mapping, jr)
-              }
-
-              call(
-                association.mapping_name,
-                associated_record,
-                assoc_eager_data.fetch(:associations, {})
-              )
-            },
+            loader: recursive_loader(association, eager_association_data),
           )
         ]
       }
@@ -54,10 +44,25 @@ module Terrestrial
 
     def load_from_datasets(association)
       association
-      .mapping_names
-      .map { |name| mappings.fetch(name) }
-      .map(&:namespace)
-      .map { |ns| datasets[ns] }
+        .mapping_names
+        .map { |name| mappings.fetch(name) }
+        .map(&:namespace)
+        .map { |ns| datasets[ns] }
+    end
+
+    def recursive_loader(association, eager_data)
+      ->(associated_record, join_records = []) {
+        join_records.map { |jr|
+          join_mapping = mappings.fetch(association.join_mapping_name)
+          object_load_pipeline.call(join_mapping, jr)
+        }
+
+        call(
+          association.mapping_name,
+          associated_record,
+          eager_data,
+        )
+      }
     end
   end
 end

@@ -34,24 +34,41 @@ module Terrestrial
     private
 
     def associated_records(mapping, current_record, association_fields, depth)
-      mapping.associations
+      mapping
+        .associations
         .map { |name, association|
-          [association_fields.fetch(name), association]
+          dump_association(
+            association,
+            current_record,
+            association_fields.fetch(name),
+            depth,
+          )
         }
-        .map { |collection, association|
-          [nodes(collection), deleted_nodes(collection), association]
+    end
+
+    def dump_association(association, current_record, collection, depth)
+      updated_nodes_recursive(association, current_record, collection, depth) + 
+        deleted_nodes(association, current_record, collection, depth)
+    end
+
+    def updated_nodes_recursive(association, current_record, collection, depth)
+      association.dump(current_record, get_loaded(collection), depth) { |assoc_mapping_name, assoc_object, pass_down_foreign_key, assoc_depth|
+        recurse(current_record, association, assoc_mapping_name, assoc_object, assoc_depth, pass_down_foreign_key)
+      }
+    end
+
+    def recurse(current_record, association, assoc_mapping_name, assoc_object, assoc_depth, foreign_key)
+      (assoc_object && call(assoc_mapping_name, assoc_object, assoc_depth, foreign_key))
+        .tap { |associated_record, *_join_records|
+          current_record.merge!(association.extract_foreign_key(associated_record))
         }
-        .map { |nodes, deleted_nodes, association|
-          association.dump(current_record, nodes, depth) { |assoc_mapping_name, assoc_object, foreign_key, assoc_depth|
-            call(assoc_mapping_name, assoc_object, assoc_depth, foreign_key).tap { |associated_record, *_join_records|
-              # TODO: remove this mutation
-              current_record.merge!(association.extract_foreign_key(associated_record))
-            }
-          } +
-          association.delete(current_record, deleted_nodes, depth) { |assoc_mapping_name, assoc_object, foreign_key, assoc_depth|
-            delete(assoc_mapping_name, assoc_object, assoc_depth, foreign_key)
-          }
-        }
+    end
+
+    def deleted_nodes(association, current_record, collection, depth)
+      nodes = get_deleted(collection)
+      association.delete(current_record, nodes, depth) { |assoc_mapping_name, assoc_object, foreign_key, assoc_depth|
+        delete(assoc_mapping_name, assoc_object, assoc_depth, foreign_key)
+      }
     end
 
     def delete(mapping_name, object, depth, _foreign_key)
@@ -68,19 +85,21 @@ module Terrestrial
       ]
     end
 
-    def nodes(collection)
+    def get_loaded(collection)
       if collection.respond_to?(:each_loaded)
         collection.each_loaded
       elsif collection.is_a?(Struct)
         [collection]
       elsif collection.respond_to?(:each)
         collection.each
+      elsif collection.nil?
+        [nil]
       else
         [collection]
       end
     end
 
-    def deleted_nodes(collection)
+    def get_deleted(collection)
       if collection.respond_to?(:each_deleted)
         collection.each_deleted
       else
