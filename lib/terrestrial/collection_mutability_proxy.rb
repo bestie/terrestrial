@@ -45,10 +45,15 @@ module Terrestrial
     end
 
     def push(node)
+      force_load
       @added_nodes.push(node)
     end
 
     private
+
+    def force_load
+      to_a
+    end
 
     def loaded_enum
       Enumerator.new do |yielder|
