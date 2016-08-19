@@ -1,6 +1,3 @@
-require "terrestrial/upserted_record"
-require "terrestrial/deleted_record"
-
 module Terrestrial
   class GraphSerializer
     def initialize(mappings:)
@@ -73,16 +70,7 @@ module Terrestrial
 
     def delete(mapping_name, object, depth, _foreign_key)
       mapping = mappings.fetch(mapping_name)
-      serialized_record, _associated_records = mapping.serialize(object, depth)
-
-      [
-        DeletedRecord.new(
-          mapping.namespace,
-          mapping.primary_key,
-          serialized_record.to_h,
-          depth,
-        )
-      ]
+      mapping.delete(object, depth)
     end
 
     def get_loaded(collection)

@@ -1,4 +1,6 @@
 require "terrestrial/error"
+require "terrestrial/upserted_record"
+require "terrestrial/deleted_record"
 
 module Terrestrial
   class RelationMapping
@@ -37,11 +39,28 @@ module Terrestrial
       raise SerializationError.new(name, serializer, object, e)
     end
 
+    def delete(object, depth)
+      object_attributes = serializer.call(object)
+
+      [deleted_record(object_attributes, depth)]
+    end
+
+    private
+
     def record(attributes, depth, foreign_keys)
       UpsertedRecord.new(
         namespace,
         primary_key,
         select_mapped_fields(attributes).merge(foreign_keys),
+        depth,
+      )
+    end
+
+    def deleted_record(attributes, depth)
+      DeletedRecord.new(
+        namespace,
+        primary_key,
+        attributes,
         depth,
       )
     end
