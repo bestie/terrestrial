@@ -303,6 +303,52 @@ RSpec.describe "Graph persistence" do
     end
   end
 
+  context "when a many to one association is nil" do
+    context "when the object does not have a reference to its parent" do
+      it "populates that association with a nil" do
+        post = Post.new(
+          id: "posts/orphan",
+          subject: "Nils gonna getcha",
+          body: "",
+          created_at: Time.parse("2015-09-05T15:00:00+01:00"),
+          categories: [],
+          comments: [],
+        )
+
+        object_store[:posts].save(post)
+
+        expect(datastore).to have_persisted(
+          :posts,
+          hash_including(
+            id: "posts/orphan",
+            author_id: nil,
+          )
+        )
+      end
+    end
+
+    context "when an existing partent object reference is set to nil" do
+      it "populates that association with a nil" do
+        comment = user
+          .posts
+          .flat_map(&:comments)
+          .detect { |c| c.id == "comments/1" }
+
+        comment.commenter = nil
+
+        user_store.save(user)
+
+        expect(datastore).to have_persisted(
+          :comments,
+          hash_including(
+            id: "comments/1",
+            commenter_id: nil,
+          )
+        )
+      end
+    end
+  end
+
   context "when a save operation fails (some object is not persistable)" do
     let(:unpersistable_object) { ->() { } }
 

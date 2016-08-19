@@ -43,6 +43,16 @@ RSpec.describe "Graph traversal" do
       ).to eq("oh noes")
     end
 
+    context "when a many to one association foreign key is nil" do
+      before do
+        datastore[:comments].update(commenter_id: nil)
+      end
+
+      it "populates that association with a nil" do
+        expect(user.posts.flat_map(&:comments).flat_map(&:commenter).uniq).to eq([nil])
+      end
+    end
+
     describe "lazy loading" do
       let(:post_factory) { double(:post_factory, call: nil) }
 

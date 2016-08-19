@@ -19,13 +19,13 @@ module Terrestrial
     private     :foreign_key, :key, :proxy_factory
 
     def build_proxy(data_superset:, loader:, record:)
-      proxy_factory.call(
-        query: build_query(data_superset, record),
-        loader: loader,
-        preloaded_data: {
-          key => foreign_key_value(record),
-        },
-      )
+      foreign_key_nil?(record) ? nil : proxy_factory.call(
+          query: build_query(data_superset, record),
+          loader: loader,
+          preloaded_data: {
+            key => foreign_key_value(record),
+          },
+        )
     end
 
     def eager_superset((superset), (associated_dataset))
@@ -41,19 +41,25 @@ module Terrestrial
     end
 
     def dump(parent_record, collection, depth, &block)
-      collection.flat_map { |object|
-        block.call(mapping_name, object, _foreign_key_does_not_go_here = {}, depth + depth_modifier)
-      }
+      collection
+        .flat_map { |object|
+          block.call(mapping_name, object, _foreign_key_does_not_go_here = {}, depth + depth_modifier)
+        }
+        .reject(&:nil?)
     end
     alias_method :delete, :dump
 
     def extract_foreign_key(record)
       {
-        foreign_key => record.fetch(key),
+        foreign_key => (record && record.fetch(key)),
       }
     end
 
     private
+
+    def foreign_key_nil?(record)
+      foreign_key_value(record).nil?
+    end
 
     def foreign_key_value(record)
       record.fetch(foreign_key)
