@@ -4,7 +4,7 @@
 
 * A Ruby ORM that enables DDD and clean architectural styles.
 * Persists plain objects while supporting arbitrarily deeply nested / circular associations
-* Provides excellent database and query building support courtesy of [Sequel library](https://github.com/jeremyevans/sequel)
+* Provides excellent database and query building support courtesy of the [Sequel library](https://github.com/jeremyevans/sequel)
 
 Terrestrial is a new, currently experimental [data mapper](http://martinfowler.com/eaaCatalog/dataMapper.html) ORM implementation for Ruby.
 
@@ -16,10 +16,10 @@ In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/ac
 
 * Associations (belongs_to, has_many, has_many_through)
 * Automatic 'convention over configuration' that is fully customizable
-* Lazy loading for database read efficiency
+* Lazy loading of associations
+* Optional eager loading to avoid the `n + 1` query problem
 * Dirty tracking for database write efficiency
 * Predefined queries, scopes or subsets
-* Eager loading to avoid the `n + 1` query problem
 
 There are some [conspicuous missing features](https://github.com/bestie/terrestrial/blob/master/MissingFeatures.md)
 that you may want to read more about. If you want to contribute to solving any
@@ -137,7 +137,10 @@ code of conduct first.
 
 ## Running the tests
 
-### Set the following environment variables
+### ENV vars
+
+The test suite expects the following standard Postgres environment variables.
+
 * PGHOST
 * PGUSER
 * PGDATABASE
