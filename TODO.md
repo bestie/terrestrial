@@ -2,29 +2,19 @@
 
 In no particular order
 
-## General
+* User defined default settings for all mappings
 * Refactor, methods too big, objects missing
 * Name things better
 * Better support swapping out DB for in memory datasets
-* `#eager_load!` that raises an error when traversing outside the eagerly
-  loaded data
 
-## Querying
-* Querying API, what would a repository with some arbitrary queries look like?
-  - e.g. an association on post called `burger_comments` that finds comments
-    with the word burger in them
-* Add other querying methods from association proxies or remove entirely
-  - Depends on nailing down the querying API
+## Candidate features to consider
+* Column aliasing
+* Callbacks e.g. after_save, after_insert as functions defined in mapping
+* Database generated IDs and Timestamps (perhaps implemented as callbacks)
 * When possible optimise blocks given to `AssociationProxy#select` with
   Sequel's `#where` with block [querying API](http://sequel.jeremyevans.net/rdoc/files/doc/cheat_sheet_rdoc.html#label-AND%2FOR%2FNOT)
-
-## Associations
-* Read only associations
-  - Loaded objects would be immutable
-  - Collection proxy would have no #push or #remove
-  - Skipped when dumping
-* Associations defined with a join
-* Composable associations
+* `#eager_load!` that raises an error when traversing outside the eagerly
+  loaded data
 
 # Hopefully done
 
@@ -36,6 +26,21 @@ In no particular order
 ## Associations
 * Eager loading
 
+## Querying
+* Querying API, what would a repository with some arbitrary queries look like?
+  - e.g. an association on post called `burger_comments` that finds comments
+    with the word burger in them
+
 ## Configuration
 * Automatic config generation based on schema, foreign keys etc
 * Config to take either a classes or callable factory
+
+# Not happening (at least for now)
+
+## Associations
+* Read only associations
+  - Loaded objects would be immutable
+  - Collection proxy would have no #push or #remove
+  - Skipped when dumping
+* Associations defined with a join
+* Composable associations
