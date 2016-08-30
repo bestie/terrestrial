@@ -11,9 +11,14 @@ Terrestrial is a new, currently experimental [data mapper](http://martinfowler.c
 The aim is to provide a convenient way to query and persist graphs of Ruby objects (think models with associations), while keeping those object completely isolated and decoupled from the database.
 
 In contrast to Ruby's many [active record](http://martinfowler.com/eaaCatalog/activeRecord.html) implementations, domain objects require no special inherited or mixed in behavior in order to be persisted.
+In fact Terrestrial has no specific requirements for domain objects at all.
+While there is a simple default, `.new` and `#to_h`, you may define arbitrary
+functions (per mapping) and expose no reader methods at all.
 
 ## Features
 
+* Absolute minimum coupling between domain and persistence
+* Persistence of plain or arbitrary objects
 * Associations (belongs_to, has_many, has_many_through)
 * Automatic 'convention over configuration' that is fully customizable
 * Lazy loading of associations
@@ -71,11 +76,12 @@ code of conduct first.
 
   MAPPINGS = Terrestrial.config(DB)
     .setup_mapping(:users) { |users|
-      users.class(User)
+      users.class(User) # Specify a class and the constructor will be used
       users.has_many(:posts, foreign_key: :author_id)
     }
     .setup_mapping(:posts) { |posts|
-      posts.class(Post)
+      # To avoid directly specifiying a class, a factory function can be used instead
+      posts.factory(->(attrs) { Post.new(attrs) })
       posts.belongs_to(:author, mapping_name: :users)
       posts.has_many_through(:categories)
     }
