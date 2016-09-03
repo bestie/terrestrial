@@ -154,6 +154,138 @@ RSpec.describe Terrestrial::CollectionMutabilityProxy do
     end
   end
 
+  describe "#+" do
+    let(:additional_nodes) { [10, 11, 12] }
+
+    it "returns a new collection" do
+      expect(proxy + additional_nodes).to be_a(Terrestrial::CollectionMutabilityProxy)
+      expect(proxy + additional_nodes).not_to be(proxy)
+      expect(proxy + additional_nodes).not_to be(additional_nodes)
+    end
+
+    it "concatenates with self" do
+      expect(
+        (proxy + additional_nodes).to_a
+      ).to eq([0,1,2,3,4,5,6,7,8,9,10,11,12])
+    end
+
+    it "does not mutate self" do
+      expect {
+        proxy + additional_nodes
+      }.not_to change { proxy.to_a }
+    end
+
+    context "after pushing a node" do
+      before do
+        proxy.push(pushed_node)
+      end
+
+      let(:pushed_node) { 99 }
+
+      it "retains the pushed nodes" do
+        expect(proxy + additional_nodes).to include(pushed_node)
+      end
+    end
+
+    context "after deleting a node" do
+      before do
+        proxy.delete(deleted_node)
+      end
+
+      let(:deleted_node) { 9 }
+
+      it "retains the deletion of the nodes" do
+        expect((proxy + additional_nodes).to_a).not_to include(deleted_node)
+      end
+    end
+
+    context "push to the original after adding" do
+      it "does not change the new collection" do
+        new_collection = proxy + additional_nodes
+
+        expect {
+          proxy.push(99)
+        }.not_to change { new_collection.to_a }
+      end
+    end
+
+    context "delete from the original after adding" do
+      it "does not change the new collection" do
+        new_collection = proxy + additional_nodes
+
+        expect {
+          proxy.delete(0)
+        }.not_to change { new_collection.to_a }
+      end
+    end
+  end
+
+  describe "#-" do
+    let(:subtracted_nodes) { [4, 6, 8, 9, 0] }
+
+    it "returns a new collection" do
+      expect(proxy - subtracted_nodes).to be_a(Terrestrial::CollectionMutabilityProxy)
+      expect(proxy - subtracted_nodes).not_to be(proxy)
+      expect(proxy - subtracted_nodes).not_to be(subtracted_nodes)
+    end
+
+    it "subtracts from self" do
+      expect(
+        (proxy - subtracted_nodes).to_a
+      ).to eq([1,2,3,5,7])
+    end
+
+    it "does not mutate self" do
+      expect {
+        proxy - subtracted_nodes
+      }.not_to change { proxy.to_a }
+    end
+
+    context "after pushing a node" do
+      before do
+        proxy.push(pushed_node)
+      end
+
+      let(:pushed_node) { 99 }
+
+      it "retains the pushed nodes" do
+        expect(proxy - subtracted_nodes).to include(pushed_node)
+      end
+    end
+
+    context "after deleting a node" do
+      before do
+        proxy.delete(deleted_node)
+      end
+
+      let(:deleted_node) { 2 }
+
+      it "retains the deletion of the nodes" do
+        expect((proxy - subtracted_nodes).to_a).not_to include(deleted_node)
+      end
+    end
+
+    context "push to the original after subtracting" do
+      it "does not change the new collection" do
+        new_collection = proxy - subtracted_nodes
+
+        expect {
+          proxy.push(99)
+        }.not_to change { new_collection.to_a }
+      end
+    end
+
+    context "delete from the original after subtracting" do
+      it "does not change the new collection" do
+        new_collection = proxy - subtracted_nodes
+
+        expect {
+          proxy.delete(1)
+        }.not_to change { new_collection.to_a }
+      end
+    end
+  end
+
   class LoadableCollectionDouble
     def initialize(collection, loaded_collection)
       @collection = collection

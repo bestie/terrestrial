@@ -7,10 +7,10 @@ module Terrestrial
     include ShortInspectionString
     include Enumerable
 
-    def initialize(collection)
+    def initialize(collection, added_nodes: [], deleted_nodes: [])
       @collection = collection
-      @added_nodes = []
-      @deleted_nodes = []
+      @added_nodes = added_nodes
+      @deleted_nodes = deleted_nodes
     end
 
     attr_reader :collection, :deleted_nodes, :added_nodes
@@ -48,6 +48,24 @@ module Terrestrial
 
     def _deleted_nodes
       deleted_nodes.each
+    end
+
+    def +(additional_nodes)
+      force_load
+
+      self.class.new(
+        collection,
+        added_nodes: added_nodes + additional_nodes,
+        deleted_nodes: deleted_nodes.dup,
+      )
+    end
+
+    def -(subtracted_nodes)
+      self.class.new(
+        collection,
+        added_nodes: added_nodes.dup,
+        deleted_nodes: deleted_nodes + subtracted_nodes,
+      )
     end
 
     private

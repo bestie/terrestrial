@@ -146,14 +146,28 @@ RSpec.describe "Graph persistence" do
     end
 
     context "when the collection is not loaded until the new object is persisted" do
-      it "is consistent with the datastore" do
-        user.posts.push(new_post)
+      context "when using collection push" do
+        it "is consistent with the datastore" do
+          user.posts.push(new_post)
 
-        user_store.save(user)
+          user_store.save(user)
 
-        expect(user.posts.to_a.map(&:id)).to eq(
-          ["posts/1", "posts/2", "posts/neu"]
-        )
+          expect(user.posts.to_a.map(&:id)).to eq(
+            ["posts/1", "posts/2", "posts/neu"]
+          )
+        end
+      end
+
+      context "when using collection +" do
+        it "is consistent with the datastore" do
+          user.posts = user.posts + [new_post]
+
+          user_store.save(user)
+
+          expect(user.posts.to_a.map(&:id)).to eq(
+            ["posts/1", "posts/2", "posts/neu"]
+          )
+        end
       end
     end
   end
