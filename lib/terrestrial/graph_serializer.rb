@@ -74,8 +74,8 @@ module Terrestrial
     end
 
     def get_loaded(collection)
-      if collection.respond_to?(:each_loaded)
-        collection.each_loaded
+      if collection.respond_to?(:_loaded_nodes)
+        collection._loaded_nodes
       elsif collection.is_a?(Struct)
         [collection]
       elsif collection.respond_to?(:each)
@@ -88,8 +88,8 @@ module Terrestrial
     end
 
     def get_deleted(collection)
-      if collection.respond_to?(:each_deleted)
-        collection.each_deleted
+      if collection.respond_to?(:_deleted_nodes)
+        collection._deleted_nodes
       else
         []
       end

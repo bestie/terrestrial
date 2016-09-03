@@ -18,14 +18,6 @@ module Terrestrial
 
     def_delegators :collection, :where, :subset
 
-    def each_loaded(&block)
-      loaded_enum.each(&block)
-    end
-
-    def each_deleted(&block)
-      @deleted_nodes.each(&block)
-    end
-
     def to_ary
       to_a
     end
@@ -47,6 +39,14 @@ module Terrestrial
     def push(node)
       force_load
       @added_nodes.push(node)
+    end
+
+    def _loaded_nodes
+      loaded_enum.each
+    end
+
+    def _deleted_nodes
+      deleted_nodes.each
     end
 
     private

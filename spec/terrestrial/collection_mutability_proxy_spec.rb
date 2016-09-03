@@ -7,7 +7,7 @@ RSpec.describe Terrestrial::CollectionMutabilityProxy do
     Terrestrial::CollectionMutabilityProxy.new(lazy_enum)
   }
 
-  let(:lazy_enum) { data_set.each.lazy }
+  let(:lazy_enum) { data_set.lazy }
   let(:data_set) { (0..9) }
 
   def id
@@ -75,26 +75,41 @@ RSpec.describe Terrestrial::CollectionMutabilityProxy do
     end
   end
 
-  describe "#each_loaded" do
-    context "when called with a block" do
-      it "returns self" do
-        expect(proxy.each(&id)).to eq(proxy)
-      end
+  describe "#_loaded_nodes" do
+    let(:lazy_enum) {
+      LoadableCollectionDouble.new(
+        data_set.each.lazy,
+        loaded_nodes,
+      )
+    }
 
-      it "yields each element to the block" do
-        yielded = []
+    let(:loaded_nodes) { data_set.take(2) }
 
-        proxy.each do |element|
-          yielded.push(element)
-        end
+    it "returns an enumerator of loaded nodes" do
+      expect(proxy._loaded_nodes).to be_a(Enumerator)
+      expect(proxy._loaded_nodes.to_a).to eq(loaded_nodes.to_a)
+    end
+  end
 
-        expect(yielded).to eq(data_set.to_a)
+  describe "#_deleted_nodes" do
+    context "before any nodes have been deleted" do
+      it "returns an empty enumerator" do
+        expect(proxy._deleted_nodes.to_a).to be_empty
       end
     end
 
-    context "when called without a block" do
-      it "returns an enumerator" do
-        expect(proxy.each).to be_a(Enumerator)
+    context "after some nodes have been deleted" do
+      before do
+        deleted_nodes.each { |node| proxy.delete(node) }
+      end
+
+      let(:deleted_nodes) { [4, 0] }
+
+      context "when called without a block" do
+        it "returns an enumerator of deleted nodes" do
+          expect(proxy._deleted_nodes).to be_a(Enumerator)
+          expect(proxy._deleted_nodes.to_a).to eq(deleted_nodes)
+        end
       end
     end
   end
@@ -130,6 +145,21 @@ RSpec.describe Terrestrial::CollectionMutabilityProxy do
       it "appends the element to the enumeration" do
         expect(proxy.map(&id).last).to eq(new_value)
       end
+    end
+  end
+
+  class LoadableCollectionDouble
+    def initialize(collection, loaded_collection)
+      @collection = collection
+      @loaded_collection = loaded_collection
+    end
+
+    def each(&block)
+      @collection.each(&block)
+    end
+
+    def each_loaded(&block)
+      @loaded_collection.each(&block)
     end
   end
 end
