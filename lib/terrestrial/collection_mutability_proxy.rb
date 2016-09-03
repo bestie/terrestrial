@@ -31,14 +31,15 @@ module Terrestrial
       end
     end
 
-    def delete(node)
-      @deleted_nodes.push(node)
+    def push(node)
+      force_load
+      added_nodes.push(node)
       self
     end
 
-    def push(node)
-      force_load
-      @added_nodes.push(node)
+    def delete(node)
+      deleted_nodes.push(node)
+      self
     end
 
     def _loaded_nodes
@@ -80,7 +81,7 @@ module Terrestrial
     end
 
     def deleted?(node)
-      @deleted_nodes.include?(node)
+      deleted_nodes.include?(node)
     end
   end
 end
