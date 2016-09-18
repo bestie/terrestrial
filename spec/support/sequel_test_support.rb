@@ -87,14 +87,28 @@ module Terrestrial
         }
       end
 
+      def write_count
+        insert_count + update_count
+      end
+
       def update_count
         updates.count
+      end
+
+      def insert_count
+        inserts.count
       end
 
       def updates
         @info
           .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
           .select { |query| query.start_with?("UPDATE") }
+      end
+
+      def inserts
+        @info
+          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
+          .select { |query| query.start_with?("INSERT") }
       end
 
       def show_queries

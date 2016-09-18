@@ -67,5 +67,49 @@ RSpec.describe "Persist a new graph in empty datastore" do
         post_id: "posts/1",
       })
     end
+
+    context "when saving a second time" do
+      context "when the first time is successful" do
+        before do
+          object_store[:users].save(hansel)
+        end
+
+        it "does not double write to the database" do
+          expect {
+            object_store[:users].save(hansel)
+          }.not_to change { query_counter.write_count }
+        end
+      end
+
+      context "when the first time fails" do
+        before do
+          attempt_unpersistable_save
+        end
+
+        let(:unpersistable) { Object.new }
+
+        it "successfully saves all attributes the second time" do
+          object_store[:users].save(hansel)
+
+          expect(datastore).to have_persisted(
+            :users,
+            hash_including(
+              id: hansel.id,
+              email: hansel.email,
+              first_name: hansel.first_name,
+              last_name: hansel.last_name,
+            )
+          )
+        end
+
+        def attempt_unpersistable_save
+          email = hansel.email
+          hansel.email = unpersistable
+          object_store[:users].save(hansel)
+        rescue Terrestrial::UpsertError
+          hansel.email = email
+        end
+      end
+    end
   end
 end

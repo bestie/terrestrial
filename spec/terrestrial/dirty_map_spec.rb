@@ -11,7 +11,7 @@ RSpec.describe Terrestrial::DirtyMap do
 
   let(:storage) { {} }
 
-  let(:loaded_record) {
+  let(:record) {
     create_record( namespace, identity_fields, attributes, depth)
   }
 
@@ -27,15 +27,47 @@ RSpec.describe Terrestrial::DirtyMap do
     }
   }
 
+  describe "#load_if_new" do
+    context "when a record is new" do
+      it "adds it to the map" do
+        dirty_map.load_if_new(record)
+
+        expect(storage).to include([:table_name, { id: "record/id" }])
+      end
+
+      it "returns the record" do
+        expect(dirty_map.load_if_new(record)).to eq(record)
+      end
+    end
+
+    context "when the record has already been loaded" do
+      let(:storage) {
+        {
+          [:table_name, { id: "record/id" }] => record
+        }
+      }
+
+      it "has no effect on the storage" do
+        expect {
+          dirty_map.load_if_new(record)
+        }.not_to change { storage }
+      end
+
+      it "returns the record" do
+        expect(dirty_map.load_if_new(record)).to eq(record)
+      end
+    end
+  end
+
   describe "#load" do
     it "adds the record to its storage" do
-      dirty_map.load(loaded_record)
+      dirty_map.load(record)
 
-      expect(storage.values).to include(loaded_record)
+      expect(storage.values).to include(record)
     end
 
     it "returns the loaded record" do
-      expect(dirty_map.load(loaded_record)).to eq(loaded_record)
+      expect(dirty_map.load(record)).to eq(record)
     end
   end
 
@@ -61,7 +93,7 @@ RSpec.describe Terrestrial::DirtyMap do
 
     context "when a record with same identity has been loaded (existing record)" do
       before do
-        dirty_map.load(loaded_record)
+        dirty_map.load(record)
       end
 
       context "when the record is unchanged" do
@@ -181,7 +213,7 @@ RSpec.describe Terrestrial::DirtyMap do
 
       context "when a record with same identity has been loaded (existing record)" do
         before do
-          dirty_map.load(loaded_record)
+          dirty_map.load(record)
         end
 
         context "with a equivalent record" do

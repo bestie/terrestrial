@@ -121,9 +121,10 @@ module Terrestrial
                 }
               }
             },
+            ->(rs) { rs.map { |r| dirty_map.load_if_new(r) } },
           ].reduce(records) { |agg, operation|
-              operation.call(agg)
-            }
+            operation.call(agg)
+          }
         }
       end
 
