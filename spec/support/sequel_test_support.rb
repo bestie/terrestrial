@@ -27,12 +27,11 @@ module Terrestrial
     module_function :truncate_tables
 
     def db_connection
-      Sequel.default_timezone = :utc
-      @db_connection ||= Sequel.postgres(
+      @@db_connection ||= Sequel.postgres(
         host: ENV.fetch("PGHOST"),
         user: ENV.fetch("PGUSER"),
         database: ENV.fetch("PGDATABASE"),
-      )
+      ).tap { Sequel.default_timezone = :utc }
     end
     module_function :db_connection
 
