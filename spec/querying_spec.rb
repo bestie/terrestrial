@@ -7,7 +7,6 @@ require "terrestrial"
 
 RSpec.describe "Querying" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   subject(:user_store) { object_store[:users] }

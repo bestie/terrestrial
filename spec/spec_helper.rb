@@ -1,5 +1,6 @@
 require "pry"
 require "support/sequel_test_support"
+require "support/memory_adapter_test_support"
 require "support/blog_schema"
 
 RSpec.configure do |config|
@@ -29,18 +30,29 @@ RSpec.configure do |config|
 
   # Kernel.srand config.seed
 
-  config.before(backend: "memory") do
-    define_singleton_method(:datastore) do
-      @datastore ||= Terrestrial::MockSequel.new(BLOG_SCHEMA.fetch(:tables))
-    end
-
-    define_singleton_method(:query_counter) do
-      datastore
-    end
+  adapter_support = case ENV.fetch("ADAPTER", "sequel")
+  when "memory"
+    Terrestrial::MemoryAdapterTestSupport
+  when "sequel"
+    Terrestrial::SequelTestSupport
+  else
+    raise "Adapter `#{ENV["ADAPTER"]}` not found"
   end
+
+  def schema
+    BLOG_SCHEMA
+  end
+
+  RSpec.shared_context "adapter setup" do
+    let(:datastore) { adapter_support.build_datastore(schema) }
+    let(:query_counter) { adapter_support.query_counter }
+  end
+
+  config.include_context "adapter setup"
 
   config.before(:suite) do
-    Terrestrial::SequelTestSupport.drop_tables
-    Terrestrial::SequelTestSupport.create_tables(BLOG_SCHEMA)
+    adapter_support.before_suite(schema)
   end
+
+  config.filter_run_excluding(backend: adapter_support.excluded_adapters)
 end

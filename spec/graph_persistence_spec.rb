@@ -8,7 +8,6 @@ require "terrestrial"
 
 RSpec.describe "Graph persistence" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   subject(:user_store) { object_store.fetch(:users) }
@@ -18,7 +17,7 @@ RSpec.describe "Graph persistence" do
   }
 
   context "without associations" do
-    let(:modified_email) { "bestie+modified@gmail.com" }
+    let(:modified_email) { "hasel+modified@gmail.com" }
 
     it "saves the root object" do
       user.email = modified_email

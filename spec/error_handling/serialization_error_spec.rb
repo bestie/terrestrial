@@ -3,8 +3,6 @@ require "support/sequel_persistence_setup"
 
 RSpec.describe "Serialization error handling" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
-
   context "when a domain object is incompatible with its serializer" do
     before do
       override_user_serializer_with(incompatible_custom_serializer)

@@ -7,7 +7,6 @@ require "terrestrial"
 
 RSpec.describe "Sequel query efficiency", backend: "sequel" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   let(:user_store) { object_store[:users] }
@@ -101,6 +100,7 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
         user_store.save(user)
         update_sql = query_counter.updates.last
 
+        # TODO: SQL parser?
         expect(update_sql).to eq(
           %{UPDATE "users" SET "email" = '#{modified_email}' WHERE ("id" = '#{user.id}')}
         )

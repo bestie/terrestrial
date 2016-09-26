@@ -2,7 +2,6 @@ require "spec_helper"
 require "ostruct"
 
 require "support/object_store_setup"
-require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
@@ -10,7 +9,6 @@ require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Configuration override" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   let(:object_store) {
@@ -88,8 +86,6 @@ RSpec.describe "Configuration override" do
           config.class(OpenStruct)
         end
       }
-
-      let(:datastore) { db_connection }
 
       let(:unconventional_table_name) {
         :users_is_called_this_weird_thing_perhaps_for_legacy_reasons

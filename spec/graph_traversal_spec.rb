@@ -7,7 +7,6 @@ require "terrestrial"
 
 RSpec.describe "Graph traversal" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   describe "associations" do

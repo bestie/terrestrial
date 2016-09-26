@@ -10,7 +10,6 @@ require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Config override" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   let(:user) { object_store[:users].where(id: "users/1").first }

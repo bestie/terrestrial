@@ -3,7 +3,9 @@ RSpec.shared_context "seed data setup" do
   include_context "object graph setup"
 
   before {
-    insert_records(datastore, seeded_records)
+    seeded_records.each do |(namespace, record)|
+      datastore[namespace].insert(record)
+    end
   }
 
   let(:seeded_records) {

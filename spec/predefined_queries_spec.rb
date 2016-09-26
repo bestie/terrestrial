@@ -8,7 +8,6 @@ require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Predefined subset queries" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   subject(:users) { object_store[:users] }
@@ -41,7 +40,7 @@ RSpec.describe "Predefined subset queries" do
       configs.fetch(:posts).merge!(
         subsets: {
           body_contains: ->(dataset, search_string) {
-            dataset.where("body like '%#{search_string}%'")
+            dataset.where(body: /#{search_string}/)
           },
         },
       )

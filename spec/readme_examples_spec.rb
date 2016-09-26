@@ -13,8 +13,6 @@ require "support/seed_data_setup"
 require "terrestrial"
 
 RSpec.describe "README examples" do
-  include_context "sequel persistence setup"
-
   readme_contents = File.read("README.md")
 
   code_samples = readme_contents

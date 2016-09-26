@@ -5,7 +5,6 @@ require "support/have_persisted_matcher"
 
 RSpec.describe "Persist a new graph in empty datastore" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
 
   context "given a graph of new objects" do
     it "persists the root node" do
@@ -71,10 +70,14 @@ RSpec.describe "Persist a new graph in empty datastore" do
     context "when saving an object a second time" do
       context "when the first time fails" do
         before do
-          attempt_unpersistable_save
+          error = attempt_unpersistable_save
+          unless error.is_a?(Terrestrial::UpsertError)
+            raise "Unpersistable save did not raise an error. Expected this save to fail."
+          end
+          hansel.email = "hansel@gmail.com"
         end
 
-        let(:unpersistable) { Object.new }
+        let(:unpersistable) { ->() {} }
 
         it "successfully saves all attributes the second time" do
           object_store[:users].save(hansel)
@@ -94,8 +97,8 @@ RSpec.describe "Persist a new graph in empty datastore" do
           email = hansel.email
           hansel.email = unpersistable
           object_store[:users].save(hansel)
-        rescue Terrestrial::UpsertError
-          hansel.email = email
+        rescue Terrestrial::UpsertError => e
+          e
         end
       end
     end

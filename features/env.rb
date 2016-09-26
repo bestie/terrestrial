@@ -42,12 +42,9 @@ module ExampleRunnerSupport
 end
 
 module DatabaseSupport
-  def create_table(name, schema)
+  def create_table(name, columns)
     Terrestrial::SequelTestSupport.create_tables(
-      tables: {
-        name => schema,
-      },
-      foreign_keys: [],
+      name => columns,
     )
   end
 end

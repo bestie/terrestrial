@@ -8,7 +8,6 @@ require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "Ordered associations" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
   include_context "seed data setup"
 
   context "one to many association ordered by `created_at DESC`" do

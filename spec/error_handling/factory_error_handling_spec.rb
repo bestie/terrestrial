@@ -4,8 +4,6 @@ require "terrestrial"
 require "terrestrial/configurations/conventional_configuration"
 
 RSpec.describe "factory error handling" do
-  include_context "sequel persistence setup"
-
   context "factory with too few parameters" do
     before do
       seed_user(record)

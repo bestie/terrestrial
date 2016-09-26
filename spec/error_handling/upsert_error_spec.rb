@@ -4,8 +4,6 @@ require "terrestrial/inspection_string"
 
 RSpec.describe "Upsert error handling" do
   include_context "object store setup"
-  include_context "sequel persistence setup"
-
   let(:user) { double(:user) }
 
   context "with an record that raises error on persistence" do
@@ -100,7 +98,7 @@ RSpec.describe "Upsert error handling" do
       }
     }
 
-    it "filters the serialization result and raises no error" do
+    it "raises an UpsertError with detail of the original error", backend: "sequel" do
       error = nil
       begin
         save_user

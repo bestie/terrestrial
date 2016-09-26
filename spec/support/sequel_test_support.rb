@@ -2,6 +2,41 @@ require "sequel"
 
 module Terrestrial
   module SequelTestSupport
+    def build_datastore(_schema)
+      db_connection.tap { |db|
+        # This test is using the database so we better clean it out first
+        truncate_tables
+
+        # The query_counter will let us make assertions about how efficiently
+        # the database is being used
+        reset_query_counter
+        db.loggers << query_counter
+      }
+    end
+    module_function :build_datastore
+
+    def query_counter
+      @@query_counter ||= QueryCounter.new
+    end
+    module_function :query_counter
+
+    def before_suite(schema)
+      drop_tables
+      create_tables(schema.fetch(:tables))
+      add_foreign_keys(schema.fetch(:foreign_keys))
+    end
+    module_function :before_suite
+
+    def excluded_adapters
+      "memory"
+    end
+    module_function :excluded_adapters
+
+    def reset_query_counter
+      @@query_counter = nil
+    end
+    module_function :reset_query_counter
+
     def create_database
       `psql postgres --command "CREATE DATABASE $PGDATABASE;"`
     end
@@ -35,8 +70,8 @@ module Terrestrial
     end
     module_function :db_connection
 
-    def create_tables(schema)
-      schema.fetch(:tables).each do |table_name, fields|
+    def create_tables(tables)
+      tables.each do |table_name, fields|
         db_connection.create_table(table_name) do
           fields.each do |field|
             type = field.fetch(:type)
@@ -48,21 +83,18 @@ module Terrestrial
         end
       end
 
-      schema.fetch(:foreign_keys).each do |(table, fk_col, foreign_table, key_col)|
+      tables.keys
+    end
+    module_function :create_tables
+
+    def add_foreign_keys(foreign_keys)
+      foreign_keys.each do |(table, fk_col, foreign_table, key_col)|
         db_connection.alter_table(table) do
           add_foreign_key([fk_col], foreign_table, key: key_col, deferrable: false, on_delete: :set_null)
         end
       end
-
-      schema.fetch(:tables).keys
     end
-    module_function :create_tables
-
-    def insert_records(datastore, records)
-      records.each { |(namespace, record)|
-        datastore[namespace].insert(record)
-      }
-    end
+    module_function :add_foreign_keys
 
     class QueryCounter
       def initialize
