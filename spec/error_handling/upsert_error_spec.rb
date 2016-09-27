@@ -6,7 +6,55 @@ RSpec.describe "Upsert error handling" do
   include_context "object store setup"
   include_context "sequel persistence setup"
 
-  let(:user) { Object.new }
+  let(:user) { double(:user) }
+
+  context "with an record that raises error on persistence" do
+    before do
+      use_custom_serializer( ->(_) { unpersistable_record } )
+    end
+    let(:unpersistable_record) { UnpersistableRecord.new(original_error) }
+    let(:original_error) { RuntimeError.new("Cannot upsert") }
+
+    it "raises an UpsertError with detail of the original error" do
+      error = nil
+      begin
+        save_user
+      rescue Terrestrial::UpsertError => error
+      end
+
+      expect(error.message).to eq(
+        [
+          "Error upserting record into `users` with data `#{unpersistable_record}`.",
+          "Got Error: #{original_error.class} #{original_error.message}",
+        ].join("\n")
+      )
+    end
+  end
+
+  class UnpersistableRecord
+    include Terrestrial::InspectionString
+
+    def initialize(error)
+      @error = error
+    end
+
+    def to_h
+      # This is used in error reporting
+      self
+    end
+
+    def method_missing(*_)
+      # Raising on anything else ensures a problem while persisting
+      raise_if_upserting
+      self
+    end
+
+    private
+
+    def raise_if_upserting
+      raise(@error) if caller.any? { |line| /if_upsert/ === line }
+    end
+  end
 
   context "serializer returns an extra field not in the schema" do
     before do
