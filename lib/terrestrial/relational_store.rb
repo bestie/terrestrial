@@ -5,7 +5,7 @@ require "terrestrial/short_inspection_string"
 module Terrestrial
   class RelationalStore
     include Enumerable
-    include ShortInspectionString
+    include InspectionString
 
     def initialize(mappings:, mapping_name:, datastore:, dataset:, load_pipeline:, dump_pipeline:)
       @mappings = mappings

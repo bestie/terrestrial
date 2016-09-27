@@ -1,6 +1,6 @@
 module Terrestrial
   class LazyObjectProxy
-    include ShortInspectionString
+    include InspectionString
 
     def initialize(object_loader, key_fields)
       @object_loader = object_loader

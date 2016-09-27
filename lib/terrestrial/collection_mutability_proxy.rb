@@ -4,7 +4,7 @@ require "terrestrial/short_inspection_string"
 module Terrestrial
   class CollectionMutabilityProxy
     extend Forwardable
-    include ShortInspectionString
+    include InspectionString
     include Enumerable
 
     def initialize(collection)

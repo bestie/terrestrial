@@ -2,7 +2,7 @@ require "terrestrial/short_inspection_string"
 
 module Terrestrial
   class LazyCollection
-    include ShortInspectionString
+    include InspectionString
     include Enumerable
 
     def initialize(database_enum, loader, queries)

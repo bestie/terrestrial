@@ -8,7 +8,7 @@ require "terrestrial/short_inspection_string"
 module Terrestrial
   class ObjectStore
     include Fetchable
-    include ShortInspectionString
+    include InspectionString
 
     def initialize(stores)
       @mappings = stores.keys
