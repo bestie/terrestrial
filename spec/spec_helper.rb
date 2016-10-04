@@ -29,6 +29,16 @@ RSpec.configure do |config|
 
   # Kernel.srand config.seed
 
+  config.before(backend: "memory") do
+    define_singleton_method(:datastore) do
+      @datastore ||= Terrestrial::MockSequel.new(BLOG_SCHEMA.fetch(:tables))
+    end
+
+    define_singleton_method(:query_counter) do
+      datastore
+    end
+  end
+
   config.before(:suite) do
     Terrestrial::SequelTestSupport.drop_tables
     Terrestrial::SequelTestSupport.create_tables(BLOG_SCHEMA)

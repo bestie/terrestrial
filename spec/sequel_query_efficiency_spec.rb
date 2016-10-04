@@ -5,7 +5,7 @@ require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
-RSpec.describe "Graph persistence efficiency" do
+RSpec.describe "Sequel query efficiency", backend: "sequel" do
   include_context "object store setup"
   include_context "sequel persistence setup"
   include_context "seed data setup"
@@ -13,6 +13,75 @@ RSpec.describe "Graph persistence efficiency" do
   let(:user_store) { object_store[:users] }
   let(:user_query) { user_store.where(id: "users/1") }
   let(:user) { user_query.first }
+
+  context "when loading the root node" do
+    it "only performs one read" do
+      expect {
+        user
+      }.to change { query_counter.read_count }.by(1)
+    end
+  end
+
+  context "when traversing associations (lazily)" do
+    let(:user) { object_store[:users].where(id: "users/1").first }
+    let(:posts) { user.posts }
+
+    context "when getting a reference to an association proxy" do
+      before { user }
+
+      it "does no additional reads" do
+        expect{
+          user.posts
+        }.to change { query_counter.read_count }.by(0)
+      end
+    end
+
+    context "when iteratiing over a has many association" do
+      before { posts }
+
+      it "does a single additional read for the association collection" do
+        expect {
+          user.posts.each { |x| x }
+        }.to change { query_counter.read_count }.by(1)
+      end
+
+      context "when doing this more than once" do
+        before do
+          posts.each { |x| x }
+        end
+
+        it "performs no additional reads" do
+          expect {
+            user.posts.each { |x| x }
+          }.not_to change { query_counter.read_count }
+        end
+      end
+    end
+
+    context "when getting a reference to a many to many association" do
+      before { post }
+
+      let(:post) { user.posts.first }
+
+      it "does no additional reads" do
+        expect {
+          post.categories
+        }.to change { query_counter.read_count }.by(0)
+      end
+    end
+
+    context "when iterating over a many to many association" do
+      let(:category_count) { 3 }
+
+      it "does 1 read" do
+        post = user.posts.first
+
+        expect {
+          post.categories.each { |x| x }
+        }.to change { query_counter.read_count }.by(1)
+      end
+    end
+  end
 
   context "when modifying the root node" do
     let(:modified_email) { "modified@example.com" }
@@ -127,8 +196,8 @@ RSpec.describe "Graph persistence efficiency" do
     end
   end
 
-  context "eager loading" do
-    context "on root node" do
+  context "when traversing assocations (eagerly)" do
+    context "laoding `#all` from the object store with one assocation" do
       it "performs 1 read per table rather than n + 1" do
         expect {
           user_store.eager_load(:posts => []).all.map { |user|
@@ -214,6 +283,20 @@ RSpec.describe "Graph persistence efficiency" do
         }.to change {
           query_counter.read_count
         }.by(eager_queries + lazy_comment_queries)
+      end
+    end
+  end
+
+  context "when double saving a new object" do
+    context "when the first time is successful" do
+      before do
+        object_store[:users].save(hansel)
+      end
+
+      it "does not double write to the database" do
+        expect {
+          object_store[:users].save(hansel)
+        }.not_to change { query_counter.write_count }
       end
     end
   end

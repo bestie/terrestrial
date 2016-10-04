@@ -68,19 +68,7 @@ RSpec.describe "Persist a new graph in empty datastore" do
       })
     end
 
-    context "when saving a second time" do
-      context "when the first time is successful" do
-        before do
-          object_store[:users].save(hansel)
-        end
-
-        it "does not double write to the database" do
-          expect {
-            object_store[:users].save(hansel)
-          }.not_to change { query_counter.write_count }
-        end
-      end
-
+    context "when saving an object a second time" do
       context "when the first time fails" do
         before do
           attempt_unpersistable_save

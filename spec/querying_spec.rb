@@ -31,12 +31,6 @@ RSpec.describe "Querying" do
       expect(filtered_posts.map(&:id)).to eq(["posts/2"])
     end
 
-    it "delegates the query to the datastore, performs two additiona reads" do
-      expect {
-        filtered_posts.map(&:id)
-      }.to change { query_counter.read_count }.by(2)
-    end
-
     it "returns another collection" do
       expect(filtered_posts).not_to be(user.posts)
     end
