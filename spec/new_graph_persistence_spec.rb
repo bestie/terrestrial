@@ -1,6 +1,5 @@
 require "spec_helper"
 require "support/object_store_setup"
-require "support/sequel_persistence_setup"
 require "support/have_persisted_matcher"
 
 RSpec.describe "Persist a new graph in empty datastore" do

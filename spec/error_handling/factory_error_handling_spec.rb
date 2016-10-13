@@ -1,5 +1,3 @@
-require "support/sequel_persistence_setup"
-
 require "terrestrial"
 require "terrestrial/configurations/conventional_configuration"
 

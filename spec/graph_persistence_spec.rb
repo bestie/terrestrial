@@ -2,7 +2,6 @@ require "spec_helper"
 
 require "support/have_persisted_matcher"
 require "support/object_store_setup"
-require "support/sequel_persistence_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
