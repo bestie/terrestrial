@@ -5,7 +5,8 @@ In no particular order
 * User defined default settings for all mappings
 * Refactor, methods too big, objects missing
 * Name things better
-* Better support swapping out DB for in memory datasets
+* Full adaptorization of the database, refactor some Sequel specific things
+  into the adapter
 
 ## Candidate features to consider
 * Column aliasing
@@ -22,6 +23,7 @@ In no particular order
 * Efficient saving
   - Part one, if it wasn't loaded it wasn't modified, check identity map
   - Part two, dirty tracking
+* Support swapping out DB for in memory datasets
 
 ## Associations
 * Eager loading
