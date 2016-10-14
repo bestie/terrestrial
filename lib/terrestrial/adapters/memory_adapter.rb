@@ -1,4 +1,9 @@
-class Terrestrial::MockSequel
+module Terrestrial
+  module Adapters
+  end
+end
+
+class Terrestrial::Adapters::MemoryAdapter
   def self.build_from_schema(schema, raw_storage)
     schema.each { |name, _| raw_storage[name] = [] }
 
