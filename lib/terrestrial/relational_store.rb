@@ -1,6 +1,6 @@
 require "terrestrial/graph_serializer"
 require "terrestrial/graph_loader"
-require "terrestrial/short_inspection_string"
+require "terrestrial/inspection_string"
 
 module Terrestrial
   class RelationalStore

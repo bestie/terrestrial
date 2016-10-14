@@ -3,7 +3,7 @@ require "terrestrial/dirty_map"
 require "terrestrial/upserted_record"
 require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
-require "terrestrial/short_inspection_string"
+require "terrestrial/inspection_string"
 
 module Terrestrial
   class ObjectStore

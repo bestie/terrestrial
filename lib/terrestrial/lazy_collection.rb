@@ -1,4 +1,4 @@
-require "terrestrial/short_inspection_string"
+require "terrestrial/inspection_string"
 
 module Terrestrial
   class LazyCollection
