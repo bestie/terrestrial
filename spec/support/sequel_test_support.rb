@@ -2,7 +2,7 @@ require "sequel"
 
 module Terrestrial
   module SequelTestSupport
-    def build_datastore(_schema)
+    module_function def build_datastore(_schema)
       db_connection.tap { |db|
         # This test is using the database so we better clean it out first
         truncate_tables
@@ -13,64 +13,54 @@ module Terrestrial
         db.loggers << query_counter
       }
     end
-    module_function :build_datastore
 
-    def query_counter
+    module_function def query_counter
       @@query_counter ||= QueryCounter.new
     end
-    module_function :query_counter
 
-    def before_suite(schema)
+    module_function def before_suite(schema)
       drop_tables
       create_tables(schema.fetch(:tables))
       add_foreign_keys(schema.fetch(:foreign_keys))
     end
-    module_function :before_suite
 
-    def excluded_adapters
+    module_function def excluded_adapters
       "memory"
     end
-    module_function :excluded_adapters
 
-    def reset_query_counter
+    module_function def reset_query_counter
       @@query_counter = nil
     end
-    module_function :reset_query_counter
 
-    def create_database
+    module_function def create_database
       `psql postgres --command "CREATE DATABASE $PGDATABASE;"`
     end
-    module_function :create_database
 
-    def drop_database
+    module_function def drop_database
       `psql postgres --command "DROP DATABASE $PGDATABASE;"`
     end
-    module_function :drop_database
 
-    def drop_tables(tables = db_connection.tables)
+    module_function def drop_tables(tables = db_connection.tables)
       tables.each do |table_name|
         db_connection.drop_table(table_name, cascade: true)
       end
     end
-    module_function :drop_tables
 
-    def truncate_tables(tables = db_connection.tables)
+    module_function def truncate_tables(tables = db_connection.tables)
       tables.each do |table_name|
         db_connection[table_name].truncate(cascade: true)
       end
     end
-    module_function :truncate_tables
 
-    def db_connection
+    module_function def db_connection
       @@db_connection ||= Sequel.postgres(
         host: ENV.fetch("PGHOST"),
         user: ENV.fetch("PGUSER"),
         database: ENV.fetch("PGDATABASE"),
       ).tap { Sequel.default_timezone = :utc }
     end
-    module_function :db_connection
 
-    def create_tables(tables)
+    module_function def create_tables(tables)
       tables.each do |table_name, fields|
         db_connection.create_table(table_name) do
           fields.each do |field|
@@ -85,16 +75,14 @@ module Terrestrial
 
       tables.keys
     end
-    module_function :create_tables
 
-    def add_foreign_keys(foreign_keys)
+    module_function def add_foreign_keys(foreign_keys)
       foreign_keys.each do |(table, fk_col, foreign_table, key_col)|
         db_connection.alter_table(table) do
           add_foreign_key([fk_col], foreign_table, key: key_col, deferrable: false, on_delete: :set_null)
         end
       end
     end
-    module_function :add_foreign_keys
 
     class QueryCounter
       def initialize
