@@ -2,8 +2,8 @@ require "support/mock_sequel"
 
 module Terrestrial
   module MemoryAdapterTestSupport
-    module_function def build_datastore(schema)
-      MockSequel.new(schema.fetch(:tables))
+    module_function def build_datastore(schema, raw_storage = {})
+      MockSequel.build_from_schema(schema.fetch(:tables), raw_storage)
     end
 
     module_function def excluded_adapters

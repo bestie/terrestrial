@@ -1,11 +1,17 @@
 class Terrestrial::MockSequel
-  def initialize(schema, storage = {})
-    @schema = schema
-    @relations = storage
+  def self.build_from_schema(schema, raw_storage)
+    schema.each { |name, _| raw_storage[name] = [] }
 
-    schema.each do |name, columns|
-      @relations[name] = Relation.new(columns, [])
-    end
+    relations = Hash[schema.map { |name, columns|
+      [name, Relation.new(columns, raw_storage.fetch(name))]
+    }]
+
+    new(schema, relations)
+  end
+
+  def initialize(schema, relations)
+    @schema = schema
+    @relations = relations
   end
 
   attr_reader :relations
