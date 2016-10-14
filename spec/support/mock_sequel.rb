@@ -4,10 +4,8 @@ class Terrestrial::MockSequel
     @relations = storage
 
     schema.each do |name, columns|
-      @relations[name] = Relation.new(self, columns, [])
+      @relations[name] = Relation.new(columns, [])
     end
-
-    @reads, @updates, @inserts, @deletes = [], [], [], []
   end
 
   attr_reader :relations
@@ -46,62 +44,10 @@ class Terrestrial::MockSequel
     @relations.fetch(table_name)
   end
 
-  def show_queries
-    @reads + @updates + @inserts + @deletes
-  end
-
-  def log_read(query)
-    @reads.push(dump(query))
-  end
-
-  def log_update(new_attrs)
-    @updates.push(dump(new_attrs))
-  end
-
-  def log_insert(new_row)
-    @inserts.push(dump(new_row))
-  end
-
-  def log_delete(row)
-    @deletes.push(dump(row))
-  end
-
-  def read_count
-    @reads.count
-  end
-
-  def reads
-    @reads.map { |r| load(r) }
-  end
-
-  def updates
-    @updates.map { |u| load(u) }
-  end
-
-  def update_count
-    @updates.count
-  end
-
-  def write_count
-    @updates.count + @inserts.count
-  end
-
-  def delete_count
-    @deletes.count
-  end
-
   private
 
   def rollback(relations)
     @relations = relations
-  end
-
-  def load(object)
-    Marshal.load(object)
-  end
-
-  def dump(object)
-    Marshal.dump(object)
   end
 
   class Query
@@ -149,8 +95,7 @@ class Terrestrial::MockSequel
   class Relation
     include Enumerable
 
-    def initialize(database, schema, all_rows, selected_columns: nil, applied_query: Query.new)
-      @database = database
+    def initialize(schema, all_rows, selected_columns: nil, applied_query: Query.new)
       @schema = schema
       @all_rows = all_rows
       @applied_query = applied_query
@@ -158,8 +103,8 @@ class Terrestrial::MockSequel
     end
 
     attr_reader :schema
-    attr_reader :database, :all_rows, :selected_columns, :applied_query
-    private     :database, :all_rows, :selected_columns, :applied_query
+    attr_reader :all_rows, :selected_columns, :applied_query
+    private     :all_rows, :selected_columns, :applied_query
 
     def columns
       all_column_names
@@ -171,7 +116,7 @@ class Terrestrial::MockSequel
 
     def select(*new_selected_columns)
       selected_columns = new_selected_columns & all_column_names
-      self.class.new(database, columns, all_rows, selected_columns: selected_columns, applied_query: applied_query)
+      self.class.new(columns, all_rows, selected_columns: selected_columns, applied_query: applied_query)
     end
 
     def order(*columns)
@@ -183,21 +128,17 @@ class Terrestrial::MockSequel
     end
 
     def each(&block)
-      database.log_read(applied_query)
-
       matching_rows.each(&block)
     end
 
     def delete
       matching_rows.each do |row_to_delete|
-        database.log_delete(row_to_delete)
         all_rows.delete(row_to_delete)
       end
     end
 
     def insert(new_row)
-      new_row_with_empty_fields = empty_row.merge(new_row)
-      database.log_insert(new_row_with_empty_fields)
+      new_row_with_empty_fields = empty_row.merge(clone(new_row))
 
       all_rows.push(new_row_with_empty_fields)
     end
@@ -206,18 +147,14 @@ class Terrestrial::MockSequel
       all_rows
         .select { |row| matching_rows.include?(row) }
         .each do |row|
-          database.log_update([row, attrs])
-
           attrs.each do |k, v|
-            row[k] = v
+            row[clone(k)] = clone(v)
           end
         end
         .count
     end
 
     def empty?
-      database.log_read(applied_query)
-
       matching_rows.empty?
     end
 
@@ -283,7 +220,11 @@ class Terrestrial::MockSequel
     end
 
     def new_with_query(query)
-      self.class.new(database, schema, all_rows, selected_columns: selected_columns, applied_query: query)
+      self.class.new(schema, all_rows, selected_columns: selected_columns, applied_query: query)
+    end
+
+    def clone(object)
+      Marshal.load(Marshal.dump(object))
     end
   end
 end
