@@ -159,9 +159,15 @@ This will create a database named from the value of `PGDATABASE`
 $ bundle exec rake db:create
 ```
 
-### Run all tests (RSpec and Cucumber)
+### Run all tests RSpec and Cucumber
+
+The RSpec tests run twice, once against Sequel/Postgres and again against
+an in-memory datastore.
+
+Cucumber runs only against the Sequel/Postgres backend.
+
 ```
-$ bundle exec rake
+$ bin/test
 ```
 
 ### Should anything go awry

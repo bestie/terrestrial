@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require "bundler"
+Bundler.setup
+
+ADAPTERS = ["memory", "sequel"]
+
+module TerrestrialTesting
+  module_function def run_rspec_with_adapter(adapter)
+    puts "Running RSpec suite for `#{adapter}` adapter"
+    puts "Run following command to replicate"
+    puts "ADAPTER=#{adapter} bundle exec rspec"
+    puts ""
+
+    system("ADAPTER=#{adapter} rspec")
+  end
+
+  module_function def run_cucumber
+    system("cucumber")
+  end
+end
+
+exit_successes = ADAPTERS.map do |adapter|
+  TerrestrialTesting.run_rspec_with_adapter(adapter)
+end
+
+if exit_successes.all?
+  exit_successes.push(TerrestrialTesting.run_cucumber)
+end
+
+exit exit_successes.all? ? 0 : 1
