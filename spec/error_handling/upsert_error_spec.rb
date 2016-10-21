@@ -1,5 +1,4 @@
 require "support/object_store_setup"
-require "support/sequel_persistence_setup"
 require "terrestrial/inspection_string"
 
 RSpec.describe "Upsert error handling" do
