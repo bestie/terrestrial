@@ -27,7 +27,8 @@ module ExampleRunnerSupport
     string
       .strip
       .gsub(/[\n\s]+/, " ")
-      .gsub(/\:[0-9a-f]{12}/, ":<<object id removed>>")
+      .gsub(/ \>/, ">")
+      .gsub(/\:0x[0-9a-f]{14}/, ":<<object id removed>>")
   end
 
   def parse_schema_table(string)
