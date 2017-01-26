@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "pry", "~> 0.10.1"
   spec.add_development_dependency "rspec", "~> 3.1"
-  spec.add_development_dependency "cucumber"
+  spec.add_development_dependency "cucumber", "~> 2.4"
   spec.add_development_dependency "pg", "~> 0.17.1"
 
   spec.add_dependency "sequel", "~> 4.16"
