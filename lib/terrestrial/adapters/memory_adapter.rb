@@ -148,10 +148,19 @@ class Terrestrial::Adapters::MemoryAdapter
       end
     end
 
-    def insert(new_row)
-      new_row_with_empty_fields = empty_row.merge(clone(new_row))
+    def insert_conflict(target:, update: {})
+      Upsert.new(self, target: target, update: update)
+    end
 
-      all_rows.push(new_row_with_empty_fields)
+    def insert(new_row)
+      new_row_with_all_fields = empty_row.merge(clone(new_row))
+      row_id = extract_row_id(new_row_with_all_fields)
+
+      if row_id.any? && where(row_id).any?
+        raise DuplicateKeyError.new(row_id)
+      else
+        all_rows.push(new_row_with_all_fields)
+      end
     end
 
     def update(attrs)
@@ -236,6 +245,61 @@ class Terrestrial::Adapters::MemoryAdapter
 
     def clone(object)
       Marshal.load(Marshal.dump(object))
+    end
+
+    def extract_row_id(row)
+      row.select { |k, _v| primary_key.include?(k) }
+    end
+
+    def primary_key
+      @primary_key ||= schema
+        .select { |col| col.fetch(:options, {}).fetch(:primary_key, nil) }
+        .map { |col| col.fetch(:name) }
+    end
+  end
+
+  # Small amount of code necessary to simulate upserts with Sequel's API
+  class Upsert
+    def initialize(dataset, target:, update:)
+      @dataset = dataset
+      @target = target
+      @update_attributes = update
+    end
+
+    attr_reader :dataset, :target, :update_attributes
+    private     :dataset, :target, :update_attributes
+
+    def insert(row)
+      dataset.insert(row)
+    rescue DuplicateKeyError => e
+      if target_matches?(e.key)
+        attempt_update(e.row_id)
+      end
+    end
+
+    def attempt_update(row_id)
+      dataset.where(row_id).update(update_attributes)
+    end
+
+    def target_matches?(key)
+      key.sort == Array(target).sort
+    end
+  end
+
+
+  class DuplicateKeyError < RuntimeError
+    def initialize(row_id)
+      @row_id = row_id
+    end
+
+    attr_reader :row_id
+
+    def key
+      row_id.keys
+    end
+
+    def message
+      "Insert conflict. Row with `#{row_id}` already exists"
     end
   end
 end

@@ -227,7 +227,7 @@ RSpec.describe Terrestrial::DirtyMap do
             expect(
               dirty_map
                 .reject_unchanged_fields(dirty_record)
-                .non_identity_attributes
+                .updatable_attributes
             ).to eq( name: "record/dirty_name" )
           end
         end

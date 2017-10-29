@@ -33,12 +33,22 @@ module ExampleRunnerSupport
 
   def parse_schema_table(string)
     string.each_line.drop(2).map { |line|
-      name, type = line.split("|").map(&:strip)
+      name, type, options = line.split("|").map(&:strip)
+
       {
         name: name,
         type: Object.const_get(type),
+        options: string_to_schema_options(options.to_s),
       }
     }
+  end
+
+  def string_to_schema_options(string)
+    Hash[
+      string.split(",").map(&:strip).reject(&:empty?).map { |s|
+        [s.downcase.gsub(" ", "_").to_sym, true]
+      }
+    ]
   end
 end
 

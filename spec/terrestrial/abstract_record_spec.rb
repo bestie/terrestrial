@@ -43,6 +43,51 @@ RSpec.describe Terrestrial::AbstractRecord do
     end
   end
 
+  describe "#updatable?" do
+    context "when the record has attributes other than its identity attributes" do
+      let(:record) {
+        Terrestrial::AbstractRecord.new(
+          namespace,
+          [:id],
+          { id: "some-id", name: "some name" },
+        )
+      }
+
+      it "returns true" do
+        expect(record).to be_updatable
+      end
+    end
+
+    context "when the record contains only identity attributes" do
+      let(:record) {
+        Terrestrial::AbstractRecord.new(
+          namespace,
+          [:id],
+          { id: "some-id" },
+        )
+      }
+
+      it "returns false" do
+        expect(record).not_to be_updatable
+      end
+    end
+  end
+
+  describe "#updatable_attributes" do
+    it "filters out idetity attributes" do
+      expect(record.updatable_attributes).not_to include(
+        id1: id1,
+        id2: id2,
+      )
+    end
+
+    it "returns a hash of only non-identity attributes" do
+      expect(record.updatable_attributes).to eq(
+        name: name,
+      )
+    end
+  end
+
   describe "#fetch" do
     it "delegates to the underlying Hash representation" do
       expect(record.fetch(:id1)).to eq(id1)
@@ -59,6 +104,57 @@ RSpec.describe Terrestrial::AbstractRecord do
         id2: id2,
         name: name,
       )
+    end
+  end
+
+  describe "#reject" do
+    it "returns a new record" do
+      expect(record.reject { true }).to be_a(Terrestrial::AbstractRecord)
+    end
+
+    it "rejects matching non-identity attributes" do
+      filtered = record.reject { |k, _v| k == :name }
+
+      expect(filtered.to_h).not_to include(:name)
+    end
+
+    it "does not yield identity fields for rejection" do
+      captured = []
+
+      record.reject { |k, v| captured << [k, v] }
+
+      expect(captured).not_to include(:id1, :id2)
+    end
+
+    it "cannot reject the identity attributes" do
+      filtered = record.reject { true }
+
+      expect(filtered.to_h).to eq(
+        id1: id1,
+        id2: id2,
+      )
+    end
+  end
+
+  describe "#empty?" do
+    context "when there are non-identity attributes" do
+      it "returns false" do
+        expect(record).not_to be_empty
+      end
+    end
+
+    context "when there are only identity attributes" do
+      let(:record) {
+        Terrestrial::AbstractRecord.new(
+          namespace,
+          [:id],
+          { id: "some-id" },
+        )
+      }
+
+      it "returns true" do
+        expect(record).to be_empty
+      end
     end
   end
 

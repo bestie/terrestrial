@@ -27,6 +27,14 @@ module Terrestrial
       self
     end
 
+    def updatable?
+      updatable_attributes.any?
+    end
+
+    def updatable_attributes
+      attributes.reject { |k| identity_fields.include?(k) }
+    end
+
     def each(&block)
       to_h.each(&block)
     end
@@ -39,10 +47,6 @@ module Terrestrial
       attributes.select { |k,_v| identity_fields.include?(k) }
     end
 
-    def non_identity_attributes
-      attributes.reject { |k| identity.include?(k) }
-    end
-
     def merge(more_data)
       new_with_raw_data(attributes.merge(more_data))
     end
@@ -52,7 +56,7 @@ module Terrestrial
     end
 
     def reject(&block)
-      new_with_raw_data(non_identity_attributes.reject(&block).merge(identity))
+      new_with_raw_data(updatable_attributes.reject(&block).merge(identity))
     end
 
     def to_h
@@ -60,7 +64,7 @@ module Terrestrial
     end
 
     def empty?
-      non_identity_attributes.empty?
+      updatable_attributes.empty?
     end
 
     def ==(other)

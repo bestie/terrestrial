@@ -9,36 +9,36 @@ Feature: Basic setup
       """
     And a conventionally similar database schema for table "users"
       """
-        Column      | Type
-       ------------ +---------
-        id          | String
-        first_name  | String
-        last_name   | String
-        email       | String
+        Column      | Type     | Options
+       -------------+----------+-------------
+        id          | String   | Primary key
+        first_name  | String   |
+        last_name   | String   |
+        email       | String   |
       """
     And a conventionally similar database schema for table "posts"
       """
-        Column      | Type
-       -------------+---------
-        id          | String
-        author_id   | String
-        subject     | String
-        body        | String
-        created_at  | DateTime
+        Column      | Type     | Options
+       -------------┼----------+-------------
+        id          | String   | Primary key
+        author_id   | String   |
+        subject     | String   |
+        body        | String   |
+        created_at  | DateTime |
       """
     And a conventionally similar database schema for table "categories"
       """
-        Column      | Type
-       -------------+---------
-        id          | String
-        name        | String
+        Column      | Type    | Options
+       -------------+---------+-------------
+        id          | String  | Primary key
+        name        | String  |
       """
     And a conventionally similar database schema for table "categories_to_posts"
       """
-        Column      | Type
-       -------------+---------
-        post_id     | String
-        category_id | String
+        Column      | Type    | Options
+       -------------+---------+-------------
+        post_id     | String  | Primary key
+        category_id | String  |
       """
     And a database connection is established
       """

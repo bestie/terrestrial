@@ -89,20 +89,17 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
         user.email = modified_email
       end
 
-      it "performs 1 update" do
+      it "performs 1 write" do
         expect {
           user_store.save(user)
-        }.to change { query_counter.update_count }.by(1)
+        }.to change { query_counter.write_count }.by(1)
       end
 
       it "sends only the updated fields to the datastore" do
         user_store.save(user)
-        update_sql = query_counter.updates.last
+        upsert_sql = query_counter.upserts.last
 
-        # TODO: SQL parser?
-        expect(update_sql).to eq(
-          %{UPDATE "users" SET "email" = '#{modified_email}' WHERE ("id" = '#{user.id}')}
-        )
+        expect(upsert_sql).not_to include(user.first_name, user.last_name)
       end
     end
   end
@@ -117,7 +114,7 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
     it "performs 1 update" do
       expect {
         user_store.save(user)
-      }.to change { query_counter.update_count }.by(1)
+      }.to change { query_counter.write_count }.by(1)
     end
 
     it "performs 0 deletes" do
@@ -146,7 +143,7 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
       it "performs 1 write" do
         expect {
           user_store.save(user)
-        }.to change { query_counter.update_count }.by(1)
+        }.to change { query_counter.write_count }.by(1)
       end
     end
 
@@ -160,7 +157,7 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
       it "performs 1 update" do
         expect {
           user_store.save(user)
-        }.to change { query_counter.update_count }.by(1)
+        }.to change { query_counter.write_count }.by(1)
       end
     end
 
@@ -175,7 +172,7 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
       it "performs 2 updates" do
         expect {
           user_store.save(user)
-        }.to change { query_counter.update_count }.by(2)
+        }.to change { query_counter.write_count }.by(2)
       end
     end
   end
@@ -191,7 +188,7 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
     it "performs 1 write" do
         expect {
           user_store.save(user)
-        }.to change { query_counter.update_count }.by(1)
+        }.to change { query_counter.write_count }.by(1)
     end
   end
 

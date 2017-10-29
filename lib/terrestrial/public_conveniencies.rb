@@ -143,18 +143,9 @@ module Terrestrial
       end
 
       def upsert_record(datastore, record)
-        row_count = 0
-        unless record.non_identity_attributes.empty?
-          row_count = datastore[record.namespace].
-            where(record.identity).
-            update(record.non_identity_attributes)
-        end
+        update_attributes = record.updatable? && record.updatable_attributes
 
-        if row_count < 1
-          row_count = datastore[record.namespace].insert(record.to_h)
-        end
-
-        row_count
+        datastore[record.namespace].insert_conflict(target: record.identity_fields, update: update_attributes).insert(record.to_h)
       rescue Object => e
         raise UpsertError.new(record.namespace, record.to_h, e)
       end

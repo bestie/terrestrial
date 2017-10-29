@@ -21,6 +21,7 @@ module Terrestrial
     module_function def before_suite(schema)
       drop_tables
       create_tables(schema.fetch(:tables))
+      add_unique_indexes(schema.fetch(:unique_indexes))
       add_foreign_keys(schema.fetch(:foreign_keys))
     end
 
@@ -76,10 +77,24 @@ module Terrestrial
       tables.keys
     end
 
-    module_function def add_foreign_keys(foreign_keys)
-      foreign_keys.each do |(table, fk_col, foreign_table, key_col)|
+    module_function def add_unique_indexes(unique_indexes)
+      unique_indexes.each do |(table, *cols)|
         db_connection.alter_table(table) do
-          add_foreign_key([fk_col], foreign_table, key: key_col, deferrable: false, on_delete: :set_null)
+          add_unique_constraint(cols)
+        end
+      end
+    end
+
+    module_function def add_foreign_keys(foreign_keys)
+      default_options = { deferrable: false, on_delete: :set_null }
+
+      foreign_keys.each do |(table, fk_col, foreign_table, key_col, options)|
+        options_with_defaults = default_options
+          .merge(options || {})
+          .merge(key: key_col)
+
+        db_connection.alter_table(table) do
+          add_foreign_key([fk_col], foreign_table, options_with_defaults)
         end
       end
     end
@@ -108,7 +123,7 @@ module Terrestrial
       end
 
       def write_count
-        insert_count + update_count
+        upserts.count
       end
 
       def update_count
@@ -117,6 +132,12 @@ module Terrestrial
 
       def insert_count
         inserts.count
+      end
+
+      def upserts
+        @info
+          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
+          .select { |query| query.start_with?("INSERT") && query.include?("ON CONFLICT") }
       end
 
       def updates
