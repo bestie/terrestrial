@@ -4,6 +4,7 @@ require "terrestrial/upserted_record"
 require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
 require "terrestrial/inspection_string"
+require "terrestrial/functional_pipeline"
 
 module Terrestrial
   class ObjectStore
@@ -107,25 +108,22 @@ module Terrestrial
       end
 
       def build_dump_pipeline(dirty_map:, transaction:, upsert:, delete:)
-        ->(records) {
-          [
-            :uniq.to_proc,
-            ->(rs) { rs.select { |r| dirty_map.dirty?(r) } },
-            ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } },
-            ->(rs) { rs.sort_by(&:depth) },
-            ->(rs) {
+        Terrestrial::FunctionalPipeline.from_array([
+          [:dedup, :uniq.to_proc],
+          [:sort_by_depth, ->(rs) { rs.sort_by(&:depth) }],
+          [:select_changed, ->(rs) { rs.select { |r| dirty_map.dirty?(r) } }],
+          [:remove_unchanged_fields, ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } }],
+          [:save_records, ->(rs) {
               transaction.call {
                 rs.each { |r|
                   r.if_upsert(&upsert)
                   .if_delete(&delete)
                 }
               }
-            },
-            ->(rs) { rs.map { |r| dirty_map.load_if_new(r) } },
-          ].reduce(records) { |agg, operation|
-            operation.call(agg)
-          }
-        }
+            }
+          ],
+          [:add_new_records_to_dirty_map, ->(rs) { rs.map { |r| dirty_map.load_if_new(r) } }],
+        ])
       end
 
       def record_factory(mapping)
