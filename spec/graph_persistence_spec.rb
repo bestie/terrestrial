@@ -31,18 +31,6 @@ RSpec.describe "Graph persistence" do
       )
     end
 
-    it "doesn't send associated objects to the database as columns" do
-      user.email = modified_email
-      user_store.save(user)
-
-      expect(datastore).not_to have_persisted(
-        :users,
-        hash_including(
-          posts: anything,
-        )
-      )
-    end
-
     # TODO move to a dirty tracking spec?
     context "when mutating entity fields in place" do
       it "saves the object" do
