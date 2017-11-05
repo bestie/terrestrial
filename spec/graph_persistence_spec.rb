@@ -31,9 +31,8 @@ RSpec.describe "Graph persistence" do
       )
     end
 
-    # TODO move to a dirty tracking spec?
-    context "when mutating entity fields in place" do
-      it "saves the object" do
+    context "when mutating an entity's fields in place" do
+      it "updates the row with new, mutated values" do
         user.email << "MUTATED"
 
         user_store.save(user)
