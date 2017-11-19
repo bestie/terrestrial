@@ -10,7 +10,7 @@ require "support/object_store_setup"
 require "support/seed_data_setup"
 require "terrestrial"
 
-RSpec.describe "README examples" do
+RSpec.describe "README examples", backend: "sequel" do
   readme_contents = File.read("README.md")
 
   code_samples = readme_contents
