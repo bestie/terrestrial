@@ -1,9 +1,9 @@
-module Terrestrial
-  module Adapters
-  end
-end
+require "terrestrial/adapters/abstract_adapter"
+require "terrestrial/error"
 
 class Terrestrial::Adapters::MemoryAdapter
+  include Terrestrial::Adapters::AbstractAdapter
+
   def self.build_from_schema(schema, raw_storage)
     schema.each { |name, _| raw_storage[name] = [] }
 
@@ -53,6 +53,18 @@ class Terrestrial::Adapters::MemoryAdapter
 
   def [](table_name)
     @relations.fetch(table_name)
+  end
+
+  def upsert(record)
+    existing = self[record.namespace].where(record.identity)
+
+    if existing.any?
+      existing.update(record.updatable_attributes)
+    else
+      self[record.namespace].insert(record.to_h)
+    end
+  rescue Object => e
+    raise Terrestrial::UpsertError.new(record.namespace, record.to_h, e)
   end
 
   private

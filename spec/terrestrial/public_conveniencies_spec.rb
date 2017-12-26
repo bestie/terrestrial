@@ -8,15 +8,10 @@ RSpec.describe Terrestrial::PublicConveniencies do
     Module.new.extend(Terrestrial::PublicConveniencies)
   }
 
-  class MockDatastore < DelegateClass(Hash)
-    def transaction(&block)
-      block.call
-    end
-  end
-
   describe "#object_store" do
     let(:datastore) {
-      MockDatastore.new(
+      Terrestrial::Adapters::MemoryAdapter.new(
+        [ :things, nil ],
         {
           things: [ thing_record ],
         }

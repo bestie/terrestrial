@@ -21,11 +21,27 @@ module Terrestrial
     private     :mappings, :mapping_name, :datastore, :dataset, :load_pipeline, :dump_pipeline
 
     def save(graph)
-      record_dump = graph_serializer.call(mapping_name, graph)
+      record_dump = serialize_graph(graph)
 
       dump_pipeline.call(record_dump)
 
       self
+    end
+
+    def changes_sql(graph)
+      changes(graph).map { |record|
+        datastore.changes_sql(record)
+      }
+    end
+
+    def changes(graph)
+      changes, _ = dump_pipeline
+        .take_until(:save_records)
+        .call(
+          serialize_graph(graph)
+        )
+
+      changes
     end
 
     def all
@@ -71,6 +87,10 @@ module Terrestrial
     end
 
     private
+
+    def serialize_graph(graph)
+      graph_serializer.call(mapping_name, graph)
+    end
 
     def mapping
       mappings.fetch(mapping_name)

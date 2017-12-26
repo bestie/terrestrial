@@ -5,6 +5,7 @@ require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
 require "terrestrial/inspection_string"
 require "terrestrial/functional_pipeline"
+require "terrestrial/adapters/sequel_postgres_adapter"
 
 module Terrestrial
   class ObjectStore
@@ -39,6 +40,7 @@ module Terrestrial
     def object_store(mappings:, datastore:)
       dirty_map = Private.build_dirty_map
       identity_map = Private.build_identity_map
+      datastore_adapter = Private.datastore_adapter(datastore)
 
       stores = Hash[mappings.map { |name, _mapping|
         [
@@ -46,7 +48,7 @@ module Terrestrial
           Private.single_type_store(
             mappings: mappings ,
             name: name,
-            datastore: datastore,
+            datastore: datastore_adapter,
             identity_map: identity_map,
             dirty_map: dirty_map,
           )
@@ -86,6 +88,19 @@ module Terrestrial
 
       def build_dirty_map(storage = {})
         DirtyMap.new(storage)
+      end
+
+      def datastore_adapter(datastore)
+        if datastore.is_a?(Terrestrial::Adapters::AbstractAdapter)
+          return datastore
+        end
+
+        case datastore.class.name
+        when "Sequel::Postgres::Database"
+          Adapters::SequelPostgresAdapter.new(datastore)
+        else
+          raise "No adapter found for #{datastore.inspect}"
+        end
       end
 
       def build_load_pipeline(dirty_map:, identity_map:)
@@ -143,11 +158,7 @@ module Terrestrial
       end
 
       def upsert_record(datastore, record)
-        update_attributes = record.updatable? && record.updatable_attributes
-
-        datastore[record.namespace].insert_conflict(target: record.identity_fields, update: update_attributes).insert(record.to_h)
-      rescue Object => e
-        raise UpsertError.new(record.namespace, record.to_h, e)
+        datastore.upsert(record)
       end
 
       def delete_record(datastore, record)
