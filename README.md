@@ -97,7 +97,7 @@ code of conduct first.
     mappings: MAPPINGS,
   )
 
-  ## You are not limted to one object store configuration or one database
+  ## You are not limited to one object store configuration or one database
   ## connection. To handle complex situations you may create several segregated
   ## mappings and object stores for your separate aggregate roots, potentially
   ## utilising multiple databases and different domain object
