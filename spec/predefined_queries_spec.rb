@@ -14,15 +14,15 @@ RSpec.describe "Predefined subset queries" do
   context "on the top level mapper" do
     context "subset is defined with a block" do
       before do
-        configs.fetch(:users).merge!(
-          subsets: {
-            tricketts: ->(dataset) {
+        mappings
+          .setup_mapping(:users) { |users|
+            users.has_many(:posts, foreign_key: :author_id)
+            users.subset(:tricketts) { |dataset|
               dataset
                 .where(last_name: "Trickett")
                 .order(:first_name)
-            },
-          },
-        )
+            }
+          }
       end
 
       it "maps the result of the subset" do
@@ -36,13 +36,15 @@ RSpec.describe "Predefined subset queries" do
 
   context "on a has many association" do
     before do
-      configs.fetch(:posts).merge!(
-        subsets: {
-          body_contains: ->(dataset, search_string) {
+      mappings
+        .setup_mapping(:posts) { |posts|
+          posts.fields([:id, :subject, :body, :created_at])
+          posts.has_many(:comments)
+          posts.has_many_through(:categories)
+          posts.subset(:body_contains) { |dataset, search_string|
             dataset.where(body: /#{search_string}/)
-          },
-        },
-      )
+          }
+        }
     end
 
     let(:user) { users.first }

@@ -25,8 +25,9 @@ RSpec.describe "Config override" do
 
     before do
       mappings
-        .fetch(:users)
-        .instance_variable_set(:@serializer, user_serializer)
+        .setup_mapping(:users) { |users|
+          users.serializer(user_serializer)
+        }
     end
 
     context "when saving the object" do

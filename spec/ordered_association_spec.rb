@@ -13,12 +13,10 @@ RSpec.describe "Ordered associations" do
     let(:posts) { object_store[:users].first.posts }
 
     before do
-      configs.fetch(:users).fetch(:associations).fetch(:posts).merge!(
-        order: Terrestrial::QueryOrder.new(
-          fields: [:created_at],
-          direction: "DESC",
-        )
-      )
+      mappings
+        .setup_mapping(:users) { |users|
+          users.has_many(:posts, foreign_key: :author_id, order_fields: [:created_at], order_direction: :DESC)
+        }
     end
 
     it "enumerates the objects in order specified in the config" do
@@ -30,12 +28,12 @@ RSpec.describe "Ordered associations" do
 
   context "many to many associatin ordered by reverse alphabetical name" do
     before do
-      configs.fetch(:posts).fetch(:associations).fetch(:categories).merge!(
-        order: Terrestrial::QueryOrder.new(
-          fields: [:name],
-          direction: "DESC",
-        )
-      )
+      mappings
+        .setup_mapping(:posts) { |posts|
+          posts.fields([:id, :subject, :body, :created_at])
+          posts.has_many(:comments)
+          posts.has_many_through(:categories, order_fields: [:name], order_direction: :DESC)
+        }
     end
 
     let(:categories) { object_store[:users].first.posts.first.categories }
