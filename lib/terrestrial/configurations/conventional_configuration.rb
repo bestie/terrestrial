@@ -195,13 +195,6 @@ module Terrestrial
         )
       end
 
-      TableNameNotSpecifiedError = Class.new(StandardError) do
-        def initialize(mapping_name)
-          @message = "Error defining custom mapping `#{mapping_name}`." +
-            " You must provide the `table_name` configuration option."
-        end
-      end
-
       def class_with_same_name_as_mapping_factory(name)
         target_class = string_to_class(name)
         ClassFactory.new(target_class)
@@ -260,6 +253,13 @@ module Terrestrial
       class HashCoercionSerializer
         def call(object)
           object.to_h
+        end
+      end
+
+      class TableNameNotSpecifiedError < StandardError
+        def initialize(mapping_name)
+          @message = "Error defining custom mapping `#{mapping_name}`." \
+            " You must provide the `table_name` configuration option."
         end
       end
     end
