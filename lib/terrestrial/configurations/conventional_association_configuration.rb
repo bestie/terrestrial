@@ -10,22 +10,23 @@ module Terrestrial
     require "terrestrial/lazy_object_proxy"
 
     class ConventionalAssociationConfiguration
-      def initialize(mapping_name, mappings, datastore)
+      def initialize(inflector, mapping_name, mappings, datastore)
+        @inflector = inflector
         @local_mapping_name = mapping_name
         @mappings = mappings
-        @local_mapping = mappings.fetch(local_mapping_name)
+        @local_mapping = mappings.fetch(mapping_name)
         @datastore = datastore
       end
 
-      attr_reader :local_mapping_name, :local_mapping, :mappings, :datastore
-      private     :local_mapping_name, :local_mapping, :mappings, :datastore
+      attr_reader :inflector, :local_mapping, :mappings, :datastore
+      private     :inflector, :local_mapping, :mappings, :datastore
 
       DEFAULT = Module.new
 
       def has_many(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
         defaults = {
           mapping_name: association_name,
-          foreign_key: [INFLECTOR.singularize(local_mapping_name), "_id"].join.to_sym,
+          foreign_key: [singular_name, "_id"].join.to_sym,
           key: :id,
           order_fields: [],
           order_direction: "ASC",
@@ -55,7 +56,7 @@ module Terrestrial
         defaults = {
           key: :id,
           foreign_key: [association_name, "_id"].join.to_sym,
-          mapping_name: INFLECTOR.pluralize(association_name).to_sym,
+          mapping_name: pluralize(association_name).to_sym,
         }
 
         specified = {
@@ -82,8 +83,8 @@ module Terrestrial
           mapping_name: association_name,
           key: :id,
           association_key: :id,
-          foreign_key: [INFLECTOR.singularize(local_mapping_name), "_id"].join.to_sym,
-          association_foreign_key: [INFLECTOR.singularize(association_name), "_id"].join.to_sym,
+          foreign_key: [singular_name, "_id"].join.to_sym,
+          association_foreign_key: [singularize(association_name), "_id"].join.to_sym,
           order_fields: [],
           order_direction: "ASC",
         }
@@ -180,6 +181,18 @@ module Terrestrial
 
       def query_order(fields, direction)
         QueryOrder.new(fields: fields, direction: direction)
+      end
+
+      def singular_name
+        inflector.singularize(local_mapping.name)
+      end
+
+      def singularize(string)
+        inflector.singularize(string)
+      end
+
+      def pluralize(string)
+        inflector.pluralize(string)
       end
     end
   end

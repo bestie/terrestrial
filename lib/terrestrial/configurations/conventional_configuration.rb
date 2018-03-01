@@ -11,21 +11,20 @@ module Terrestrial
       include ActiveSupport::Inflector
     end
 
-    INFLECTOR = Inflector.new
-
     require "fetchable"
     class ConventionalConfiguration
       include Fetchable
 
-      def initialize(datastore)
+      def initialize(datastore, inflector = Inflector.new)
         @datastore = datastore
         @overrides = {}
         @subset_queries = {}
         @associations_by_mapping = {}
+        @inflector = inflector
       end
 
-      attr_reader :datastore, :mappings
-      private     :datastore, :mappings
+      attr_reader :datastore, :mappings, :inflector
+      private     :datastore, :mappings, :inflector
 
       def [](mapping_name)
         mappings[mapping_name]
@@ -74,6 +73,7 @@ module Terrestrial
 
       def association_configurator(mappings, mapping_name)
         ConventionalAssociationConfiguration.new(
+          inflector,
           mapping_name,
           mappings,
           datastore,
@@ -217,7 +217,7 @@ module Terrestrial
       end
 
       def class_name(name)
-        INFLECTOR.classify(name)
+        inflector.classify(name)
       end
 
       def no_table_error(table_name)
