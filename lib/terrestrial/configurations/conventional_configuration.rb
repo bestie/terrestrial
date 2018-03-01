@@ -37,75 +37,13 @@ module Terrestrial
 
       def setup_mapping(mapping_name, &block)
         @associations_by_mapping[mapping_name] ||= []
+        @overrides[mapping_name] ||= {}
 
-        block.call(
-          RelationConfigOptionsProxy.new(
-            method(:add_override).to_proc.curry.call(mapping_name),
-            method(:add_subset).to_proc.curry.call(mapping_name),
-            @associations_by_mapping.fetch(mapping_name),
-          )
-        ) if block
-
-        # TODO: more madness in this silly config this, kill it with fire.
-        explicit_settings = @overrides[mapping_name] ||= {}
-        explicit_settings[:factory] ||= raise_if_not_found_factory(mapping_name)
+        block && block.call(
+          RelationConfigOptionsProxy.new(self, mapping_name)
+        )
 
         self
-      end
-
-      private
-
-      class RelationConfigOptionsProxy
-        def initialize(config_override, subset_adder, association_register)
-          @config_override = config_override
-          @subset_adder = subset_adder
-          @association_register = association_register
-        end
-
-        def relation_name(name)
-          @config_override.call(relation_name: name)
-        end
-        alias_method :table_name, :relation_name
-
-        def subset(subset_name, &block)
-          @subset_adder.call(subset_name, block)
-        end
-
-        def has_many(*args)
-          @association_register.push([:has_many, args])
-        end
-
-        def has_many_through(*args)
-          @association_register.push([:has_many_through, args])
-        end
-
-        def belongs_to(*args)
-          @association_register.push([:belongs_to, args])
-        end
-
-        def fields(field_names)
-          @config_override.call(fields: field_names)
-        end
-
-        def primary_key(field_names)
-          @config_override.call(primary_key: field_names)
-        end
-
-        def factory(callable)
-          @config_override.call(factory: callable)
-        end
-
-        def class(entity_class)
-          @config_override.call('class': entity_class)
-        end
-
-        def class_name(class_name)
-          @config_override.call(class_name: class_name)
-        end
-
-        def serializer(serializer_func)
-          @config_override.call(serializer: serializer_func)
-        end
       end
 
       def mappings
@@ -125,6 +63,77 @@ module Terrestrial
             subset_name => block,
           )
         )
+      end
+
+      def add_assocation(mapping_name, type, options)
+        @associations_by_mapping.fetch(mapping_name).push([type, options])
+      end
+
+      private
+
+      class RelationConfigOptionsProxy
+        def initialize(configuration, mapping_name)
+          @configuration = configuration
+          @mapping_name = mapping_name
+        end
+
+        attr_reader :configuration, :mapping_name
+        private :configuration, :mapping_name
+
+        def relation_name(name)
+          add_override(relation_name: name)
+        end
+        alias_method :table_name, :relation_name
+
+        def subset(subset_name, &block)
+          configuration.send(:add_subset, mapping_name, subset_name, block)
+        end
+
+        def has_many(*args)
+          add_assocation(:has_many, args)
+        end
+
+        def has_many_through(*args)
+          add_assocation(:has_many_through, args)
+        end
+
+        def belongs_to(*args)
+          add_assocation(:belongs_to, args)
+        end
+
+        def fields(field_names)
+          add_override(fields: field_names)
+        end
+
+        def primary_key(field_names)
+          add_override(primary_key: field_names)
+        end
+
+        def factory(callable)
+          add_override(factory: callable)
+        end
+
+        def class(entity_class)
+          add_override('class': entity_class)
+        end
+
+        def class_name(class_name)
+          add_override(class_name: class_name)
+        end
+
+        def serializer(serializer_func)
+          add_override(serializer: serializer_func)
+        end
+
+        private
+
+        def add_override(*args)
+          configuration.add_override(mapping_name, *args)
+        end
+
+        def add_assocation(*args)
+          configuration.add_assocation(mapping_name, *args)
+        end
       end
 
       def association_configurator(mappings, mapping_name)
@@ -178,9 +187,9 @@ module Terrestrial
         {
           name: mapping_name,
           relation_name: table_name,
-          fields: get_fields(table_name),
+          fields: all_available_fields(table_name),
           primary_key: get_primary_key(table_name),
-          factory: ok_if_it_doesnt_exist_factory(mapping_name),
+          factory: ok_if_class_is_not_defined_factory(mapping_name),
           serializer: hash_coercion_serializer,
           associations: {},
           subsets: subset_queries_proxy(@subset_queries.fetch(mapping_name, {})),
@@ -213,7 +222,7 @@ module Terrestrial
         new_opts
       end
 
-      def get_fields(table_name)
+      def all_available_fields(table_name)
         datastore[table_name].columns
       end
 
@@ -230,7 +239,7 @@ module Terrestrial
       end
 
       def hash_coercion_serializer
-        ->(o) { o.to_h }
+        HashCoercionSerializer.new
       end
 
       def subset_queries_proxy(subset_map)
@@ -267,17 +276,13 @@ module Terrestrial
         end
       end
 
-      def raise_if_not_found_factory(name)
-        ->(attrs) {
-          class_to_factory(string_to_class(name)).call(attrs)
-        }
+      def class_with_same_name_as_mapping_factory(name)
+        target_class = string_to_class(name)
+        ClassFactory.new(target_class)
       end
 
-      def ok_if_it_doesnt_exist_factory(name)
-        ->(attrs) {
-          factory = class_to_factory(string_to_class(name)) rescue nil
-          factory && factory.call(attrs)
-        }
+      def ok_if_class_is_not_defined_factory(name)
+        LazyClassLookupFactory.new(class_name(name))
       end
 
       def class_to_factory(klass)
@@ -289,13 +294,47 @@ module Terrestrial
       end
 
       def string_to_class(string)
-        klass_name = INFLECTOR.classify(string)
+        Object.const_get(class_name(string))
+      end
 
-        Object.const_get(klass_name)
+      def class_name(name)
+        INFLECTOR.classify(name)
       end
 
       def no_table_error(table_name)
         TableNameNotSpecifiedError.new(table_name)
+      end
+
+      class ClassFactory
+        def initialize(target_class)
+          @target_class = target_class
+        end
+
+        def call(attrs)
+          @target_class.new(attrs)
+        end
+      end
+
+      class LazyClassLookupFactory
+        def initialize(class_name)
+          @class_name = class_name
+        end
+
+        def call(attrs)
+          target_class && target_class.new(attrs)
+        end
+
+        private
+
+        def target_class
+          @target_class ||= Object.const_get(@class_name)
+        end
+      end
+
+      class HashCoercionSerializer
+        def call(object)
+          object.to_h
+        end
       end
     end
   end
