@@ -10,15 +10,15 @@ module Terrestrial
     require "terrestrial/lazy_object_proxy"
 
     class ConventionalAssociationConfiguration
-      def initialize(inflector, mapping_name, mappings, datastore)
+      def initialize(inflector, datastore, mapping_name, mappings)
         @inflector = inflector
-        @mappings = mappings
-        @target_mapping = mappings.fetch(mapping_name)
         @datastore = datastore
+        @target_mapping = mappings.fetch(mapping_name)
+        @mappings = mappings
       end
 
-      attr_reader :inflector, :target_mapping, :mappings, :datastore
-      private     :inflector, :target_mapping, :mappings, :datastore
+      attr_reader :inflector, :datastore, :target_mapping, :mappings
+      private     :inflector, :datastore, :target_mapping, :mappings
 
       DEFAULT = Module.new
 

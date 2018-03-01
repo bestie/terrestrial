@@ -75,9 +75,9 @@ module Terrestrial
       def association_configurator(mappings, mapping_name)
         ConventionalAssociationConfiguration.new(
           inflector,
+          datastore,
           mapping_name,
           mappings,
-          datastore,
         )
       end
 
