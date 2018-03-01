@@ -195,16 +195,6 @@ module Terrestrial
         )
       end
 
-      FactoryNotFoundError = Class.new(StandardError) do
-        def initialize(specified)
-          @specified = specified
-        end
-
-        def message
-          "Could not find factory for #{@specified}"
-        end
-      end
-
       TableNameNotSpecifiedError = Class.new(StandardError) do
         def initialize(mapping_name)
           @message = "Error defining custom mapping `#{mapping_name}`." +
