@@ -12,14 +12,13 @@ module Terrestrial
     class ConventionalAssociationConfiguration
       def initialize(inflector, mapping_name, mappings, datastore)
         @inflector = inflector
-        @local_mapping_name = mapping_name
         @mappings = mappings
-        @local_mapping = mappings.fetch(mapping_name)
+        @target_mapping = mappings.fetch(mapping_name)
         @datastore = datastore
       end
 
-      attr_reader :inflector, :local_mapping, :mappings, :datastore
-      private     :inflector, :local_mapping, :mappings, :datastore
+      attr_reader :inflector, :target_mapping, :mappings, :datastore
+      private     :inflector, :target_mapping, :mappings, :datastore
 
       DEFAULT = Module.new
 
@@ -46,7 +45,7 @@ module Terrestrial
         associated_mapping_name = config.fetch(:mapping_name)
         associated_mapping = mappings.fetch(associated_mapping_name)
 
-        local_mapping.add_association(
+        target_mapping.add_association(
           association_name,
           has_many_mapper(**config)
         )
@@ -72,7 +71,7 @@ module Terrestrial
         associated_mapping_name = config.fetch(:mapping_name)
         associated_mapping = mappings.fetch(associated_mapping_name)
 
-        local_mapping.add_association(
+        target_mapping.add_association(
           association_name,
           belongs_to_mapper(**config)
         )
@@ -107,7 +106,7 @@ module Terrestrial
         if through_mapping_name == DEFAULT
           through_mapping_name = [
             associated_mapping.name,
-            local_mapping.name,
+            target_mapping.name,
           ].sort.join("_to_").to_sym
         end
 
@@ -118,7 +117,7 @@ module Terrestrial
             through_dataset: datastore[join_table_name.to_sym],
           )
 
-        local_mapping.add_association(
+        target_mapping.add_association(
           association_name,
           has_many_through_mapper(**config)
         )
@@ -184,7 +183,7 @@ module Terrestrial
       end
 
       def singular_name
-        inflector.singularize(local_mapping.name)
+        inflector.singularize(target_mapping.name)
       end
 
       def singularize(string)
