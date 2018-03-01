@@ -95,7 +95,7 @@ module Terrestrial
 
             [
               mapping_name,
-              mapping(
+              build_mapping(
                 **default_mapping_args(table_name, mapping_name).merge(overrides)
               ),
             ]
@@ -182,7 +182,7 @@ module Terrestrial
         SubsetQueriesProxy.new(subset_map)
       end
 
-      def mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, subsets:)
+      def build_mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, subsets:)
         RelationMapping.new(
           name: name,
           namespace: relation_name,
