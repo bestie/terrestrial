@@ -1,3 +1,6 @@
+require "active_support/inflector"
+require "fetchable"
+
 require "terrestrial/configurations/mapping_config_options_proxy"
 require "terrestrial/configurations/conventional_association_configuration"
 require "terrestrial/relation_mapping"
@@ -6,13 +9,12 @@ require "terrestrial/struct_factory"
 
 module Terrestrial
   module Configurations
-    require "active_support/inflector"
     class Inflector
       include ActiveSupport::Inflector
     end
 
-    require "fetchable"
     class ConventionalConfiguration
+      include Enumerable
       include Fetchable
 
       def initialize(datastore, inflector = Inflector.new)
@@ -30,7 +32,6 @@ module Terrestrial
         mappings[mapping_name]
       end
 
-      include Enumerable
       def each(&block)
         mappings.each(&block)
       end
