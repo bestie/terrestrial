@@ -94,6 +94,10 @@ module Terrestrial
           :reverse,
         ]
 
+        def cache_sql?
+          false
+        end
+
         def each(&block)
           dataset.each(&block)
         end
