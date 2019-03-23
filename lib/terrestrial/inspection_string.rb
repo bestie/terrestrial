@@ -2,7 +2,7 @@ module Terrestrial
   module InspectionString
     def inspect
       (
-        ["\#<#{self.class.name}:0x#{sprintf("%014x", (object_id.<<(1)))}"] +
+        ["\#<#{self.class.name}:0x#{sprintf("00%014x", (object_id.<<(1)))}"] +
         inspectable_properties.map { |name|
           [
             name,
