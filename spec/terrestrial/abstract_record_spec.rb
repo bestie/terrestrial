@@ -1,31 +1,39 @@
 require "spec_helper"
 
-require "terrestrial/abstract_record"
+require "terrestrial/record"
 
-RSpec.describe Terrestrial::AbstractRecord do
+RSpec.describe Terrestrial::Record do
   subject(:record) {
-    Terrestrial::AbstractRecord.new(
-      namespace,
-      primary_key_fields,
-      raw_data,
-      depth,
+    Terrestrial::Record.new(
+      mapping,
+      attributes,
+    )
+  }
+
+  let(:mapping) {
+    double(
+      :mapping,
+      {
+        namespace: namespace,
+        primary_key: primary_key_fields,
+        database_owned_fields: [],
+        database_default_fields: [],
+      }
     )
   }
 
   let(:namespace) { double(:namespace) }
-  let(:primary_key_fields) { [ :id1, :id2 ] }
+  let(:primary_key_fields) { [:id] }
   let(:depth) { 0 }
 
-  let(:raw_data) {
+  let(:attributes) {
     {
-      id1: id1,
-      id2: id2,
+      id: id,
       name: name,
     }
   }
 
-  let(:id1) { double(:id1) }
-  let(:id2) { double(:id2) }
+  let(:id) { double(:id) }
   let(:name) { double(:name) }
 
   describe "#namespace" do
@@ -37,8 +45,7 @@ RSpec.describe Terrestrial::AbstractRecord do
   describe "#identity" do
     it "returns the primary key fields" do
       expect(record.identity).to eq(
-        id1: id1,
-        id2: id2,
+        id: id,
       )
     end
   end
@@ -46,9 +53,8 @@ RSpec.describe Terrestrial::AbstractRecord do
   describe "#updatable?" do
     context "when the record has attributes other than its identity attributes" do
       let(:record) {
-        Terrestrial::AbstractRecord.new(
-          namespace,
-          [:id],
+        Terrestrial::Record.new(
+          mapping,
           { id: "some-id", name: "some name" },
         )
       }
@@ -60,9 +66,8 @@ RSpec.describe Terrestrial::AbstractRecord do
 
     context "when the record contains only identity attributes" do
       let(:record) {
-        Terrestrial::AbstractRecord.new(
-          namespace,
-          [:id],
+        Terrestrial::Record.new(
+          mapping,
           { id: "some-id" },
         )
       }
@@ -76,8 +81,7 @@ RSpec.describe Terrestrial::AbstractRecord do
   describe "#updatable_attributes" do
     it "filters out idetity attributes" do
       expect(record.updatable_attributes).not_to include(
-        id1: id1,
-        id2: id2,
+        id: id,
       )
     end
 
@@ -90,7 +94,7 @@ RSpec.describe Terrestrial::AbstractRecord do
 
   describe "#fetch" do
     it "delegates to the underlying Hash representation" do
-      expect(record.fetch(:id1)).to eq(id1)
+      expect(record.fetch(:id)).to eq(id)
       expect(record.fetch(:name)).to eq(name)
       expect(record.fetch(:not_there, "nope")).to eq("nope")
       expect(record.fetch(:not_there) { "lord no" }).to eq("lord no")
@@ -100,8 +104,7 @@ RSpec.describe Terrestrial::AbstractRecord do
   describe "#to_h" do
     it "returns a raw_data merged with identity" do
       expect(record.to_h).to eq(
-        id1: id1,
-        id2: id2,
+        id: id,
         name: name,
       )
     end
@@ -109,7 +112,7 @@ RSpec.describe Terrestrial::AbstractRecord do
 
   describe "#reject" do
     it "returns a new record" do
-      expect(record.reject { true }).to be_a(Terrestrial::AbstractRecord)
+      expect(record.reject { true }).to be_a(Terrestrial::Record)
     end
 
     it "rejects matching non-identity attributes" do
@@ -130,8 +133,7 @@ RSpec.describe Terrestrial::AbstractRecord do
       filtered = record.reject { true }
 
       expect(filtered.to_h).to eq(
-        id1: id1,
-        id2: id2,
+        id: id,
       )
     end
   end
@@ -145,9 +147,8 @@ RSpec.describe Terrestrial::AbstractRecord do
 
     context "when there are only identity attributes" do
       let(:record) {
-        Terrestrial::AbstractRecord.new(
-          namespace,
-          [:id],
+        Terrestrial::Record.new(
+          mapping,
           { id: "some-id" },
         )
       }
@@ -197,8 +198,7 @@ RSpec.describe Terrestrial::AbstractRecord do
 
     it "returns a new record with same identity" do
       expect(record.merge(extra_data).identity).to eq(
-        id1: id1,
-        id2: id2,
+        id: id,
       )
     end
 
@@ -212,8 +212,7 @@ RSpec.describe Terrestrial::AbstractRecord do
       merged_record = record.merge(extra_data)
 
       expect(merged_record.to_h).to eq(
-        id1: id1,
-        id2: id2,
+        id: id,
         name: name,
         location: location,
       )
@@ -241,99 +240,36 @@ RSpec.describe Terrestrial::AbstractRecord do
     end
   end
 
-  describe "#<=>" do
-    let(:deep_record) {
-      Terrestrial::AbstractRecord.new(
-        namespace,
-        primary_key_fields,
-        raw_data,
-        _depth = 5,
-      )
-    }
+  describe "#==" do
+    context "compared to a record with the same attributes and mapping" do
+      let(:other) { Terrestrial::Record.new(mapping, attributes) }
 
-    let(:shallow_record) {
-      Terrestrial::AbstractRecord.new(
-        namespace,
-        primary_key_fields,
-        raw_data,
-        _depth = 1,
-      )
-    }
-
-    context "when other record has deeper depth" do
-      it "is sortable by depth" do
-        expect([shallow_record, record, deep_record].sort).to eq(
-          [record, deep_record, shallow_record]
-        )
+      it "is equal" do
+        expect(record).to eq(other)
       end
     end
-  end
 
-  describe "#==" do
-    context "super class contract" do
-      let(:comparitor) { record.merge({}) }
+    context "compared to a record with the same mappiung different attributes" do
+      let(:other) { Terrestrial::Record.new(mapping, other_attributes) }
+      let(:other_attributes) { double(:other_attributes) }
 
-      it "compares" do
-        record == comparitor
+      it "is equal" do
+        expect(record).not_to eq(other)
       end
+    end
 
-      context "when subclassed" do
-        subject(:record) {
-          record_subclass.new(namespace, primary_key_fields, raw_data)
-        }
+    context "compared to a record with the same attributes and different mapping" do
+      let(:other) { Terrestrial::Record.new(other_mapping, attributes) }
+      let(:other_mapping) { double(:other_mapping) }
 
-        let(:record_subclass) {
-          Class.new(Terrestrial::AbstractRecord) {
-            protected
+      it "is not equal" do
+        expect(record).not_to eq(other)
+      end
+    end
 
-            def operation
-              :do_a_thing
-            end
-          }
-        }
-
-        context "when comparitor is of the wrong type" do
-          it "is not equal" do
-            expect(record.==(Object.new)).to be(false)
-          end
-        end
-
-        context "when the operation type is equal" do
-          context "when the combined `raw_data` and `identity` are equal" do
-            let(:comparitor) { record.merge({}) }
-
-            it "is equal" do
-              expect(record.==(comparitor)).to be(true)
-            end
-          end
-
-          context "when the combined `raw_data` and `identity` are not equal" do
-            let(:comparitor) { record.merge(something_else: "i'm different") }
-
-            it "is not equal" do
-              expect(record.==(comparitor)).to be(false)
-            end
-          end
-        end
-
-        context "when the operation name differs" do
-          let(:comparitor) {
-            record_class_with_different_operation.new(namespace, primary_key_fields, raw_data)
-          }
-
-          let(:record_class_with_different_operation) {
-            Class.new(Terrestrial::AbstractRecord) {
-              protected
-              def operation
-                :do_a_different_thing
-              end
-            }
-          }
-
-          it "is not equal" do
-            expect(record.==(comparitor)).to be(false)
-          end
-        end
+    context "compared to something completely different" do
+      it "is not equal" do
+        expect(record).not_to eq("something completetly different")
       end
     end
   end

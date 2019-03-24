@@ -74,7 +74,7 @@ code of conduct first.
   ## This is kept separate from your domain models as knowledge of the schema
   ## is required to wire them up.
 
-  MAPPINGS = Terrestrial.config(DB)
+  CONFIG = Terrestrial.config(DB)
     .setup_mapping(:users) { |users|
       users.class(User) # Specify a class and the constructor will be used
       users.has_many(:posts, foreign_key: :author_id)
@@ -92,10 +92,7 @@ code of conduct first.
 
   # 4. Create an object store by combining a connection and a configuration
 
-  OBJECT_STORE = Terrestrial.object_store(
-    datastore: DB,
-    mappings: MAPPINGS,
-  )
+  OBJECT_STORE = Terrestrial.object_store(config: CONFIG)
 
   ## You are not limited to one object store configuration or one database
   ## connection. To handle complex situations you may create several segregated

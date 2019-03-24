@@ -46,7 +46,10 @@ RSpec.configure do |config|
   end
 
   RSpec.shared_context "adapter setup" do
-    let(:datastore) { adapter_support.build_datastore(schema) }
+    define_method(:datastore) do
+      @datastore ||= adapter_support.build_datastore(schema)
+    end
+
     let(:query_counter) { adapter_support.query_counter }
   end
 

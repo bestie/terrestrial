@@ -2,6 +2,7 @@ require "spec_helper"
 
 require "support/object_store_setup"
 require "support/seed_data_setup"
+require "support/have_persisted_matcher"
 require "terrestrial"
 
 RSpec.describe "Changes API", backend: "sequel" do
@@ -27,18 +28,27 @@ RSpec.describe "Changes API", backend: "sequel" do
       it "returns changes to only that node" do
         user.email = modified_email
 
-        expect(user_store.changes(user)).to eq(
+        expect(user_store.changes(user).map(&:to_h)).to eq(
           [
-            Terrestrial::UpsertedRecord.new(
-              :users,
-              [:id],
-              {
-                id: "users/1",
-                email: modified_email,
-              },
-              0,
-            )
+            {
+              id: "users/1",
+              email: modified_email,
+            }
           ]
+        )
+      end
+
+      it "does not persist the changes" do
+        user.email = modified_email
+
+        user_store.changes(user)
+
+        expect(datastore).not_to have_persisted(
+          :users,
+          hash_including(
+            id: user.id,
+            email: modified_email,
+          )
         )
       end
     end
@@ -61,7 +71,8 @@ RSpec.describe "Changes API", backend: "sequel" do
           [
             "INSERT INTO \"users\" (\"email\", \"id\") VALUES " \
               "('hasel+modified@gmail.com', 'users/1') ON CONFLICT (\"id\") " \
-              "DO UPDATE SET \"email\" = 'hasel+modified@gmail.com'",
+              "DO UPDATE SET \"email\" = 'hasel+modified@gmail.com' " \
+              "RETURNING *",
           ]
         )
       end

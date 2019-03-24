@@ -30,7 +30,7 @@ RSpec.describe "Ordered associations" do
     before do
       mappings
         .setup_mapping(:posts) { |posts|
-          posts.fields([:id, :subject, :body, :created_at])
+          posts.fields([:id, :subject, :body, :created_at, :updated_at])
           posts.has_many(:comments)
           posts.has_many_through(:categories, order_fields: [:name], order_direction: :DESC)
         }

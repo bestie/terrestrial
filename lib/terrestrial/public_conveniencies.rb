@@ -1,6 +1,6 @@
 require "terrestrial/identity_map"
 require "terrestrial/dirty_map"
-require "terrestrial/upserted_record"
+require "terrestrial/upsert_record"
 require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
 require "terrestrial/inspection_string"
@@ -33,24 +33,42 @@ module Terrestrial
   end
 
   module PublicConveniencies
-    def config(database_connection)
-      Configurations::ConventionalConfiguration.new(database_connection)
+    def config(database, clock: Time)
+      Configurations::ConventionalConfiguration.new(
+        Private.datastore_adapter(database),
+        clock: clock
+      )
     end
 
-    def object_store(mappings:, datastore:)
+    def object_store(config:)
+      mappings = config.mappings
+      clock = config.send(:clock)
+      datastore = config.send(:datastore)
+
       dirty_map = Private.build_dirty_map
       identity_map = Private.build_identity_map
-      datastore_adapter = Private.datastore_adapter(datastore)
+      mapping_names = mappings.keys
+      load_pipeline = Private.build_load_pipeline(
+        dirty_map: dirty_map,
+        identity_map: identity_map,
+      )
+      dump_pipeline = Private.build_dump_pipeline(
+        dirty_map: dirty_map,
+        datastore: datastore,
+        clock: clock,
+      )
 
-      stores = Hash[mappings.map { |name, _mapping|
+      stores = Hash[mapping_names.map { |mapping_name|
         [
-          name,
-          Private.single_type_store(
+          mapping_name,
+          Private.relational_store(
+            name: mapping_name,
             mappings: mappings ,
-            name: name,
-            datastore: datastore_adapter,
+            datastore: datastore,
             identity_map: identity_map,
             dirty_map: dirty_map,
+            load_pipeline: load_pipeline,
+            dump_pipeline: dump_pipeline,
           )
         ]
       }]
@@ -61,24 +79,13 @@ module Terrestrial
     module Private
       module_function
 
-      def single_type_store(mappings:, name:, datastore:, identity_map:, dirty_map:)
-        dataset = datastore[mappings.fetch(name).namespace]
-
+      def relational_store(mappings:, name:, datastore:, identity_map:, dirty_map:, load_pipeline:, dump_pipeline:)
         RelationalStore.new(
           mappings: mappings,
           mapping_name: name,
           datastore: datastore,
-          dataset: dataset,
-          load_pipeline: build_load_pipeline(
-            dirty_map: dirty_map,
-            identity_map: identity_map,
-          ),
-          dump_pipeline: build_dump_pipeline(
-            dirty_map: dirty_map,
-            transaction: datastore.method(:transaction),
-            upsert: method(:upsert_record).curry.call(datastore),
-            delete: method(:delete_record).curry.call(datastore),
-          )
+          load_pipeline: load_pipeline,
+          dump_pipeline: dump_pipeline,
         )
       end
 
@@ -106,7 +113,7 @@ module Terrestrial
       def build_load_pipeline(dirty_map:, identity_map:)
         ->(mapping, record, associated_fields = {}) {
           [
-            record_factory(mapping),
+            ->(record) { Record.new(mapping, record) },
             dirty_map.method(:load),
             ->(record) {
               attributes = record.to_h.select { |k,_v|
@@ -122,17 +129,17 @@ module Terrestrial
         }
       end
 
-      def build_dump_pipeline(dirty_map:, transaction:, upsert:, delete:)
+      def build_dump_pipeline(dirty_map:, datastore:, clock:)
         Terrestrial::FunctionalPipeline.from_array([
           [:dedup, :uniq.to_proc],
           [:sort_by_depth, ->(rs) { rs.sort_by(&:depth) }],
           [:select_changed, ->(rs) { rs.select { |r| dirty_map.dirty?(r) } }],
           [:remove_unchanged_fields, ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } }],
           [:save_records, ->(rs) {
-              transaction.call {
+            datastore.transaction {
                 rs.each { |r|
-                  r.if_upsert(&upsert)
-                  .if_delete(&delete)
+                  r.if_upsert(&datastore.method(:upsert))
+                  r.if_delete(&datastore.method(:delete))
                 }
               }
             }
@@ -140,30 +147,6 @@ module Terrestrial
           [:add_new_records_to_dirty_map, ->(rs) { rs.map { |r| dirty_map.load_if_new(r) } }],
         ])
       end
-
-      def record_factory(mapping)
-        ->(record_hash) {
-          identity = Hash[
-            mapping.primary_key.map { |field|
-              [field, record_hash.fetch(field)]
-            }
-          ]
-
-          UpsertedRecord.new(
-            mapping.namespace,
-            identity,
-            record_hash,
-          )
-        }
-      end
-
-      def upsert_record(datastore, record)
-        datastore.upsert(record)
-      end
-
-      def delete_record(datastore, record)
-        datastore[record.namespace].where(record.identity).delete
-      end
-    end
+   end
   end
 end

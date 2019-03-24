@@ -7,7 +7,7 @@ module Terrestrial
     include Enumerable
     include InspectionString
 
-    def initialize(mappings:, mapping_name:, datastore:, dataset:, load_pipeline:, dump_pipeline:)
+    def initialize(mappings:, mapping_name:, datastore:, load_pipeline:, dump_pipeline:, dataset: nil)
       @mappings = mappings
       @mapping_name = mapping_name
       @datastore = datastore
@@ -17,8 +17,8 @@ module Terrestrial
       @eager_data = {}
     end
 
-    attr_reader :mappings, :mapping_name, :datastore, :dataset, :load_pipeline, :dump_pipeline
-    private     :mappings, :mapping_name, :datastore, :dataset, :load_pipeline, :dump_pipeline
+    attr_reader :mappings, :mapping_name, :datastore, :load_pipeline, :dump_pipeline
+    private     :mappings, :mapping_name, :datastore, :load_pipeline, :dump_pipeline
 
     def save(graph)
       record_dump = serialize_graph(graph)
@@ -36,7 +36,7 @@ module Terrestrial
 
     def changes(graph)
       changes, _ = dump_pipeline
-        .take_until(:save_records)
+        .take_until(:remove_unchanged_fields)
         .call(
           serialize_graph(graph)
         )
@@ -74,15 +74,13 @@ module Terrestrial
       self
     end
 
-    def delete(object, cascade: false)
+    def delete(object)
       dump_pipeline.call(
-        graph_serializer.call(mapping_name, object)
+        serialize_graph(object)
           .select { |record| record.depth == 0 }
           .reverse
           .take(1)
-          .map { |record|
-            DeletedRecord.new(record.namespace, record.identity)
-          }
+          .map { |record| DeletedRecord.new(mapping, record.attributes, 0) }
       )
     end
 
@@ -90,10 +88,6 @@ module Terrestrial
 
     def serialize_graph(graph)
       graph_serializer.call(mapping_name, graph)
-    end
-
-    def mapping
-      mappings.fetch(mapping_name)
     end
 
     def eager_load_associations(mapping, parent_dataset, association_name_map)
@@ -154,6 +148,14 @@ module Terrestrial
         mappings: mappings,
         object_load_pipeline: load_pipeline,
       )
+    end
+
+    def dataset
+      @dataset ||= datastore[mapping.namespace]
+    end
+
+    def mapping
+      mappings.fetch(mapping_name)
     end
 
     def inspectable_properties

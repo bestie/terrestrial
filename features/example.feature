@@ -50,7 +50,7 @@ Feature: Basic setup
       """
     And the associations are defined in the configuration
       """
-        MAPPINGS = Terrestrial.config(DB)
+        CONFIG = Terrestrial.config(DB)
           .setup_mapping(:users) { |users|
             users.class(User)
             users.has_many(:posts, foreign_key: :author_id)
@@ -67,10 +67,7 @@ Feature: Basic setup
       """
     And a object store is instantiated
       """
-        OBJECT_STORE = Terrestrial.object_store(
-          datastore: DB,
-          mappings: MAPPINGS,
-        )
+        OBJECT_STORE = Terrestrial.object_store(config: CONFIG)
       """
     When a new graph of objects are created
       """

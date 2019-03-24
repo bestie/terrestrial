@@ -1,20 +1,24 @@
-require "terrestrial/abstract_record"
+require "terrestrial/record"
 
 module Terrestrial
-  class DeletedRecord < AbstractRecord
+  class DeletedRecord < Record
+    def initialize(mapping, attributes, depth)
+      @mapping = mapping
+      @attributes = attributes
+      @depth = depth
+    end
+
+    attr_reader :mapping, :attributes, :depth
+
     def if_delete(&block)
       block.call(self)
       self
     end
 
-    def subset?(_other)
-      false
-    end
-
     protected
 
-    def operation
-      :delete
+    def new_with_attributes(new_attributes)
+      self.class.new(mapping, new_attributes, depth)
     end
   end
 end

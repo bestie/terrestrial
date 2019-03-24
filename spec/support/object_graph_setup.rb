@@ -50,7 +50,7 @@ RSpec.shared_context "object graph setup" do
   end
 
   User ||= PlainObject.with_members(:id, :first_name, :last_name, :email, :posts)
-  Post ||= PlainObject.with_members(:id, :subject, :body, :comments, :categories, :created_at)
+  Post ||= PlainObject.with_members(:id, :subject, :body, :comments, :categories, :created_at, :updated_at)
   Comment ||= PlainObject.with_members(:id, :commenter, :body)
   Category ||= PlainObject.with_members(:id, :name, :posts)
 
@@ -104,6 +104,7 @@ RSpec.shared_context "object graph setup" do
         cat_biscuits_category,
       ],
       created_at: Time.parse("2015-09-05T15:00:00+01:00"),
+      updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
     )
   }
 
@@ -117,6 +118,7 @@ RSpec.shared_context "object graph setup" do
         chilling_category,
       ],
       created_at: Time.parse("2015-09-02T15:00:00+01:00"),
+      updated_at: Time.parse("2015-09-02T15:00:00+01:00"),
     )
   }
 

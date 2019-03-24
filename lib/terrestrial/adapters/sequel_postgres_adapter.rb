@@ -45,7 +45,9 @@ module Terrestrial
       end
 
       def upsert(record)
-        prepared_upsert(record).insert(record.to_h)
+        row = perform_upsert_returning_row(record)
+        record.on_upsert(row)
+        nil
       rescue Object => e
         raise UpsertError.new(record.namespace, record.to_h, e)
       end
@@ -55,7 +57,7 @@ module Terrestrial
       end
 
       def changes_sql(record)
-        prepared_upsert(record).insert_sql(record.to_h)
+        generate_upsert_sql(record)
       rescue Object => e
         raise UpsertError.new(record.namespace, record.to_h, e)
       end
@@ -76,7 +78,30 @@ module Terrestrial
         }
       end
 
+      def relations
+        database.tables - [:schema_migrations]
+      end
+
+      def relation_fields(relation_name)
+        database[relation_name].columns
+      end
+
+      def schema(relation_name)
+        database.schema(relation_name)
+      end
+
       private
+
+      def perform_upsert_returning_row(record)
+        prepared_upsert(record)
+          .insert(record.insertable)
+          .to_a
+          .fetch(0) { {} }
+      end
+
+      def generate_upsert_sql(record)
+        prepared_upsert(record).insert_sql(record.insertable)
+      end
 
       def prepared_upsert(record)
         table_name = record.namespace
@@ -86,7 +111,21 @@ module Terrestrial
 
         # TODO: investigate if failing to find a private key results in extra schema queries
         if primary_key_fields.any?
-          conflict_fields = primary_key_fields
+          if record.id?
+            conflict_fields = primary_key_fields
+          else
+            insert_to_do_later = ->(attributes) {
+              ret = database[table_name]
+                .returning(Sequel.lit("*"))
+                .insert(attributes)
+            }
+
+            def insert_to_do_later.insert(*args)
+              call(*args)
+            end
+
+            return insert_to_do_later
+          end
         else
           u_idxs = unique_indexes(table_name)
           if u_idxs.any?
@@ -100,7 +139,10 @@ module Terrestrial
           upsert_args.merge!(target: conflict_fields)
         end
 
-        database[table_name].insert_conflict(**upsert_args)
+        # TODO: Use specific field list instead of Sequel.lit("*")
+        database[table_name]
+          .insert_conflict(**upsert_args)
+          .returning(Sequel.lit("*"))
       end
 
       class Dataset

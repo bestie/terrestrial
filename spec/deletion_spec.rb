@@ -21,7 +21,7 @@ RSpec.describe "Deletion" do
 
   describe "Deleting the root" do
     it "deletes the root object" do
-      user_store.delete(user, cascade: true)
+      user_store.delete(user)
 
       expect(datastore).not_to have_persisted(
         :users,

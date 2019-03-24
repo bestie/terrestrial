@@ -12,20 +12,16 @@ RSpec.describe "Configuration override" do
   include_context "seed data setup"
 
   let(:object_store) {
-    Terrestrial.object_store(mappings: override_config, datastore: datastore)
+    Terrestrial.object_store(config: override_config)
   }
 
   let(:override_config) {
-    Terrestrial::Configurations::ConventionalConfiguration.new(datastore)
+    Terrestrial::config(datastore)
       .setup_mapping(:users) { |users|
         users.has_many :posts, foreign_key: :author_id
         users.fields([:id, :first_name, :last_name, :email])
       }
       .setup_mapping(:posts)
-  }
-
-  let(:user) {
-    object_store[:users].where(id: "users/1").first
   }
 
   context "override the root mapper factory" do
@@ -39,6 +35,8 @@ RSpec.describe "Configuration override" do
       let(:user_struct) { Struct.new(*User.members) }
 
       it "uses the class from the override" do
+        user = object_store[:users].where(id: "users/1").first
+
         expect(user.class).to be(user_struct)
       end
     end
@@ -59,11 +57,10 @@ RSpec.describe "Configuration override" do
         post_class.method(:new)
       }
 
-      let(:posts) {
-        user.posts
-      }
-
       it "uses the specified factory" do
+        user = object_store[:users].where(id: "users/1").first
+        posts = user.posts
+
         expect(posts.first.class).to be(post_class)
       end
     end
@@ -80,12 +77,11 @@ RSpec.describe "Configuration override" do
       end
 
       let(:override_config) {
-        Terrestrial::Configurations::ConventionalConfiguration
-        .new(datastore)
-        .setup_mapping(:users) do |config|
-          config.relation_name unconventional_table_name
-          config.class(OpenStruct)
-        end
+        Terrestrial.config(datastore)
+          .setup_mapping(:users) do |config|
+            config.relation_name unconventional_table_name
+            config.class(OpenStruct)
+          end
       }
 
       let(:unconventional_table_name) {
@@ -151,18 +147,24 @@ RSpec.describe "Configuration override" do
       }
 
       it "maps data from the specified relation into a has many collection" do
+        user = object_store[:users].where(id: "users/1").first
+
         expect(
           user.posts.map(&:id)
         ).to eq(["posts/1", "posts/2"])
       end
 
       it "maps data from the specified relation into a has many through collection" do
+        user = object_store[:users].where(id: "users/1").first
+
         expect(
           user.posts.flat_map(&:categories).map(&:id).uniq
         ).to eq(["categories/1", "categories/2"])
       end
 
       it "maps data from the specified relation into a `belongs_to` field" do
+        user = object_store[:users].where(id: "users/1").first
+
         expect(
           user.posts.first.author.__getobj__.object_id
         ).to eq(user.object_id)
@@ -175,7 +177,7 @@ RSpec.describe "Configuration override" do
     TypeTwoUser = Class.new(OpenStruct)
 
     let(:override_config) {
-      Terrestrial::Configurations::ConventionalConfiguration.new(datastore)
+      Terrestrial.config(datastore)
         .setup_mapping(:t1_users) { |c|
           c.class(TypeOneUser)
           c.table_name(:users)

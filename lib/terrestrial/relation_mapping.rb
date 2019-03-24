@@ -1,22 +1,25 @@
 require "terrestrial/error"
-require "terrestrial/upserted_record"
+require "terrestrial/upsert_record"
 require "terrestrial/deleted_record"
 
 module Terrestrial
   class RelationMapping
-    def initialize(name:, namespace:, fields:, primary_key:, factory:, serializer:, associations:, subsets:)
+    def initialize(name:, namespace:, fields:, database_owned_fields:, database_default_fields:, primary_key:, factory:, serializer:, associations:, subsets:, observers:)
       @name = name
       @namespace = namespace
       @fields = fields
+      @database_owned_fields = database_owned_fields
+      @database_default_fields = database_default_fields
       @primary_key = primary_key
       @factory = factory
       @serializer = serializer
       @associations = associations
       @subsets = subsets
+      @observers = observers
     end
 
-    attr_reader :name, :namespace, :fields, :primary_key, :factory, :serializer, :associations, :subsets
-    private :factory, :serializer
+    attr_reader :name, :namespace, :fields, :database_owned_fields, :database_default_fields, :primary_key, :factory, :serializer, :associations, :subsets, :created_at_field, :updated_at_field, :observers
+    private :factory, :serializer, :observers
 
     def add_association(name, new_association)
       @associations = associations.merge(name => new_association)
@@ -31,9 +34,12 @@ module Terrestrial
     def serialize(object, depth, foreign_keys = {})
       object_attributes = serializer.call(object)
 
+      record = upsertable_record(object, object_attributes, depth, foreign_keys)
+      observers.each { |o| o.post_serialize(self, object, record) }
+
       [
-        record(object_attributes, depth, foreign_keys),
-        extract_associations(object_attributes) # extract_association_fields
+        record,
+        extract_associations(object_attributes)
       ]
     rescue => e
       raise SerializationError.new(name, serializer, object, e)
@@ -45,12 +51,20 @@ module Terrestrial
       [deleted_record(object_attributes, depth)]
     end
 
+    def post_save(object, record, new_attributes)
+      new_record = upsertable_record(object, new_attributes, 0, {})
+
+      observers.each { |o| o.post_save(self, object, record, new_record) }
+
+      record.merge!(new_attributes)
+    end
+
     private
 
-    def record(attributes, depth, foreign_keys)
-      UpsertedRecord.new(
-        namespace,
-        primary_key,
+    def upsertable_record(object, attributes, depth, foreign_keys)
+      UpsertRecord.new(
+        self,
+        object,
         select_mapped_fields(attributes).merge(foreign_keys),
         depth,
       )
@@ -58,8 +72,7 @@ module Terrestrial
 
     def deleted_record(attributes, depth)
       DeletedRecord.new(
-        namespace,
-        primary_key,
+        self,
         attributes,
         depth,
       )

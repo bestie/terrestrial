@@ -29,31 +29,4 @@ RSpec.describe Terrestrial::DeletedRecord do
       }.to yield_with_args(record)
     end
   end
-
-  describe "#==" do
-    context "with another record that deletes" do
-      let(:comparitor) {
-        record.merge({})
-      }
-
-      it "is equal" do
-        expect(record.==(comparitor)).to be(true)
-      end
-    end
-
-    context "with another record that does not delete" do
-      let(:comparitor) {
-        Class.new(Terrestrial::AbstractRecord) do
-          protected
-          def operation
-            :something_else
-          end
-        end
-      }
-
-      it "is not equal" do
-        expect(record.==(comparitor)).to be(false)
-      end
-    end
-  end
 end

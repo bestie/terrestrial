@@ -1,7 +1,7 @@
 require "spec_helper"
 
 require "terrestrial/adapters/sequel_postgres_adapter"
-require "terrestrial/upserted_record"
+require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" do
 
@@ -86,12 +86,27 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
     end
 
     def create_record(values)
-      Terrestrial::UpsertedRecord.new(
-        :unique_index_table,
-        [:field_one, :field_two],
+      Terrestrial::UpsertRecord.new(
+        mapping,
+        object,
         values,
+        0,
       )
     end
+
+    let(:object) { double(:object)
+    }
+
+    let(:mapping) {
+      double(
+        :mapping,
+        namespace: :unique_index_table,
+        primary_key: [],
+        database_owned_fields: [],
+        database_default_fields: [],
+        post_save: nil,
+      )
+    }
 
     context "when the has a primary key and no other indexes" do
       let(:table_name) { :users }

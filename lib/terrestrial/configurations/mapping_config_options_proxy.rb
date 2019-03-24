@@ -38,6 +38,35 @@ module Terrestrial
         add_override(primary_key: field_names)
       end
 
+      def use_database_id(&block)
+        add_override(use_database_id: true)
+        block && add_override(database_id_setter: block)
+      end
+
+      def database_owned_field(field_name, &object_setter)
+        configuration.overrides.fetch(mapping_name)[:database_owned_fields_setter_map] ||= {}
+        db_owned_fields = configuration.overrides.fetch(mapping_name).fetch(:database_owned_fields_setter_map)
+
+        db_owned_fields.merge!({field_name => object_setter})
+      end
+
+      def database_default_field(field_name, &object_setter)
+        configuration.overrides.fetch(mapping_name)[:database_default_fields_setter_map] ||= {}
+        db_default_fields = configuration.overrides.fetch(mapping_name).fetch(:database_default_fields_setter_map)
+
+        db_default_fields.merge!({field_name => object_setter})
+      end
+
+      def created_at_timestamp(field_name = Default, &block)
+        add_override(created_at_field: field_name)
+        block && add_override(created_at_setter: block)
+      end
+
+      def updated_at_timestamp(field_name = Default, &block)
+        add_override(updated_at_field: field_name)
+        block && add_override(updated_at_setter: block)
+      end
+
       def factory(callable)
         add_override(factory: callable)
       end

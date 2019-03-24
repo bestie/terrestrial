@@ -49,10 +49,7 @@ RSpec.describe "factory error handling" do
         users.factory(factory)
       }
 
-    @object_store = Terrestrial.object_store(
-      mappings: config,
-      datastore: datastore,
-    )
+    @object_store = Terrestrial.object_store(config: config)
   end
 
   def seed_user(record)

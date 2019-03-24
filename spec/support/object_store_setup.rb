@@ -15,11 +15,11 @@ require "support/object_graph_setup"
 RSpec.shared_context "object store setup" do
   include_context "object graph setup"
 
-  let(:object_store) {
-    Terrestrial.object_store(mappings: mappings, datastore: datastore)
-  }
-
   let(:user_store) { object_store[:users] }
+
+  let(:object_store) {
+    Terrestrial.object_store(config: mappings)
+  }
 
   let(:mappings) {
     Terrestrial.config(datastore)
@@ -27,7 +27,7 @@ RSpec.shared_context "object store setup" do
         users.has_many(:posts, foreign_key: :author_id)
       }
       .setup_mapping(:posts) { |posts|
-        posts.fields([:id, :subject, :body, :created_at])
+        posts.fields([:id, :subject, :body, :created_at, :updated_at])
         posts.has_many(:comments)
         posts.has_many_through(:categories)
       }

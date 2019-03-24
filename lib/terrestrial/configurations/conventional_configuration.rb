@@ -21,28 +21,25 @@ module Terrestrial
       public :pluralize
     end
 
+    Default = Module.new
+
     class ConventionalConfiguration
       include Enumerable
       include Fetchable
 
-      def initialize(datastore, inflector = Inflector.new)
+      def initialize(datastore, clock: Time, inflector: Inflector.new)
         @datastore = datastore
+        @inflector = inflector
+        @clock = clock
         @overrides = {}
         @subset_queries = {}
         @associations_by_mapping = {}
-        @inflector = inflector
+        @clock = clock
       end
 
-      attr_reader :datastore, :mappings, :inflector
-      private     :datastore, :mappings, :inflector
-
-      def [](mapping_name)
-        mappings[mapping_name]
-      end
-
-      def each(&block)
-        mappings.each(&block)
-      end
+      attr_reader :overrides
+      attr_reader :datastore, :mappings, :inflector, :clock
+      private     :datastore, :mappings, :inflector, :clock
 
       def setup_mapping(mapping_name, &block)
         @associations_by_mapping[mapping_name] ||= []
@@ -74,6 +71,7 @@ module Terrestrial
         )
       end
 
+      # TODO: typo
       def add_assocation(mapping_name, type, options)
         @associations_by_mapping.fetch(mapping_name).push([type, options])
       end
@@ -116,10 +114,13 @@ module Terrestrial
         # as a dependency and then sends mutating messages to them.
         # This mutation based approach was originally a spike but now just
         # seems totally bananas!
-        @associations_by_mapping.each do |mapping_name, associations|
-          associations.each do |(assoc_type, assoc_args)|
-            association_configurator(mappings, mapping_name)
+        @associations_by_mapping.each do |mapping_name, association_data|
+          association_data.each do |(assoc_type, assoc_args)|
+            association = association_configurator(mappings, mapping_name)
               .public_send(assoc_type, *assoc_args)
+
+            name = assoc_args.fetch(0)
+            mappings.fetch(mapping_name).add_association(name, association)
           end
         end
       end
@@ -130,6 +131,14 @@ module Terrestrial
           relation_name: table_name,
           fields: all_available_fields(table_name),
           primary_key: get_primary_key(table_name),
+          use_database_id: false,
+          database_id_setter: nil,
+          database_owned_fields_setter_map: {},
+          database_default_fields_setter_map: {},
+          updated_at_field: nil,
+          updated_at_setter: nil,
+          created_at_field: nil,
+          created_at_setter: nil,
           factory: ok_if_class_is_not_defined_factory(mapping_name),
           serializer: hash_coercion_serializer,
           associations: {},
@@ -163,8 +172,8 @@ module Terrestrial
         new_opts
       end
 
-      def all_available_fields(table_name)
-        datastore[table_name].columns
+      def all_available_fields(relation_name)
+        datastore.relation_fields(relation_name)
       end
 
       def get_primary_key(table_name)
@@ -175,8 +184,9 @@ module Terrestrial
           .map { |field_name, _| field_name }
       end
 
+      # TODO: inconsisent naming
       def tables
-        (datastore.tables - [:schema_migrations])
+        datastore.relations
       end
 
       def hash_coercion_serializer
@@ -187,7 +197,44 @@ module Terrestrial
         SubsetQueriesProxy.new(subset_map)
       end
 
-      def build_mapping(name:, relation_name:, primary_key:, factory:, serializer:, fields:, associations:, subsets:)
+      def build_mapping(name:, relation_name:, primary_key:, use_database_id:, database_id_setter:, database_owned_fields_setter_map:, database_default_fields_setter_map:, updated_at_field:, updated_at_setter:, created_at_field:, created_at_setter:, factory:, serializer:, fields:, associations:, subsets:)
+        if use_database_id
+          database_id_setter ||= object_setter(primary_key.first)
+        end
+        if created_at_field
+          created_at_field = created_at_field == Default ? :created_at : created_at_field
+          created_at_setter ||= object_setter(created_at_field)
+        end
+        if updated_at_field
+          updated_at_field = updated_at_field == Default ? :updated_at : updated_at_field
+          updated_at_setter ||= object_setter(updated_at_field)
+        end
+
+        timestamp_observer = TimestampObserver.new(
+          clock,
+          created_at_field,
+          created_at_setter,
+          updated_at_field,
+          updated_at_setter,
+        )
+
+        database_owned_field_observers = database_owned_fields_setter_map.map { |field, setter|
+          setter ||= ->(object, value) { object.send("#{field}=", value) }
+          ArbitraryDatabaseOwnedValueObserver.new(field, setter)
+        }
+
+        database_default_field_observers = database_default_fields_setter_map.map { |field, setter|
+          setter ||= ->(object, value) { object.send("#{field}=", value) }
+          ArbitraryDatabaseDefaultValueObserver.new(field, setter)
+        }
+
+        observers = [
+          use_database_id && DatabaseIDObserver.new(database_id_setter),
+          (created_at_field || updated_at_field) && timestamp_observer,
+          *database_owned_field_observers,
+          *database_default_field_observers,
+        ].select(&:itself)
+
         RelationMapping.new(
           name: name,
           namespace: relation_name,
@@ -195,9 +242,20 @@ module Terrestrial
           factory: factory,
           serializer: serializer,
           fields: fields,
+          database_owned_fields: database_owned_fields_setter_map.keys,
+          database_default_fields: database_default_fields_setter_map.keys,
           associations: associations,
           subsets: subsets,
+          observers: observers,
         )
+      end
+
+      def object_setter(field_name)
+        SetterMethodCaller.new(field_name)
+      end
+
+      def simple_setter_method_caller(primary_key)
+        SetterMethodCaller.new(primary_key.first)
       end
 
       def class_with_same_name_as_mapping_factory(name)
@@ -265,6 +323,131 @@ module Terrestrial
         def initialize(mapping_name)
           @message = "Error defining custom mapping `#{mapping_name}`." \
             " You must provide the `table_name` configuration option."
+        end
+      end
+
+      class DatabaseIDObserver
+        def initialize(setter)
+          @setter = setter
+        end
+
+        attr_reader :setter
+        private :setter
+
+        def post_serialize(mapping, object, record)
+          add_database_id_container!(record)
+        end
+
+        def post_save(mapping, object, record, new_record)
+          if !record.id?
+            new_id = new_record.identity_values.first
+            record.identity_values.first.value = new_id
+            setter.call(object, new_id)
+          end
+        end
+
+        private
+
+        def add_database_id_container!(record)
+          if !record.id?
+            record.set_id(database_id_container)
+          end
+        end
+
+        def database_id_container
+          Terrestrial::DatabaseID.new
+        end
+      end
+
+      # TODO: It is very tempting to implement database generated IDs in terms of this
+      class ArbitraryDatabaseOwnedValueObserver
+        def initialize(field_name, setter)
+          @field_name = field_name
+          @setter = setter
+        end
+
+        attr_reader :field_name, :setter
+        private :field_name, :setter
+
+        def post_serialize(*_args)
+        end
+
+        def post_save(mapping, object, record, new_record)
+          setter.call(object, new_record.get(field_name))
+        end
+      end
+
+      class ArbitraryDatabaseDefaultValueObserver
+        def initialize(field_name, setter)
+          @field_name = field_name
+          @setter = setter
+        end
+
+        attr_reader :field_name, :setter
+        private :field_name, :setter
+
+        def post_serialize(*_args)
+        end
+
+        def post_save(mapping, object, record, new_record)
+          if value_changed?(new_record, record)
+            setter.call(object, new_record.get(field_name))
+          end
+        end
+
+        private
+
+        def value_changed?(new_record, old_record)
+          new_record.attributes[field_name] != old_record.attributes[field_name]
+        end
+      end
+
+      class TimestampObserver
+        def initialize(clock, created_at_field, created_at_setter, updated_at_field, updated_at_setter)
+          @clock = clock
+          @created_at_field = created_at_field
+          @created_at_setter = created_at_setter
+          @updated_at_field = updated_at_field
+          @updated_at_setter = updated_at_setter
+          @setter = setter
+        end
+
+        attr_reader :clock, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter, :setter
+        private     :clock, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter, :setter
+
+        def post_serialize(mapping, object, record)
+          time = clock.now
+
+          if created_at_field && !record.get(created_at_field)
+            record.set(created_at_field, time)
+          end
+
+          if updated_at_field
+            record.set(updated_at_field, time)
+          end
+        end
+
+        def post_save(mapping, object, record, new_record)
+          if created_at_field && record.fetch(created_at_field, false)
+            time = record.fetch(created_at_field)
+            created_at_setter.call(object, time)
+          end
+
+          if updated_at_field
+            time = record.get(updated_at_field)
+            updated_at_setter.call(object, time)
+          end
+        end
+      end
+
+      class SetterMethodCaller
+        def initialize(field_name)
+          raise "hell no" unless field_name
+          @setter_method = "#{field_name}="
+        end
+
+        def call(object, value)
+          object.public_send(@setter_method, value)
         end
       end
     end

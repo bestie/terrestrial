@@ -45,10 +45,7 @@ module Terrestrial
         associated_mapping_name = config.fetch(:mapping_name)
         associated_mapping = mappings.fetch(associated_mapping_name)
 
-        target_mapping.add_association(
-          association_name,
-          has_many_mapper(**config)
-        )
+        has_many_mapper(**config)
       end
 
       def belongs_to(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT)
@@ -71,10 +68,7 @@ module Terrestrial
         associated_mapping_name = config.fetch(:mapping_name)
         associated_mapping = mappings.fetch(associated_mapping_name)
 
-        target_mapping.add_association(
-          association_name,
-          belongs_to_mapper(**config)
-        )
+        belongs_to_mapper(**config)
       end
 
       def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, through_table_name: DEFAULT, association_key: DEFAULT, association_foreign_key: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
@@ -125,10 +119,7 @@ module Terrestrial
           join_dataset: join_dataset,
         )
 
-        target_mapping.add_association(
-          association_name,
-          has_many_through_mapper(**config)
-        )
+        has_many_through_mapper(**config)
       end
 
       private
@@ -178,6 +169,9 @@ module Terrestrial
           fields: [],
           associations: [],
           subsets: [],
+          database_owned_fields: [],
+          database_default_fields: [],
+          observers: [],
         )
       end
 

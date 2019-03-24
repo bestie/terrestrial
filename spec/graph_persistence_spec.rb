@@ -102,6 +102,7 @@ RSpec.describe "Graph persistence" do
         comments: [],
         categories: [],
         created_at: Time.now,
+        updated_at: Time.now,
       }
     }
 
@@ -337,6 +338,7 @@ RSpec.describe "Graph persistence" do
           subject: "Nils gonna getcha",
           body: "",
           created_at: Time.parse("2015-09-05T15:00:00+01:00"),
+          updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
           categories: [],
           comments: [],
         )

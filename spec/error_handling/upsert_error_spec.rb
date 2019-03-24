@@ -105,7 +105,7 @@ RSpec.describe "Upsert error handling" do
       end
 
       aggregate_failures do
-        expect(error.message).to include("Error upserting record into `users` with data `#{serialization_result}`.")
+        expect(error.message).to start_with("Error upserting record into `users` with data `#{serialization_result}`.")
         expect(error.message).to include("Got Error: Sequel::NotNullConstraintViolation")
         expect(error.message).to include("in column \"id\"")
         expect(error.message).to include("DETAIL:  Failing row contains (null, Hansel, Trickett, hansel@tricketts.org)")
@@ -123,9 +123,6 @@ RSpec.describe "Upsert error handling" do
         users.serializer(serializer)
       }
 
-    @object_store = Terrestrial.object_store(
-      mappings: config,
-      datastore: datastore,
-    )
+    @object_store = Terrestrial.object_store(config: config)
   end
 end

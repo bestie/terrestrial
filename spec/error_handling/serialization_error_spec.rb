@@ -37,10 +37,7 @@ RSpec.describe "Serialization error handling" do
         users.serializer(serializer)
       }
 
-      @object_store = Terrestrial.object_store(
-        mappings: config,
-        datastore: datastore,
-      )
+      @object_store = Terrestrial.object_store(config: config)
     end
 
     def save_user

@@ -50,8 +50,12 @@ module Terrestrial
       stardard_test_tables = BLOG_SCHEMA.fetch(:tables).keys
       test_tables_in_deletable_order = stardard_test_tables.reverse
 
-      test_tables_in_deletable_order.each do |table_name|
-        clean_table(table_name)
+      clean_tables(test_tables_in_deletable_order)
+    end
+
+    module_function def clean_tables(names)
+      names.each do |name|
+        clean_table(name)
       end
     end
 

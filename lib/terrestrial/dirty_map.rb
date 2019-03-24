@@ -13,15 +13,12 @@ module Terrestrial
     end
 
     def load(record)
-      storage.store(hash_key(record), deep_clone(record))
+      storage.store(hash_key(record), record.deep_clone)
       record
     end
 
     def dirty?(record)
-      record_as_loaded = storage.fetch(hash_key(record), NotFound)
-      return true if record_as_loaded == NotFound
-
-      !record.subset?(record_as_loaded)
+      !same_as_loaded?(record) || deleted?(record)
     end
 
     def reject_unchanged_fields(record)
@@ -36,12 +33,23 @@ module Terrestrial
 
     NotFound = Module.new
 
-    def hash_key(record)
-      deep_clone([record.namespace, record.identity])
+    def same_as_loaded?(record)
+      record_as_loaded = storage.fetch(hash_key(record), NotFound)
+
+      if record_as_loaded == NotFound
+        false
+      else
+        record.subset?(record_as_loaded)
+      end
     end
 
-    def deep_clone(record)
-      Marshal.load(Marshal.dump(record))
+    def deleted?(record)
+      record.if_delete { return true }
+      return false
+    end
+
+    def hash_key(record)
+      [record.namespace, record.identity]
     end
   end
 end
