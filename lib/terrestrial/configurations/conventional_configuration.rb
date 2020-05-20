@@ -1,4 +1,3 @@
-require "active_support/inflector"
 require "fetchable"
 
 require "terrestrial/configurations/mapping_config_options_proxy"
@@ -6,11 +5,20 @@ require "terrestrial/configurations/conventional_association_configuration"
 require "terrestrial/relation_mapping"
 require "terrestrial/subset_queries_proxy"
 require "terrestrial/struct_factory"
+require "sequel/model/inflections"
 
 module Terrestrial
   module Configurations
+
     class Inflector
-      include ActiveSupport::Inflector
+      include Sequel::Inflections
+
+      def classify(string)
+        singularize(camelize(string))
+      end
+
+      public :singularize
+      public :pluralize
     end
 
     class ConventionalConfiguration
