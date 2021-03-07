@@ -104,13 +104,12 @@ RSpec.describe "Upsert error handling" do
       rescue Terrestrial::UpsertError => error
       end
 
-      expect(error.message).to eq(
-        [
-          "Error upserting record into `users` with data `#{serialization_result}`.",
-          "Got Error: Sequel::NotNullConstraintViolation PG::NotNullViolation: ERROR:  null value in column \"id\" violates not-null constraint",
-          "DETAIL:  Failing row contains (null, Hansel, Trickett, hansel@tricketts.org).\n",
-        ].join("\n")
-      )
+      aggregate_failures do
+        expect(error.message).to include("Error upserting record into `users` with data `#{serialization_result}`.")
+        expect(error.message).to include("Got Error: Sequel::NotNullConstraintViolation")
+        expect(error.message).to include("in column \"id\"")
+        expect(error.message).to include("DETAIL:  Failing row contains (null, Hansel, Trickett, hansel@tricketts.org)")
+      end
     end
   end
 
