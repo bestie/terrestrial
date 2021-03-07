@@ -37,6 +37,7 @@ module Terrestrial
 
       def_delegators :database, *[
         :transaction,
+        :tables,
       ]
 
       def [](table_name)
@@ -44,11 +45,7 @@ module Terrestrial
       end
 
       def upsert(record)
-        update_attributes = record.updatable? && record.updatable_attributes
-
-        database[record.namespace].insert_conflict(
-          target: record.identity_fields, update: update_attributes
-        ).insert(record.to_h)
+        prepared_upsert(record).insert(record.to_h)
       rescue Object => e
         raise UpsertError.new(record.namespace, record.to_h, e)
       end
@@ -58,13 +55,52 @@ module Terrestrial
       end
 
       def changes_sql(record)
-        update_attributes = record.updatable? && record.updatable_attributes
-
-        database[record.namespace].insert_conflict(
-          target: record.identity_fields, update: update_attributes
-        ).insert_sql(record.to_h)
+        prepared_upsert(record).insert_sql(record.to_h)
       rescue Object => e
         raise UpsertError.new(record.namespace, record.to_h, e)
+      end
+
+      def conflict_fields(table_name)
+        primary_key(table_name)
+      end
+
+      def primary_key(table_name)
+        [database.primary_key(table_name)]
+          .compact
+          .map(&:to_sym)
+      end
+
+      def unique_indexes(table_name)
+        database.indexes(table_name).map { |_name, data|
+          data.fetch(:columns)
+        }
+      end
+
+      private
+
+      def prepared_upsert(record)
+        table_name = record.namespace
+        update_attributes = record.updatable? && record.updatable_attributes
+
+        primary_key_fields = primary_key(table_name)
+
+        # TODO: investigate if failing to find a private key results in extra schema queries
+        if primary_key_fields.any?
+          conflict_fields = primary_key_fields
+        else
+          u_idxs = unique_indexes(table_name)
+          if u_idxs.any?
+            conflict_fields = u_idxs.first
+          end
+        end
+
+        upsert_args = { update: update_attributes }
+
+        if conflict_fields && conflict_fields.any?
+          upsert_args.merge!(target: conflict_fields)
+        end
+
+        database[table_name].insert_conflict(**upsert_args)
       end
 
       class Dataset

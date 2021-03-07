@@ -38,9 +38,5 @@ RSpec.shared_context "object store setup" do
       .setup_mapping(:categories) { |categories|
         categories.has_many_through(:posts)
       }
-      .setup_mapping(:categories_to_posts) { |ctp|
-        ctp.primary_key([:category_id, :post_id])
-        ctp.factory(->(*_){})
-      }
   }
 end

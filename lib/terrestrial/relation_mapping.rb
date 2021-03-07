@@ -33,7 +33,7 @@ module Terrestrial
 
       [
         record(object_attributes, depth, foreign_keys),
-        extract_associations(object_attributes)
+        extract_associations(object_attributes) # extract_association_fields
       ]
     rescue => e
       raise SerializationError.new(name, serializer, object, e)

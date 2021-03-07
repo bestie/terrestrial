@@ -94,12 +94,8 @@ module Terrestrial
           [mapping_name, {relation_name: mapping_name}.merge(consolidate_overrides(overrides))]
         }
 
-        table_mappings = (tables - @overrides.keys).map { |table_name|
-          [table_name, overrides_for_table(table_name)]
-        }
-
         Hash[
-          (table_mappings + custom_mappings).map { |(mapping_name, overrides)|
+          (custom_mappings).map { |(mapping_name, overrides)|
             table_name = overrides.fetch(:relation_name) { raise no_table_error(mapping_name) }
 
             [

@@ -77,7 +77,8 @@ module Terrestrial
         )
       end
 
-      def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, through_mapping_name: DEFAULT, association_key: DEFAULT, association_foreign_key: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
+      def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, through_table_name: DEFAULT, association_key: DEFAULT, association_foreign_key: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
+        # TODO: join_dataset as mutually exclusive option with join_table_name
         defaults = {
           mapping_name: association_name,
           key: :id,
@@ -101,21 +102,28 @@ module Terrestrial
         }
 
         config = defaults.merge(specified)
-        associated_mapping = mappings.fetch(config.fetch(:mapping_name))
 
-        if through_mapping_name == DEFAULT
-          through_mapping_name = [
-            associated_mapping.name,
-            target_mapping.name,
-          ].sort.join("_to_").to_sym
+        associated_mapping = mappings.fetch(config.fetch(:mapping_name))
+        default_through_table_name = [associated_mapping.name, target_mapping.name].sort.join("_to_").to_sym
+
+        if through_table_name == DEFAULT
+          through_table_name = default_through_table_name
         end
 
-        join_table_name = mappings.fetch(through_mapping_name).namespace
-        config = config
-          .merge(
-            through_mapping_name: through_mapping_name,
-            through_dataset: datastore[join_table_name.to_sym],
-          )
+        join_mapping = create_virtual_mapping(
+          default_mapping_name: default_through_table_name,
+          namespace: through_table_name,
+          primary_key: [config[:foreign_key], config[:association_foreign_key]],
+        )
+
+        mappings[join_mapping.name] = join_mapping
+
+        join_dataset = datastore[through_table_name.to_sym]
+
+        config = config.merge(
+          join_mapping_name: join_mapping.name,
+          join_dataset: join_dataset,
+        )
 
         target_mapping.add_association(
           association_name,
@@ -144,16 +152,32 @@ module Terrestrial
         )
       end
 
-      def has_many_through_mapper(mapping_name:, key:, foreign_key:, association_key:, association_foreign_key:, through_mapping_name:, through_dataset:, order_fields:, order_direction:)
+      def has_many_through_mapper(mapping_name:, key:, foreign_key:, association_key:, association_foreign_key:, join_mapping_name:, join_dataset:, order_fields:, order_direction:)
         ManyToManyAssociation.new(
           mapping_name: mapping_name,
-          join_mapping_name: through_mapping_name,
+          join_mapping_name: join_mapping_name,
+          join_dataset: join_dataset, # TODO: this dataset is not used
           key: key,
           foreign_key: foreign_key,
           association_key: association_key,
           association_foreign_key: association_foreign_key,
           proxy_factory: collection_proxy_factory,
           order: query_order(order_fields, order_direction),
+        )
+      end
+
+      def create_virtual_mapping(default_mapping_name:, namespace:, primary_key:)
+        mapping_name = "__generated_virtual_mapping_#{default_mapping_name}"
+
+        RelationMapping.new(
+          name: mapping_name,
+          namespace: namespace,
+          primary_key: primary_key,
+          factory: ->(*_) { },
+          serializer: :to_h.to_proc,
+          fields: [],
+          associations: [],
+          subsets: [],
         )
       end
 

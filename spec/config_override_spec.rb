@@ -21,6 +21,7 @@ RSpec.describe "Configuration override" do
         users.has_many :posts, foreign_key: :author_id
         users.fields([:id, :first_name, :last_name, :email])
       }
+      .setup_mapping(:posts)
   }
 
   let(:user) {
@@ -131,12 +132,12 @@ RSpec.describe "Configuration override" do
             config.class(OpenStruct)
             config.relation_name strange_table_name_map.fetch(:posts)
             config.belongs_to(:author, mapping_name: :users)
-            config.has_many_through(:categories, through_mapping_name: strange_table_name_map.fetch(:categories_to_posts))
+            config.has_many_through(:categories, through_table_name: strange_table_name_map.fetch(:categories_to_posts))
           end
           .setup_mapping(:categories) do |config|
             config.class(OpenStruct)
             config.relation_name strange_table_name_map.fetch(:categories)
-            config.has_many_through(:posts, through_mapping_name: strange_table_name_map.fetch(:categories_to_posts))
+            config.has_many_through(:posts, through_table_name: strange_table_name_map.fetch(:categories_to_posts))
           end
       end
 
@@ -153,6 +154,12 @@ RSpec.describe "Configuration override" do
         expect(
           user.posts.map(&:id)
         ).to eq(["posts/1", "posts/2"])
+      end
+
+      it "maps data from the specified relation into a has many through collection" do
+        expect(
+          user.posts.flat_map(&:categories).map(&:id).uniq
+        ).to eq(["categories/1", "categories/2"])
       end
 
       it "maps data from the specified relation into a `belongs_to` field" do

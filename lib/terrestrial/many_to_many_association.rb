@@ -3,9 +3,10 @@ require "terrestrial/dataset"
 
 module Terrestrial
   class ManyToManyAssociation
-    def initialize(mapping_name:, join_mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, order:)
+    def initialize(mapping_name:, join_mapping_name:, join_dataset:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, order:)
       @mapping_name = mapping_name
       @join_mapping_name = join_mapping_name
+      @join_dataset = join_dataset
       @foreign_key = foreign_key
       @key = key
       @proxy_factory = proxy_factory
@@ -20,8 +21,8 @@ module Terrestrial
 
     attr_reader :mapping_name, :join_mapping_name
 
-    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
-    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
+    attr_reader :join_dataset, :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
+    private     :join_dataset, :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
 
     def build_proxy(data_superset:, loader:, record:)
       proxy_factory.call(
@@ -37,36 +38,31 @@ module Terrestrial
     end
 
     def eager_superset((superset, join_superset), (associated_dataset))
-      join_data = Dataset.new(
+      subselect_data = Dataset.new(
         join_superset
           .where(foreign_key => associated_dataset.select(association_key))
           .to_a
       )
 
       eager_superset = Dataset.new(
-        superset.where(key => join_data.select(association_foreign_key)).to_a
+        superset.where(key => subselect_data.select(association_foreign_key)).to_a
       )
 
       [
         eager_superset,
-        join_data,
+        subselect_data,
       ]
     end
 
     def build_query((superset, join_superset), parent_record)
-      ids = join_superset
-              .where(foreign_key => foreign_key_value(parent_record))
-              .select(association_foreign_key)
+      subselect_ids = join_superset
+        .where(foreign_key => foreign_key_value(parent_record))
+        .select(association_foreign_key)
 
       order
-        .apply(
-          superset.where(
-            key => ids
-          )
-        )
-        .lazy.map { |record|
-          [record, [foreign_keys(parent_record, record)]]
-        }
+        .apply(superset.where(key => subselect_ids))
+        .lazy
+        .map { |record| [record, [foreign_keys(parent_record, record)]] }
     end
 
     def dump(parent_record, collection, depth, &block)
@@ -102,13 +98,23 @@ module Terrestrial
           depth + depth_modifier,
         )
 
-        fks = foreign_keys(parent_record, record)
+        join_foreign_keys = foreign_keys(parent_record, record)
         join_record_depth = depth + join_record_depth_modifier
+
+        # TODO: This is a bit hard to figure out
+        #
+        # The block defined in GraphSerializer#updated_nodes_recursive (inspect the block to confirm)
+        # join_foreign_keys is the two foreign key values in a hash
+        # the hash is two of the arugments here
+        # first one is normally an object to be serialized but serializing this hash will just return the same hash
+        # second one is the foreign keys that would need to accompany the object
+        #
+        # Passing it twice like this is allows it to go though the GraphSerializer like a regular user defined object
 
         join_records = block.call(
           join_mapping_name,
-          fks,
-          fks,
+          join_foreign_keys, # normally this is the object which gets serialized
+          join_foreign_keys, # normally this is the foreign key data the object doesn't know about
           join_record_depth
         ).flatten(1)
 

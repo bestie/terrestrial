@@ -13,10 +13,16 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
   let(:user) { user_query.first }
 
   context "when loading the root node" do
+    before { preload_user_store_to_avoid_counting_startup_queries }
+
     it "only performs one read" do
       expect {
-        user
+        user_query.first
       }.to change { query_counter.read_count }.by(1)
+    end
+
+    def preload_user_store_to_avoid_counting_startup_queries
+      user_store
     end
   end
 

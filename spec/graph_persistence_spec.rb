@@ -229,6 +229,47 @@ RSpec.describe "Graph persistence" do
       end
     end
 
+    context "duplicate a node" do
+      let(:post_with_one_category) { user.posts.to_a.last }
+
+      # Spoiler alert: it does mutate the graph
+      #
+      # Feature?: The posts <=> category relationship because unique when persisted
+      # because there are no indexes on the `categories_to_posts` table making
+      # the combination of foreign keys a de facto primary key.
+      #
+      # If there was an additional primary key id field without a unique index
+      # this would not be the case.
+      #
+      # It would be nice if the collection proxy for posts <=> categories was a
+      # variant that behaved like set. Unfortunately uniqueness can only be
+      # determined by the user-defind objects' identities as the proxy would
+      # not have access to datastore ids.
+      #
+      # Mappings are available when the proxy is constructed so this is
+      # possible but awkward.
+      xit "does not mutate the graph" do
+        existing_category = post_with_one_category.categories.first
+        post_with_one_category.categories.push(existing_category)
+
+        expect(post_with_one_category.categories.map(&:id))
+          .to eq(["categories/2"])
+      end
+
+      it "does not persist the change" do
+        existing_category = post_with_one_category.categories.first
+        post_with_one_category.categories.push(existing_category)
+
+        user_store.save(user)
+
+        expect(
+          datastore[:categories_to_posts]
+            .where(:post_id => post_with_one_category.id)
+            .count
+        ).to eq(1)
+      end
+    end
+
     context "modify a node" do
       let(:category) { user.posts.first.categories.first }
       let(:modified_category_name) { "modified category" }

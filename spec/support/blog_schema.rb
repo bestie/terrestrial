@@ -29,7 +29,7 @@ BLOG_SCHEMA = {
     ],
   },
   unique_indexes: [
-    [:categories_to_posts, :post_id, :category_id]
+    # [:categories_to_posts, :post_id, :category_id]
   ],
   foreign_keys: [
     [:posts, :author_id, :users, :id],
