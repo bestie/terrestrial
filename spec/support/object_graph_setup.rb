@@ -26,9 +26,16 @@ RSpec.shared_context "object graph setup" do
     end
 
     def initialize(attrs)
-      members.sort == attrs.keys.sort or (
-        raise(ArgumentError.new("Expected `#{self.class.members}` got `#{attrs.keys}"))
-      )
+      if members.sort != attrs.keys.sort
+        missing = (members - attrs.keys).sort
+        unexpected = (attrs.keys - members).sort
+        raise(ArgumentError.new(
+          "#{self.class} initialized with incorrect arguments." \
+          "Missing: #{missing}. " \
+          "Unexpected: #{unexpected}. " \
+          "Received: #{attrs.keys}."
+        ))
+      end
 
       members.each { |member| send("#{member}=", attrs.fetch(member)) }
     end
