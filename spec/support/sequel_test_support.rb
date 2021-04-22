@@ -4,8 +4,7 @@ module Terrestrial
   module SequelTestSupport
     module_function def build_datastore(_schema)
       db_connection.tap { |db|
-        # This test is using the database so we better clean it out first
-        truncate_tables
+        clean_database
 
         # The query_counter will let us make assertions about how efficiently
         # the database is being used
@@ -47,18 +46,27 @@ module Terrestrial
       end
     end
 
-    module_function def truncate_tables(tables = db_connection.tables)
-      tables.each do |table_name|
-        db_connection[table_name].truncate(cascade: true)
+    module_function def clean_database(tables = db_connection.tables)
+      stardard_test_tables = BLOG_SCHEMA.fetch(:tables).keys
+      test_tables_in_deletable_order = stardard_test_tables.reverse
+
+      test_tables_in_deletable_order.each do |table_name|
+        clean_table(table_name)
       end
     end
 
+    module_function def clean_table(name)
+      db_connection[name].delete
+    end
+
     module_function def db_connection
-      @@db_connection ||= Sequel.postgres(
-        host: ENV.fetch("PGHOST"),
-        user: ENV.fetch("PGUSER"),
-        database: ENV.fetch("PGDATABASE"),
-      ).tap { Sequel.default_timezone = :utc }
+      @db_connection ||= begin
+         Sequel.postgres(
+           host: ENV.fetch("PGHOST"),
+           user: ENV.fetch("PGUSER"),
+           database: ENV.fetch("PGDATABASE"),
+         ).tap { Sequel.default_timezone = :utc }
+       end
     end
 
     module_function def create_tables(tables)

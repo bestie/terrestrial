@@ -7,8 +7,6 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
 
   let(:adapter) { Terrestrial::Adapters::SequelPostgresAdapter.new(datastore) }
 
-  let(:adapter_support) { Terrestrial::SequelTestSupport }
-
   describe "#tables" do
     it "returns all table names as symbols" do
       expect(adapter.tables).to match_array(
@@ -35,14 +33,16 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
   end
 
   describe "#unique_indexes" do
-    before do
+    before(:all) do
       adapter_support.create_tables(schema_with_unique_index.fetch(:tables))
       adapter_support.add_unique_indexes(schema_with_unique_index.fetch(:unique_indexes))
     end
 
-    after do
+    after(:all) do
       adapter_support.drop_tables(schema_with_unique_index.fetch(:tables).keys)
     end
+
+    before(:each) { adapter_support.clean_table(:unique_index_table) }
 
     context "when the table has no primary key" do
       let(:table_name) { :unique_index_table }
@@ -101,7 +101,11 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
       end
     end
 
-    let(:schema_with_unique_index) {
+    def adapter_support
+      Terrestrial::SequelTestSupport
+    end
+
+    def schema_with_unique_index
       {
         tables: {
           unique_index_table: [
@@ -114,6 +118,6 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
           [:unique_index_table, :field_one, :field_two]
         ],
       }
-    }
+    end
   end
 end
