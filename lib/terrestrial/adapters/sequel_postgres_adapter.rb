@@ -93,17 +93,13 @@ module Terrestrial
       private
 
       def perform_upsert_returning_row(record)
-        prepared_upsert(record)
-          .insert(record.insertable)
+        sql = generate_upsert_sql(record)
+        result = database[sql]
           .to_a
           .fetch(0) { {} }
       end
 
       def generate_upsert_sql(record)
-        prepared_upsert(record).insert_sql(record.insertable)
-      end
-
-      def prepared_upsert(record)
         table_name = record.namespace
         update_attributes = record.updatable? && record.updatable_attributes
 
@@ -114,17 +110,9 @@ module Terrestrial
           if record.id?
             conflict_fields = primary_key_fields
           else
-            insert_to_do_later = ->(attributes) {
-              ret = database[table_name]
-                .returning(Sequel.lit("*"))
-                .insert(attributes)
-            }
-
-            def insert_to_do_later.insert(*args)
-              call(*args)
-            end
-
-            return insert_to_do_later
+            return database[table_name]
+              .returning(Sequel.lit("*"))
+              .insert_sql(record.insertable)
           end
         else
           u_idxs = unique_indexes(table_name)
@@ -143,6 +131,7 @@ module Terrestrial
         database[table_name]
           .insert_conflict(**upsert_args)
           .returning(Sequel.lit("*"))
+          .insert_sql(record.insertable)
       end
 
       class Dataset
