@@ -27,19 +27,19 @@ module Terrestrial
       include Enumerable
       include Fetchable
 
-      def initialize(datastore, clock: Time, inflector: Inflector.new)
+      def initialize(datastore:, clock:, dirty_map:, identity_map:, inflector: Inflector.new)
         @datastore = datastore
         @inflector = inflector
+        @dirty_map = dirty_map
+        @identity_map = identity_map
         @clock = clock
+
         @overrides = {}
         @subset_queries = {}
         @associations_by_mapping = {}
-        @clock = clock
       end
 
-      attr_reader :overrides
-      attr_reader :datastore, :mappings, :inflector, :clock
-      private     :datastore, :mappings, :inflector, :clock
+      attr_reader :overrides, :clock, :identity_map, :dirty_map, :datastore, :mappings, :inflector
 
       def setup_mapping(mapping_name, &block)
         @associations_by_mapping[mapping_name] ||= []
@@ -212,6 +212,7 @@ module Terrestrial
 
         timestamp_observer = TimestampObserver.new(
           clock,
+          dirty_map,
           created_at_field,
           created_at_setter,
           updated_at_field,
@@ -403,17 +404,17 @@ module Terrestrial
       end
 
       class TimestampObserver
-        def initialize(clock, created_at_field, created_at_setter, updated_at_field, updated_at_setter)
+        def initialize(clock, dirty_map, created_at_field, created_at_setter, updated_at_field, updated_at_setter)
           @clock = clock
+          @dirty_map = dirty_map
           @created_at_field = created_at_field
           @created_at_setter = created_at_setter
           @updated_at_field = updated_at_field
           @updated_at_setter = updated_at_setter
-          @setter = setter
         end
 
-        attr_reader :clock, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter, :setter
-        private     :clock, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter, :setter
+        attr_reader :clock, :dirty_map, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter
+        private     :clock, :dirty_map, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter
 
         def post_serialize(mapping, object, record)
           time = clock.now
@@ -422,7 +423,7 @@ module Terrestrial
             record.set(created_at_field, time)
           end
 
-          if updated_at_field
+          if updated_at_field && dirty_map.dirty?(record)
             record.set(updated_at_field, time)
           end
         end

@@ -15,6 +15,10 @@ RSpec.describe "Automatic timestamps", backend: "sequel" do
     drop_db_timestamp_tables
   end
 
+  before(:each) do
+    clean_db_timestamp_tables
+  end
+
   let(:user_store) {
     object_store[:users]
   }
@@ -85,11 +89,11 @@ RSpec.describe "Automatic timestamps", backend: "sequel" do
   end
 
   context "after an initial successful save of the object graph" do
-    context "if the clock has not yet advanced" do
-      before do
-        user_store.save(user_with_post)
-      end
+    before do
+      user_store.save(user_with_post)
+    end
 
+    context "if the clock has not yet advanced" do
       context "when saving again without modifications" do
         it "does not perform any more database writes" do
           expect {
@@ -104,10 +108,11 @@ RSpec.describe "Automatic timestamps", backend: "sequel" do
     end
 
     context "when saving modifications and the clock has advanced" do
-      let(:created_time) { clock.now }
       before do
+        @created_at_time = clock.now
         clock.tick
       end
+      let(:created_at_time) { @created_at_time }
 
       it "persists the updated_at field at the current time" do
         current_time = clock.now
@@ -134,8 +139,7 @@ RSpec.describe "Automatic timestamps", backend: "sequel" do
         user_store.save(user_with_post)
       end
 
-      it "does not persist a new created_at value" do
-        current_time = clock.now
+      it "does not change the created_at time" do
         post.body = post.body + " edited"
 
         user_store.save(user_with_post)
@@ -144,7 +148,7 @@ RSpec.describe "Automatic timestamps", backend: "sequel" do
           :timestamped_posts,
           hash_including(
             id: post.id,
-            created_at: created_time,
+            created_at: created_at_time,
           )
         )
       end
@@ -312,6 +316,10 @@ RSpec.describe "Automatic timestamps", backend: "sequel" do
 
   def drop_db_timestamp_tables
     Terrestrial::SequelTestSupport.drop_tables(schema.fetch(:tables).keys)
+  end
+
+  def clean_db_timestamp_tables
+    Terrestrial::SequelTestSupport.clean_tables(schema.fetch(:tables).keys)
   end
 
   class StaticClock

@@ -34,39 +34,39 @@ module Terrestrial
 
   module PublicConveniencies
     def config(database, clock: Time)
+      dirty_map = Private.build_dirty_map
+      identity_map = Private.build_identity_map
+
       Configurations::ConventionalConfiguration.new(
-        Private.datastore_adapter(database),
-        clock: clock
+        datastore: Private.datastore_adapter(database),
+        clock: clock,
+        dirty_map: dirty_map,
+        identity_map: identity_map,
       )
     end
 
     def object_store(config:)
-      mappings = config.mappings
-      clock = config.send(:clock)
-      datastore = config.send(:datastore)
-
-      dirty_map = Private.build_dirty_map
-      identity_map = Private.build_identity_map
-      mapping_names = mappings.keys
       load_pipeline = Private.build_load_pipeline(
-        dirty_map: dirty_map,
-        identity_map: identity_map,
+        dirty_map: config.dirty_map,
+        identity_map: config.identity_map,
       )
       dump_pipeline = Private.build_dump_pipeline(
-        dirty_map: dirty_map,
-        datastore: datastore,
-        clock: clock,
+        dirty_map: config.dirty_map,
+        datastore: config.datastore,
+        clock: config.clock,
       )
 
+      mappings = config.mappings
+      mapping_names = mappings.keys
       stores = Hash[mapping_names.map { |mapping_name|
         [
           mapping_name,
           Private.relational_store(
             name: mapping_name,
             mappings: mappings ,
-            datastore: datastore,
-            identity_map: identity_map,
-            dirty_map: dirty_map,
+            datastore: config.datastore,
+            identity_map: config.identity_map,
+            dirty_map: config.dirty_map,
             load_pipeline: load_pipeline,
             dump_pipeline: dump_pipeline,
           )
