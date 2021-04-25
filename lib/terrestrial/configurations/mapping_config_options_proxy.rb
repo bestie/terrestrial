@@ -19,15 +19,15 @@ module Terrestrial
       end
 
       def has_many(*args)
-        add_assocation(:has_many, args)
+        add_association(:has_many, args)
       end
 
       def has_many_through(*args)
-        add_assocation(:has_many_through, args)
+        add_association(:has_many_through, args)
       end
 
       def belongs_to(*args)
-        add_assocation(:belongs_to, args)
+        add_association(:belongs_to, args)
       end
 
       def fields(field_names)
@@ -89,8 +89,8 @@ module Terrestrial
         configuration.add_override(mapping_name, *args)
       end
 
-      def add_assocation(*args)
-        configuration.add_assocation(mapping_name, *args)
+      def add_association(*args)
+        configuration.add_association(mapping_name, *args)
       end
     end
   end

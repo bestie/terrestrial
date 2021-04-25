@@ -198,8 +198,8 @@ RSpec.describe "Sequel query efficiency", backend: "sequel" do
     end
   end
 
-  context "when traversing assocations (eagerly)" do
-    context "laoding `#all` from the object store with one assocation" do
+  context "when traversing association (eagerly)" do
+    context "laoding `#all` from the object store with one association" do
       it "performs 1 read per table rather than n + 1" do
         expect {
           user_store.eager_load(:posts => []).all.map { |user|

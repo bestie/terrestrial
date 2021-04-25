@@ -71,8 +71,7 @@ module Terrestrial
         )
       end
 
-      # TODO: typo
-      def add_assocation(mapping_name, type, options)
+      def add_association(mapping_name, type, options)
         @associations_by_mapping.fetch(mapping_name).push([type, options])
       end
 
