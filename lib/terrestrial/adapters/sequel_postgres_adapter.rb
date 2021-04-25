@@ -105,6 +105,23 @@ module Terrestrial
 
         primary_key_fields = primary_key(table_name)
 
+        missing_not_null_fields = database.schema(table_name)
+          .reject { |field_name, _| record.attributes.keys.include?(field_name) }
+          .select { |_field_name, properties|
+            allow_null = properties.fetch(:allow_null, true)
+            not_null = !allow_null
+            default = properties.fetch(:default, nil)
+            no_default = !default
+
+            not_null && no_default
+          }
+          .map(&:first)
+          .reject { |field_name| record.identity_fields.include?(field_name) }
+
+        missing_not_null_attrs = missing_not_null_fields
+          .map { |field_name| [field_name, database[table_name].select(field_name).where(record.identity)] }
+          .to_h
+
         # TODO: investigate if failing to find a private key results in extra schema queries
         if primary_key_fields.any?
           if record.id?
@@ -112,7 +129,7 @@ module Terrestrial
           else
             return database[table_name]
               .returning(Sequel.lit("*"))
-              .insert_sql(record.insertable)
+              .insert_sql(record.insertable.merge(missing_not_null_attrs))
           end
         else
           u_idxs = unique_indexes(table_name)
@@ -131,7 +148,7 @@ module Terrestrial
         database[table_name]
           .insert_conflict(**upsert_args)
           .returning(Sequel.lit("*"))
-          .insert_sql(record.insertable)
+          .insert_sql(record.insertable.merge(missing_not_null_attrs))
       end
 
       class Dataset

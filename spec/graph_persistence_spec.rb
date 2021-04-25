@@ -388,8 +388,10 @@ RSpec.describe "Graph persistence" do
         user.posts.first.subject = unpersistable_object
 
         user_store.save(user)
-      rescue Terrestrial::Error
+      rescue Object => e
       end
+
+      expect(e).to be_a(Terrestrial::Error)
 
       post_change = datastore[:users].to_a.map(&:to_a).sort
 
