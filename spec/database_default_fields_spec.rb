@@ -40,6 +40,7 @@ RSpec.describe "Database default fields", backend: "sequel" do
   let(:post) {
     Post.new(
       id: "posts/1",
+      author: nil,
       subject: "Biscuits",
       body: "I like them",
       comments: [],

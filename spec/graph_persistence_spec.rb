@@ -97,6 +97,7 @@ RSpec.describe "Graph persistence" do
     let(:new_post_attrs) {
       {
         id: "posts/neu",
+        author: nil,
         subject: "I am new",
         body: "new body",
         comments: [],
@@ -335,6 +336,7 @@ RSpec.describe "Graph persistence" do
       it "populates that association with a nil" do
         post = Post.new(
           id: "posts/orphan",
+          author: nil,
           subject: "Nils gonna getcha",
           body: "",
           created_at: Time.parse("2015-09-05T15:00:00+01:00"),
@@ -356,7 +358,7 @@ RSpec.describe "Graph persistence" do
     end
 
     context "when an existing partent object reference is set to nil" do
-      it "populates that association with a nil" do
+      it "does not orphan the object and sets the foreign key according to position in the object graph" do
         comment = user
           .posts
           .flat_map(&:comments)
@@ -370,7 +372,7 @@ RSpec.describe "Graph persistence" do
           :comments,
           hash_including(
             id: "comments/1",
-            commenter_id: nil,
+            commenter_id: "users/1",
           )
         )
       end

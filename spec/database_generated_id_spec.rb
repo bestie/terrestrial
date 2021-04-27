@@ -86,6 +86,7 @@ RSpec.describe "Database generated IDs", backend: "sequel" do
     let(:post_attrs) {
       {
         id: nil,
+        author: nil,
         subject: "Biscuits",
         body: "I like them",
         comments: [],

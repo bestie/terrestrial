@@ -8,6 +8,14 @@ RSpec.shared_context "object graph setup" do
   end
 
   def setup_circular_references_avoiding_stack_overflow
+    biscuits_post.author = hansel
+    sleep_post.author = hansel
+
+    hansel.posts = [
+      biscuits_post,
+      sleep_post,
+    ]
+
     biscuits_post_comment.commenter = hansel
     cat_biscuits_category.posts = [ biscuits_post ]
   end
@@ -50,51 +58,24 @@ RSpec.shared_context "object graph setup" do
   end
 
   User ||= PlainObject.with_members(:id, :first_name, :last_name, :email, :posts)
-  Post ||= PlainObject.with_members(:id, :subject, :body, :comments, :categories, :created_at, :updated_at)
+  Post ||= PlainObject.with_members(:id, :author, :subject, :body, :comments, :categories, :created_at, :updated_at)
   Comment ||= PlainObject.with_members(:id, :commenter, :body)
   Category ||= PlainObject.with_members(:id, :name, :posts)
 
-  let(:factories) {
-    {
-      users: User.method(:new),
-      posts: Post.method(:new),
-      comments: Comment.method(:new),
-      categories: Category.method(:new),
-      categories_to_posts: ->(x){x},
-      noop: ->(x){x},
-    }
-  }
-
-  let(:default_serializer) {
-    ->(fields) {
-      ->(object) {
-        Terrestrial::Serializer.new(fields, object).to_h
-      }
-    }
-  }
-
-  let(:null_serializer) {
-    ->(_fields) {
-      ->(x){x}
-    }
-  }
-
   let(:hansel) {
-    factories.fetch(:users).call(
+    User.new(
       id: "users/1",
       first_name: "Hansel",
       last_name: "Trickett",
       email: "hansel@tricketts.org",
-      posts: [
-        biscuits_post,
-        sleep_post,
-      ],
+      posts: [],
     )
   }
 
   let(:biscuits_post) {
-    factories.fetch(:posts).call(
+    Post.new(
       id: "posts/1",
+      author: nil,
       subject: "Biscuits",
       body: "I like them",
       comments: [
@@ -109,8 +90,9 @@ RSpec.shared_context "object graph setup" do
   }
 
   let(:sleep_post) {
-    factories.fetch(:posts).call(
+    Post.new(
       id: "posts/2",
+      author: nil,
       subject: "Sleeping",
       body: "I do it three times purrr day",
       comments: [],
@@ -123,7 +105,7 @@ RSpec.shared_context "object graph setup" do
   }
 
   let(:biscuits_post_comment) {
-    factories.fetch(:comments).call(
+    Comment.new(
       id: "comments/1",
       body: "oh noes",
       commenter: nil,
@@ -131,7 +113,7 @@ RSpec.shared_context "object graph setup" do
   }
 
   let(:cat_biscuits_category) {
-    factories.fetch(:categories).call(
+    Category.new(
       id: "categories/1",
       name: "Cat biscuits",
       posts: [],
@@ -139,7 +121,7 @@ RSpec.shared_context "object graph setup" do
   }
 
   let(:chilling_category) {
-    factories.fetch(:categories).call(
+    Category.new(
       id: "categories/2",
       name: "Chillaxing",
       posts: [],

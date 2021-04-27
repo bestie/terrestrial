@@ -42,17 +42,17 @@ module Terrestrial
 
     def dump(parent_record, collection, depth, &block)
       collection
+        .reject(&:nil?)
         .flat_map { |object|
           block.call(mapping_name, object, _foreign_key_does_not_go_here = {}, depth + depth_modifier)
         }
-        .reject(&:nil?)
     end
     alias_method :delete, :dump
 
     def extract_foreign_key(record)
       {
-        foreign_key => (record && record.fetch(key)),
-      }
+        foreign_key => record.fetch(key),
+      }.reject { |_k, v| v.nil? }
     end
 
     private

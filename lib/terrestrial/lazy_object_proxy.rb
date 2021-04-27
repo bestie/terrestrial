@@ -1,4 +1,5 @@
 module Terrestrial
+  # TODO: This should do a better job of showing what will be loaded when it is inspected
   class LazyObjectProxy
     include InspectionString
 
