@@ -3,7 +3,7 @@
 require "bundler"
 Bundler.setup
 
-ADAPTERS = ["memory", "sequel"]
+ADAPTERS = ["sequel"]
 
 module TerrestrialTesting
   module_function def run_rspec_with_adapter(adapter)
