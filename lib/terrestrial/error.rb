@@ -8,6 +8,8 @@ module Terrestrial
       @relation_name = relation_name
       @record = record
       @original_error = original_error
+
+      set_backtrace(original_error.backtrace)
     end
 
     attr_reader :relation_name, :record, :original_error
@@ -16,7 +18,9 @@ module Terrestrial
     def message
       [
         "Error upserting record into `#{relation_name}` with data `#{record.inspect}`.",
-        "Got Error: #{original_error.class.name} #{original_error.message}",
+        "",
+        "Caught error:",
+        "#{original_error.class.name} #{original_error.message}",
       ].join("\n")
     end
   end
@@ -29,6 +33,8 @@ module Terrestrial
       @factory = factory
       @record = record
       @original_error = original_error
+
+      set_backtrace(original_error.backtrace)
     end
 
     attr_reader :relation_name, :factory, :record, :original_error
@@ -39,7 +45,9 @@ module Terrestrial
         "Error loading record from `#{relation_name}` relation `#{record.inspect}`.",
         "Using: `#{factory.inspect}`.",
         "Check that the factory is compatible.",
-        "Got Error: #{original_error.class.name} #{original_error.message}",
+        "",
+        "Caught error:",
+        "#{original_error.class.name} #{original_error.message}",
       ].join("\n")
     end
   end
@@ -52,6 +60,8 @@ module Terrestrial
       @serializer = serializer
       @object = object
       @original_error = original_error
+
+      set_backtrace(original_error.backtrace)
     end
 
     attr_reader :relation_name, :serializer, :object, :original_error
@@ -62,7 +72,9 @@ module Terrestrial
         "Error serializing object with mapping `#{relation_name}` `#{object.inspect}`.",
         "Using serializer: `#{serializer.inspect}`.",
         "Check the specified serializer can transform objects into a Hash.",
-        "Got Error: #{original_error.class.name} #{original_error.message}",
+        "",
+        "Caught error:",
+        "#{original_error.class.name} #{original_error.message}",
       ].join("\n")
     end
   end

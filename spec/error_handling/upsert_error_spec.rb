@@ -22,7 +22,9 @@ RSpec.describe "Upsert error handling" do
       expect(error.message).to eq(
         [
           "Error upserting record into `users` with data `#{unpersistable_record}`.",
-          "Got Error: #{original_error.class} #{original_error.message}",
+          "",
+          "Caught error:",
+          "#{original_error.class} #{original_error.message}",
         ].join("\n")
       )
     end
@@ -106,7 +108,7 @@ RSpec.describe "Upsert error handling" do
 
       aggregate_failures do
         expect(error.message).to start_with("Error upserting record into `users` with data `#{serialization_result}`.")
-        expect(error.message).to include("Got Error: Sequel::NotNullConstraintViolation")
+        expect(error.message).to include("Caught error:\nSequel::NotNullConstraintViolation")
         expect(error.message).to include("in column \"id\"")
         expect(error.message).to include("DETAIL:  Failing row contains (null, Hansel, Trickett, hansel@tricketts.org)")
       end

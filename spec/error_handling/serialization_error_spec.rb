@@ -25,7 +25,9 @@ RSpec.describe "Serialization error handling" do
           "Error serializing object with mapping `users` `#{user.inspect}`.",
           "Using serializer: `#{incompatible_custom_serializer.inspect}`.",
           "Check the specified serializer can transform objects into a Hash.",
-          "Got Error: RuntimeError I am incompatible",
+          "",
+          "Caught error:",
+          "RuntimeError I am incompatible",
         ].join("\n")
       )
     end
