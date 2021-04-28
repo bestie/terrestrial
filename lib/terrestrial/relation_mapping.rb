@@ -16,6 +16,8 @@ module Terrestrial
       @associations = associations
       @subsets = subsets
       @observers = observers
+
+      @incoming_foreign_keys = []
     end
 
     attr_reader :name, :namespace, :fields, :database_owned_fields, :database_default_fields, :primary_key, :factory, :serializer, :associations, :subsets, :created_at_field, :updated_at_field, :observers
@@ -25,8 +27,12 @@ module Terrestrial
       @associations = associations.merge(name => new_association)
     end
 
+    def register_foreign_key(fk)
+      @incoming_foreign_keys += fk
+    end
+
     def load(record)
-      factory.call(record)
+      factory.call(reject_non_factory_fields(record))
     rescue => e
       raise LoadError.new(namespace, factory, record, e)
     end
@@ -88,6 +94,18 @@ module Terrestrial
 
     def select_mapped_fields(attributes)
       attributes.select { |name, _value| fields.include?(name) }
+    end
+
+    def reject_non_factory_fields(attributes)
+      attributes.reject { |name, _value| (@incoming_foreign_keys + local_foreign_keys).include?(name) }
+    end
+
+    def factory_fields
+      @factory_fields ||= fields - (local_foreign_keys + @incoming_foreign_keys)
+    end
+
+    def local_foreign_keys
+      @local_foreign_keys ||= associations.values.flat_map(&:local_foreign_keys)
     end
   end
 end

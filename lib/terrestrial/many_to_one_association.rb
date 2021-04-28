@@ -13,6 +13,14 @@ module Terrestrial
       [mapping_name]
     end
 
+    def outgoing_foreign_keys
+      []
+    end
+
+    def local_foreign_keys
+      [foreign_key]
+    end
+
     attr_reader :mapping_name
 
     attr_reader :foreign_key, :key, :proxy_factory

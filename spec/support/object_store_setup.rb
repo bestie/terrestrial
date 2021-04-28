@@ -27,13 +27,11 @@ RSpec.shared_context "object store setup" do
         users.has_many(:posts, foreign_key: :author_id)
       }
       .setup_mapping(:posts) { |posts|
-        posts.fields([:id, :subject, :body, :created_at, :updated_at])
         posts.belongs_to(:author, mapping_name: :users)
         posts.has_many(:comments)
         posts.has_many_through(:categories)
       }
       .setup_mapping(:comments) { |comments|
-        comments.fields([:id, :body])
         comments.belongs_to(:commenter, mapping_name: :users)
       }
       .setup_mapping(:categories) { |categories|

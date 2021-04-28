@@ -19,6 +19,14 @@ module Terrestrial
       [mapping_name, join_mapping_name]
     end
 
+    def outgoing_foreign_keys
+      []
+    end
+
+    def local_foreign_keys
+      []
+    end
+
     attr_reader :mapping_name, :join_mapping_name
 
     attr_reader :join_dataset, :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order

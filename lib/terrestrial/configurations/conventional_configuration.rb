@@ -120,6 +120,9 @@ module Terrestrial
 
             name = assoc_args.fetch(0)
             mappings.fetch(mapping_name).add_association(name, association)
+            associated_mapping = mappings.fetch(association.mapping_name)
+
+            associated_mapping.register_foreign_key(association.outgoing_foreign_keys)
           end
         end
       end
