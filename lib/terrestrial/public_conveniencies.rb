@@ -1,3 +1,4 @@
+require "terrestrial/adapters/sequel_postgres_adapter"
 require "terrestrial/identity_map"
 require "terrestrial/dirty_map"
 require "terrestrial/upsert_record"
@@ -5,7 +6,6 @@ require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
 require "terrestrial/inspection_string"
 require "terrestrial/functional_pipeline"
-require "terrestrial/adapters/sequel_postgres_adapter"
 
 module Terrestrial
   class ObjectStore

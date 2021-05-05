@@ -1,3 +1,4 @@
+require "sequel"
 require "forwardable"
 require "terrestrial/adapters/abstract_adapter"
 
