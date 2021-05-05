@@ -141,7 +141,7 @@ module Terrestrial
           updated_at_setter: nil,
           created_at_field: nil,
           created_at_setter: nil,
-          factory: ok_if_class_is_not_defined_factory(mapping_name),
+          factory: ok_if_class_is_not_defined_factory(class_name(mapping_name)),
           serializer: hash_coercion_serializer,
           associations: {},
           subsets: subset_queries_proxy(@subset_queries.fetch(mapping_name, {})),
@@ -162,7 +162,7 @@ module Terrestrial
         new_opts = opts.dup
 
         if new_opts.has_key?(:class_name)
-          new_opts.merge!(factory: string_to_factory(new_opts.fetch(:class_name)))
+          new_opts.merge!(factory: ok_if_class_is_not_defined_factory(new_opts.fetch(:class_name)))
           new_opts.delete(:class_name)
         end
 
@@ -263,11 +263,16 @@ module Terrestrial
 
       def class_with_same_name_as_mapping_factory(name)
         target_class = string_to_class(name)
-        ClassFactory.new(target_class)
+        class_to_factory(target_class)
       end
 
-      def ok_if_class_is_not_defined_factory(name)
-        LazyClassLookupFactory.new(class_name(name))
+      def ok_if_class_is_not_defined_factory(class_name)
+        LazyClassLookupFactory.new(class_name, class_to_factory: method(:class_to_factory))
+      end
+
+      def string_to_factory(string)
+        target_class = string_to_class(string)
+        class_to_factory(target_class)
       end
 
       def class_to_factory(klass)
@@ -290,26 +295,21 @@ module Terrestrial
         TableNameNotSpecifiedError.new(table_name)
       end
 
-      class ClassFactory
-        def initialize(target_class)
-          @target_class = target_class
-        end
-
-        def call(attrs)
-          @target_class.new(attrs)
-        end
-      end
-
       class LazyClassLookupFactory
-        def initialize(class_name)
+        def initialize(class_name, class_to_factory:)
           @class_name = class_name
+          @class_to_factory = class_to_factory
         end
 
         def call(attrs)
-          target_class && target_class.new(attrs)
+          factory.call(attrs)
         end
 
         private
+
+        def factory
+          @factory ||= @class_to_factory.call(target_class)
+        end
 
         def target_class
           @target_class ||= Object.const_get(@class_name)

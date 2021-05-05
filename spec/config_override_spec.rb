@@ -19,7 +19,6 @@ RSpec.describe "Configuration override" do
     Terrestrial::config(datastore)
       .setup_mapping(:users) { |users|
         users.has_many :posts, foreign_key: :author_id
-        users.fields([:id, :first_name, :last_name, :email])
       }
       .setup_mapping(:posts)
   }
@@ -38,6 +37,7 @@ RSpec.describe "Configuration override" do
         user = object_store[:users].where(id: "users/1").first
 
         expect(user.class).to be(user_struct)
+        expect(user.id).to eq("users/1")
       end
     end
   end
