@@ -48,6 +48,7 @@ module Terrestrial
       force_load
       @added_nodes.push(node)
     end
+    alias_method :<<, :push
 
     private
 
