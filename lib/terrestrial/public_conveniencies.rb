@@ -131,6 +131,7 @@ module Terrestrial
 
       def build_dump_pipeline(dirty_map:, datastore:, clock:)
         Terrestrial::FunctionalPipeline.from_array([
+          [:remove_nils, :compact.to_proc], # TODO: if a user object returns a nil instead of anempty array for an association then there are nils in the record list
           [:dedup, :uniq.to_proc],
           [:sort_by_depth, ->(rs) { rs.sort_by(&:depth) }],
           [:select_changed, ->(rs) { rs.select { |r| dirty_map.dirty?(r) } }],
