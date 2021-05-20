@@ -52,7 +52,7 @@ RSpec.describe "Errors" do
     def library_stuff
       where_original_error_happens
     rescue RuntimeError => error
-      raise Terrestrial::SerializationError.new("relation_name", "serializer", record, error)
+      raise Terrestrial::SerializationError.new("relation_name", "serializer", record, [:id], error)
     end
 
     it "presents with original error's backtrace, does not misdriect to where it is caught" do

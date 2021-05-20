@@ -66,7 +66,14 @@ module Terrestrial
         config = defaults.merge(specified)
 
         associated_mapping_name = config.fetch(:mapping_name)
-        associated_mapping = mappings.fetch(associated_mapping_name)
+        # TODO: test for this
+        associated_mapping = mappings.fetch(associated_mapping_name) {
+          raise [
+            "Error while trying to create an association `#{target_mapping.name}` belongs_to `#{associated_mapping_name}`",
+            "",
+            "Assocation mapping target `#{associated_mapping_name}` not found.",
+          ].join("\n")
+        }
 
         belongs_to_mapper(**config)
       end
