@@ -13,7 +13,7 @@ module Terrestrial
     end
 
     def sql_literal(_dataset)
-      @value.nil? ? "NULL" : @value.to_s
+      @value.nil? ? "NULL" : "'" + @value.to_s + "'"
     end
 
     def nil?
