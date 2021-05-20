@@ -74,9 +74,9 @@ module Terrestrial
       end
 
       def unique_indexes(table_name)
-        database.indexes(table_name).map { |_name, data|
-          data.fetch(:columns)
-        }
+        database.indexes(table_name)
+          .select { |_name, properties| properties.fetch(:unique, false) }
+          .map { |_name, properties| properties.fetch(:columns) }
       end
 
       def relations
