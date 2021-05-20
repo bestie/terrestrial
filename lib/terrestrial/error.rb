@@ -1,5 +1,20 @@
 module Terrestrial
-  Error = Module.new
+  module Error
+    attr_accessor :unfiltered_backtrace
+
+    def filter_bactrace(trace)
+      @unfiltered_backtrace = trace
+
+      gem_paths = ENV.fetch("GEM_HOME", "").split(":")
+      exclude_terrestial = !!ENV.fetch("TERRESTRIAL_FILTER_FROM_BACKTRACES", false)
+      puts "exclude_terrestial = #{exclude_terrestial}"
+      exclude_paths = gem_paths + (exclude_terrestial ? ["/terrestrial/"] : [])
+
+      trace.reject { |line|
+        exclude_paths.any? { |path| line.include?(path) }
+      }
+    end
+  end
 
   class UpsertError < RuntimeError
     include Error
