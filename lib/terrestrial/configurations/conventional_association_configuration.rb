@@ -79,7 +79,6 @@ module Terrestrial
       end
 
       def has_many_through(association_name, key: DEFAULT, foreign_key: DEFAULT, mapping_name: DEFAULT, through_table_name: DEFAULT, association_key: DEFAULT, association_foreign_key: DEFAULT, order_fields: DEFAULT, order_direction: DEFAULT)
-        # TODO: join_dataset as mutually exclusive option with join_table_name
         defaults = {
           mapping_name: association_name,
           key: :id,
@@ -154,7 +153,6 @@ module Terrestrial
         ManyToManyAssociation.new(
           mapping_name: mapping_name,
           join_mapping_name: join_mapping_name,
-          join_dataset: join_dataset, # TODO: this dataset is not used
           key: key,
           foreign_key: foreign_key,
           association_key: association_key,
