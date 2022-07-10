@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.9"
   spec.add_development_dependency "cucumber", "~> 3.1"
   spec.add_development_dependency "pg", "~> 1.0"
+  spec.add_development_dependency "activerecord", "~> 7.0"
 
   spec.add_dependency "sequel", "~> 5.0"
   spec.add_dependency "fetchable", "~> 1.0"
