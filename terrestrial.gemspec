@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "pry", "~> 0.13"
+  spec.add_development_dependency "pry-byebug"
   spec.add_development_dependency "rspec", "~> 3.9"
   spec.add_development_dependency "cucumber", "~> 3.1"
   spec.add_development_dependency "pg", "~> 1.0"

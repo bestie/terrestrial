@@ -5,7 +5,7 @@ require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "sequel" do
 
-  let(:adapter) { Terrestrial::ActiveRecordTestSupport.build_datastore }
+  let(:adapter) { datastore }
 
   describe "#tables" do
     it "returns all table names as symbols" do
@@ -101,7 +101,7 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "seq
       double(
         :mapping,
         namespace: :unique_index_table,
-        primary_key: [],
+        primary_key: [:id],
         database_owned_fields: [],
         database_default_fields: [],
         post_save: nil,
@@ -116,6 +116,31 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "seq
       end
     end
 
+    describe "#upsert_sql" do
+      let(:record) { create_record(id: "1", field_one: "one", field_two: "two", text: "initial value") }
+      it "upserts" do
+        expect(adapter.upsert_sql(record)).to eq(
+          "INSERT INTO unique_index_table (id,field_one,field_two,text) " \
+            "VALUES ('1','one','two','initial value') "\
+            "ON CONFLICT (id) DO UPDATE SET " \
+            "id=excluded.id,field_one=excluded.field_one,field_two=excluded.field_two,text=excluded.text "\
+            "RETURNING id"
+        )
+
+        insert_result = adapter.execute(adapter.upsert_sql(record))
+        expect(insert_result.to_a.first).to eq({ "id" => "1" })
+
+        select_result = adapter.execute("SELECT * FROM unique_index_table")
+        expect(select_result.to_a.first).to eq({ "id" => "1", "field_one"=>"one", "field_two"=>"two", "text"=>"initial value"})
+
+        update_result = adapter.execute(adapter.upsert_sql(record.merge(:text => "new value")) )
+        expect(update_result.to_a.first).to eq({ "id" => "1" })
+
+        select_result = adapter.execute("SELECT * FROM unique_index_table")
+        expect(select_result.to_a.first).to match(hash_including({ "id" => "1", "text"=>"new value"}))
+      end
+    end
+
     def adapter_support
       Terrestrial::ActiveRecordTestSupport
     end
@@ -124,6 +149,7 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "seq
       {
         tables: {
           unique_index_table: [
+            { name: :id, type: String, options: { primary_key: true } },
             { name: :field_one, type: String, options: { null: false } },
             { name: :field_two, type: String, options: { null: false } },
             { name: :text, type: String, options: { null: false } },

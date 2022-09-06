@@ -1,5 +1,6 @@
 require "pry-byebug"
 require "support/sequel_test_support"
+require "support/active_record_test_support"
 require "support/memory_adapter_test_support"
 require "support/blog_schema"
 
@@ -8,6 +9,7 @@ Warning[:deprecated] = false
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
+    expectations.max_formatted_output_length = 1000
   end
 
   config.mock_with :rspec do |mocks|
@@ -37,6 +39,8 @@ RSpec.configure do |config|
     Terrestrial::MemoryAdapterTestSupport
   when "sequel"
     Terrestrial::SequelTestSupport
+  when "activerecord"
+    Terrestrial::ActiveRecordTestSupport
   else
     raise "Adapter `#{ENV["ADAPTER"]}` not found"
   end
