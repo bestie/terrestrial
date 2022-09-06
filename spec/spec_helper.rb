@@ -1,4 +1,4 @@
-require "pry"
+require "pry-byebug"
 require "support/sequel_test_support"
 require "support/memory_adapter_test_support"
 require "support/blog_schema"
