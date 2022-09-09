@@ -24,6 +24,10 @@ module Terrestrial
       add_foreign_keys(schema.fetch(:foreign_keys))
     end
 
+    module_function def after_suite
+      drop_tables
+    end
+
     module_function def excluded_adapters
       "memory"
     end

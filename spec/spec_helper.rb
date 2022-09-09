@@ -63,5 +63,9 @@ RSpec.configure do |config|
     adapter_support.before_suite(schema)
   end
 
+  config.after(:suite) do
+    adapter_support.after_suite
+  end
+
   config.filter_run_excluding(backend: adapter_support.excluded_adapters)
 end

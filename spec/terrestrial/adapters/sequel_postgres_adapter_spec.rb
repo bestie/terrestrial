@@ -3,9 +3,10 @@ require "spec_helper"
 require "terrestrial/adapters/active_record_postgres_adapter"
 require "terrestrial/upsert_record"
 
-RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "sequel" do
+RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" do
 
-  let(:adapter) { Terrestrial::ActiveRecordTestSupport.build_datastore }
+  let(:db_connection) { Terrestrial::SequelTestSupport.db_connection }
+  let(:adapter) { Terrestrial::Adapters::SequelPostgresAdapter.new(db_connection) }
 
   describe "#tables" do
     it "returns all table names as symbols" do

@@ -8,7 +8,7 @@ module Terrestrial
       ActiveRecord::Base.logger = query_counter
       reset_query_counter
       clean_database
-      Adapters::ActiveRecordPostgresAdapter.new(db_connection)
+      db_connection
     end
 
     module_function def query_counter
@@ -16,15 +16,19 @@ module Terrestrial
     end
 
     module_function def before_suite(schema)
-      @db_connection = connection_pool.checkout
       drop_tables
       create_tables(schema.fetch(:tables))
       add_unique_indexes(schema.fetch(:unique_indexes))
       add_foreign_keys(schema.fetch(:foreign_keys))
     end
 
+    module_function def after_suite
+      drop_tables
+      connection_pool.checkin(db_connection)
+    end
+
     module_function def db_connection
-      @db_connection
+      @db_connection ||= connection_pool.checkout
     end
 
     module_function def excluded_adapters
