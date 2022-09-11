@@ -179,11 +179,7 @@ module Terrestrial
       end
 
       def get_primary_key(table_name)
-        datastore.schema(table_name)
-          .select { |field_name, properties|
-            properties.fetch(:primary_key, false)
-          }
-          .map { |field_name, _| field_name }
+        datastore.primary_key(table_name)
       end
 
       # TODO: inconsisent naming

@@ -49,9 +49,11 @@ RSpec.configure do |config|
     BLOG_SCHEMA
   end
 
+  define_method(:adapter_support) { adapter_support }
+
   RSpec.shared_context "adapter setup" do
     define_method(:datastore) do
-      @datastore ||= adapter_support.build_datastore(schema)
+      @datastore ||= adapter_support.db_connection
     end
 
     let(:query_counter) { adapter_support.query_counter }
@@ -61,6 +63,10 @@ RSpec.configure do |config|
 
   config.before(:suite) do
     adapter_support.before_suite(schema)
+  end
+
+  config.before do
+    adapter_support.before
   end
 
   config.after(:suite) do

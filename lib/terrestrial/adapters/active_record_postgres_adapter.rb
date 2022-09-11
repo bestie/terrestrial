@@ -1,4 +1,5 @@
 require "terrestrial/adapters/abstract_adapter"
+require "terrestrial/inspection_string"
 
 module Terrestrial
   module Adapters
@@ -16,6 +17,10 @@ module Terrestrial
       attr_reader :database
       private     :database
 
+      def_delegators :database, *[
+        :transaction,
+      ]
+
       def tables
         database.tables.map(&:to_sym)
       end
@@ -27,8 +32,8 @@ module Terrestrial
 
       def [](table_name)
         Dataset.new(
-          database,
-          arel_table(table_name).project("*"),
+          self,
+          arel_table(table_name),
         )
       end
 
@@ -36,6 +41,7 @@ module Terrestrial
         sql = upsert_sql(record)
         database.exec_query(sql)
       rescue Object => e
+        require "pry"; binding.pry # DEBUG @bestie
         raise UpsertError.new(record.namespace, record.to_h, e)
       end
 
@@ -60,7 +66,9 @@ module Terrestrial
       end
 
       def execute(sql)
-        database.execute(sql)
+        spec = caller.grep(/spec\/.*_spec.rb/)
+        puts "Executing `#{sql}`"
+        lazy_symbolize_keys(database.execute(sql))
       end
 
       def conflict_fields(table_name)
@@ -78,11 +86,13 @@ module Terrestrial
       end
 
       def relation_fields(relation_name)
-        database[relation_name].columns
+        database.columns(relation_name).map { |col| col.name.to_sym }
       end
 
       def schema(relation_name)
-        database.schema(relation_name)
+        # Yep, private method, I don't give a damn.
+        database.send(:schema).fetch(:tables).fetch(relation_name)
+          .map { |col| [ col[:name], col.except(:name) ] }
       end
 
       private
@@ -99,29 +109,40 @@ module Terrestrial
         table[column_name].eq(value)
       end
 
-  module WrapDelegate
-    def wrap_delegators(target_name, method_names)
-      method_names.each do |method_name|
-        define_method(method_name) do |*args, &block|
-          self.class.new(
-            send(target_name).public_send(method_name, *args, &block)
-          )
+      def lazy_symbolize_keys(db_result)
+        db_result.lazy.map(&:symbolize_keys!)
+      end
+
+      module WrapDelegate
+        def wrap_delegators(target_name, method_names)
+          method_names.each do |method_name|
+            define_method(method_name) do |*args, &block|
+              self.class.new(
+                send(target_name).public_send(method_name, *args, &block)
+              )
+            end
+          end
         end
       end
-    end
-  end
+
       class Dataset
         extend Forwardable
         extend WrapDelegate
         include Enumerable
+        include InspectionString
 
-        def initialize(connection, arel)
-          @connection = connection
-          @arel = arel
+        def inspectable_properties
+          [:arel_table, :arel_select]
         end
 
-        attr_reader :connection, :arel
-        private     :connection, :arel
+        def initialize(adapter, arel_table, arel_select = nil)
+          @adapter = adapter
+          @arel_table = arel_table
+          @arel_select = arel_select
+        end
+
+        attr_reader :adapter, :arel_table
+        private     :adapter, :arel_table
 
         # wrap_delegators :dataset, [
         #   :select,
@@ -138,12 +159,53 @@ module Terrestrial
         #   :reverse,
         # ]
 
+        def select(field)
+          new(arel_table.project(field))
+        end
+
+        def where(constraints)
+          new_select = arel_select.where(map_to_arel_constraints(constraints))
+          new(new_select)
+        end
+
+        def wheres
+          arel_select.ast.cores.first.wheres
+        end
+
         def cache_sql?
           false
         end
 
         def each(&block)
-          connection.execute(arel.to_sql).each(&block)
+          adapter.execute(to_sql).each(&block)
+        end
+
+        def to_sql
+          arel_select.to_sql
+        end
+
+        private
+
+        def map_to_arel_constraints(constraints)
+          constraints.map { |k,v|
+            if v.respond_to?(:to_sql)
+              arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
+            else
+              arel_table[k].eq(v)
+            end
+          }
+        end
+
+        def arel_projection
+          @arel ||= arel.project("*")
+        end
+
+        def new(new_select)
+          self.class.new(adapter, arel_table, new_select)
+        end
+
+        def arel_select
+          @arel_select ||= arel_table.project("*")
         end
       end
 
@@ -175,7 +237,13 @@ module Terrestrial
         end
 
         def values_list
-          parens(attributes.values.map { |v| "'"+database.quote_string(v)+"'" }.join(","))
+          parens(
+            attributes
+              .values
+              .map { |v| database.type_cast(v) }
+              .map { |v| "'"+database.quote_string(v)+"'" }
+              .join(",")
+          )
         end
 
         def conflict_target
@@ -183,7 +251,9 @@ module Terrestrial
         end
 
         def returning
-          "id"
+          if record.identity_fields.any?
+            parens(record.identity_fields.map(&:to_s).join(","))
+          end
         end
 
         def skip_duplicates?
@@ -191,7 +261,7 @@ module Terrestrial
         end
 
         def update_duplicates?
-          true
+          record.identity_fields.any?
         end
 
         def raw_update_sql?

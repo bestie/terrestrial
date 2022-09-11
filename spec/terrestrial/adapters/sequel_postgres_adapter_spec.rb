@@ -1,6 +1,6 @@
 require "spec_helper"
 
-require "terrestrial/adapters/active_record_postgres_adapter"
+require "terrestrial/adapters/sequel_postgres_adapter"
 require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" do
@@ -30,6 +30,45 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
       it "returns an empty array" do
         expect(adapter.primary_key(table_name)).to eq([])
       end
+    end
+  end
+
+  describe "#relation_fields" do
+    it "returns all available fields for a table" do
+      expect(adapter.relation_fields(:users)).to eq(
+        [:id, :first_name, :last_name, :email]
+      )
+    end
+  end
+
+  describe "#schema" do
+    it "returns the column information for a given table" do
+      # let's just see the first two because it gets boring fast
+      expect(adapter.schema(:users).take(2)).to eq([
+        [:id, {
+          :oid=>25,
+          :db_type=>"text",
+          :default=>nil,
+          :allow_null=>false,
+          :primary_key=>true,
+          :generated=>false,
+          :type=>:string,
+          :auto_increment=>false,
+          :ruby_default=>nil,
+          }
+        ],
+        [:first_name, {
+           :oid=>25,
+           :db_type=>"text",
+           :default=>nil,
+           :allow_null=>true,
+           :primary_key=>false,
+           :generated=>false,
+           :type=>:string,
+           :ruby_default=>nil,
+          }
+        ]
+      ])
     end
   end
 

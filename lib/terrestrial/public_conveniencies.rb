@@ -1,4 +1,5 @@
 require "terrestrial/adapters/sequel_postgres_adapter"
+require "terrestrial/adapters/active_record_postgres_adapter"
 require "terrestrial/identity_map"
 require "terrestrial/dirty_map"
 require "terrestrial/upsert_record"
@@ -105,6 +106,8 @@ module Terrestrial
         case datastore.class.name
         when "Sequel::Postgres::Database"
           Adapters::SequelPostgresAdapter.new(datastore)
+        when "ActiveRecord::ConnectionAdapters::PostgreSQLAdapter"
+          Adapters::ActiveRecordPostgresAdapter.new(datastore)
         else
           raise "No adapter found for #{datastore.inspect}"
         end
@@ -137,13 +140,13 @@ module Terrestrial
           [:select_changed, ->(rs) { rs.select { |r| dirty_map.dirty?(r) } }],
           [:remove_unchanged_fields, ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } }],
           [:save_records, ->(rs) {
-            datastore.transaction {
+            # datastore.transaction {
                 rs.each { |r|
                   r.if_upsert(&datastore.method(:upsert))
                   r.if_delete(&datastore.method(:delete))
                 }
               }
-            }
+            # }
           ],
           [:add_new_records_to_dirty_map, ->(rs) { rs.map { |r| dirty_map.load_if_new(r) } }],
         ])

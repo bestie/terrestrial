@@ -115,6 +115,10 @@ module Terrestrial
       end
     end
 
+    module_function def convert_to_adapter_keys(attr_hash)
+      attr_hash.stringify_keys
+    end
+
     class QueryCounter
       def initialize
         reset
@@ -222,7 +226,6 @@ module Terrestrial
             list_tables_query_pattern.match(query)
           }
       end
-
 
       def list_tables_query_pattern
         /\A\([0-9\.]+s\) SELECT "relname" FROM "pg_class"/

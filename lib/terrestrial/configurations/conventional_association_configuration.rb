@@ -113,7 +113,7 @@ module Terrestrial
         join_mapping = create_virtual_mapping(
           default_mapping_name: default_through_table_name,
           namespace: through_table_name,
-          primary_key: [config[:foreign_key], config[:association_foreign_key]],
+          primary_key: [], #[config[:foreign_key], config[:association_foreign_key]],
         )
 
         mappings[join_mapping.name] = join_mapping

@@ -2,17 +2,22 @@ require "active_record"
 
 module Terrestrial
   module ActiveRecordTestSupport
-    module_function def build_datastore(_schema = nil)
-      # The query_counter will let us make assertions about how efficiently
-      # the database is being used
-      ActiveRecord::Base.logger = query_counter
-      reset_query_counter
-      clean_database
-      db_connection
+    def all_users
+      adapter_support.db_connection.execute("SELECT * FROM users").to_a
     end
 
-    module_function def query_counter
-      @@query_counter ||= QueryCounter.new
+    module_function def db_connection
+      @db_connection ||= begin
+        connection = connection_pool.checkout
+        # The query_counter will let us make assertions about how efficiently
+        # the database is being used
+      end
+    end
+
+    module_function def before
+      query_counter.reset!
+      ActiveRecord::Base.logger = query_counter
+      clean_database
     end
 
     module_function def before_suite(schema)
@@ -27,16 +32,12 @@ module Terrestrial
       connection_pool.checkin(db_connection)
     end
 
-    module_function def db_connection
-      @db_connection ||= connection_pool.checkout
+    module_function def query_counter
+      @@query_counter ||= QueryCounter.new
     end
 
     module_function def excluded_adapters
       "memory"
-    end
-
-    module_function def reset_query_counter
-      @@query_counter = nil
     end
 
     module_function def create_database
@@ -66,11 +67,6 @@ module Terrestrial
       #   clean_table(name)
       # end
     end
-
-    # module_function def clean_table(name)
-    #   require "pry"; binding.pry # DEBUG @bestie
-    #   db_connection.truncate(name)
-    # end
 
     module_function def connection_pool
       @connection_pool ||= begin
@@ -123,9 +119,13 @@ module Terrestrial
       end
     end
 
+    module_function def convert_to_adapter_keys(attr_hash)
+      attr_hash.stringify_keys
+    end
+
     class QueryCounter
       def initialize
-        reset
+        reset!
       end
 
       def read_count
@@ -192,7 +192,7 @@ module Terrestrial
         @warn.push(message)
       end
 
-      def reset
+      def reset!
         @described_table_queries = []
         @info = []
         @error = []
@@ -230,7 +230,6 @@ module Terrestrial
             list_tables_query_pattern.match(query)
           }
       end
-
 
       def list_tables_query_pattern
         /\A\([0-9\.]+s\) SELECT "relname" FROM "pg_class"/
