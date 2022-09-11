@@ -5,7 +5,6 @@ require "terrestrial/adapters/active_record_postgres_adapter"
 require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "active_record" do
-
   let(:db_connection) { Terrestrial::ActiveRecordTestSupport.db_connection }
   let(:adapter) { Terrestrial::Adapters::ActiveRecordPostgresAdapter.new(db_connection) }
 

@@ -159,12 +159,24 @@ module Terrestrial
         #   :reverse,
         # ]
 
-        def select(field)
-          new(arel_table.project(field))
+        def select(*fields)
+          field_list = fields.flatten(1)
+          new_arel_select = arel_select.clone
+          new_arel_select.projections = []
+          new_arel_select.project(map_to_arel_fields(field_list))
+          new(new_arel_select)
+        end
+
+        def map_to_arel_fields(fields)
+          fields.map { |f| arel_table[f] }
         end
 
         def where(constraints)
-          new_select = arel_select.where(map_to_arel_constraints(constraints))
+          puts ""
+          puts "+++++++++++++++++++++++++++++++++++++++++++++++++"
+          puts "Adding contraints #{constraints} #{arel_table.table_name}"
+          new_select = arel_select.clone.where(map_to_arel_constraints(constraints))
+          puts "New select #{new_select.to_sql}"
           new(new_select)
         end
 
@@ -194,10 +206,6 @@ module Terrestrial
               arel_table[k].eq(v)
             end
           }
-        end
-
-        def arel_projection
-          @arel ||= arel.project("*")
         end
 
         def new(new_select)

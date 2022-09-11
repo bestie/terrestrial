@@ -87,15 +87,25 @@ RSpec.describe "Graph traversal" do
     end
 
     it "maps has many to many associations as has many through" do
-      require "pry"; binding.pry # DEBUG @bestie
+      # require "pry"; binding.pry # DEBUG @bestie
       # Some scoping problems here - Need to figure out why there's a where gone missing figure out why there's a where gone missing.
       # Would be nice to check if the Sequel adapter produces the SQL I was expecting
       # This isn't scoping categories to posts on the user's post id
+      puts "********************************************"
+      puts ">>>>> user_query.first ============="
+      u = user_query.first
+      puts ">>>>> post"
+      u = u.posts.first
+      puts ">>>>> posts categories"
+      u = u.categories
+
+
+
       expect(user_query.first.posts.first.categories.map(&:id))
         .to match_array(["categories/1", "categories/2"])
 
-      expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
-        .to match_array(["posts/1", "posts/2", "posts/3"])
+      # expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
+      #   .to match_array(["posts/1", "posts/2", "posts/3"])
     end
 
     describe "eager_loading" do
