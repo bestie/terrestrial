@@ -69,11 +69,11 @@ RSpec.describe "Configuration override" do
   context "override table names" do
     context "for just the top level mapping" do
       before do
-        datastore.rename_table(:users, unconventional_table_name)
+        adapter_support.rename_table(:users, unconventional_table_name)
       end
 
       after do
-        datastore.rename_table(unconventional_table_name, :users)
+        adapter_support.rename_table(unconventional_table_name, :users)
       end
 
       let(:override_config) {
@@ -107,13 +107,13 @@ RSpec.describe "Configuration override" do
 
       def rename_all_the_tables
         strange_table_name_map.each do |name, new_name|
-          datastore.rename_table(name, new_name)
+          adapter_support.rename_table(name, new_name)
         end
       end
 
       def undo_rename_all_the_tables
         strange_table_name_map.each do |original_name, strange_name|
-          datastore.rename_table(strange_name, original_name)
+          adapter_support.rename_table(strange_name, original_name)
         end
       end
 

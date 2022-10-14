@@ -6,6 +6,10 @@ module Terrestrial
       adapter_support.db_connection.execute("SELECT * FROM users").to_a
     end
 
+    module_function def adapter
+      Adapters::ActiveRecordPostgresAdapter.new(db_connection)
+    end
+
     module_function def db_connection
       @db_connection ||= begin
         connection = connection_pool.checkout

@@ -53,7 +53,10 @@ RSpec.configure do |config|
 
   RSpec.shared_context "adapter setup" do
     define_method(:datastore) do
-      @datastore ||= adapter_support.db_connection
+      @datastore ||= adapter_support.adapter
+    end
+    define_method(:db_connection) do
+      @db_connection ||= adapter_support.db_connection
     end
 
     let(:query_counter) { adapter_support.query_counter }

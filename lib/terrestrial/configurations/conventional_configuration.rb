@@ -415,7 +415,7 @@ module Terrestrial
         private     :clock, :dirty_map, :created_at_field, :updated_at_field, :created_at_setter, :updated_at_setter
 
         def post_serialize(mapping, object, record)
-          time = clock.now
+          time = clock.now.utc
 
           if created_at_field && !record.get(created_at_field)
             record.set(created_at_field, time)

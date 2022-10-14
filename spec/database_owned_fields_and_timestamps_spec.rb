@@ -51,7 +51,7 @@ RSpec.describe "Database owned fields", backend: "sequel" do
   }
 
   let(:with_db_owned_fields_config) {
-    Terrestrial.config(datastore)
+    Terrestrial.config(datastore, clock: clock)
       .setup_mapping(:users) { |users|
         users.has_many(:posts, foreign_key: :author_id)
       }
@@ -69,7 +69,7 @@ RSpec.describe "Database owned fields", backend: "sequel" do
       expect(datastore).to have_persisted(
         :timestamped_posts,
         hash_including(
-          created_at: an_instance_of(Time),
+          created_at: within(0.05).of(Time.now.utc),
         )
       )
     end
@@ -108,9 +108,7 @@ RSpec.describe "Database owned fields", backend: "sequel" do
 
     context "when the value changes in the database (without worrying about how)" do
       before do
-        datastore[:timestamped_posts]
-          .where(id: post.id)
-          .update("created_at" => party_time)
+        adapter_support.execute("UPDATE timestamped_posts SET created_at='#{party_time}' WHERE id='#{post.id}'")
       end
 
       let(:party_time) { Time.parse("1999-01-01 00:00:00 UTC") }

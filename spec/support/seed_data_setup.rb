@@ -8,7 +8,6 @@ RSpec.shared_context "seed data setup" do
     seeded_records.each do |(table_name, attributes)|
       raw_insert(table_name, attributes)
     end
-    p adapter_support.db_connection.execute("SELECT * FROM users").to_a
   }
 
   def raw_insert(table_name, attrs)

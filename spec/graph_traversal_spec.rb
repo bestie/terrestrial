@@ -46,7 +46,7 @@ RSpec.describe "Graph traversal" do
 
     context "when a many to one association foreign key is nil" do
       before do
-        datastore[:comments].update(commenter_id: nil)
+        db_connection.execute("UPDATE comments SET commenter_id=NULL")
       end
 
       it "populates that association with a nil" do

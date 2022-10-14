@@ -202,6 +202,8 @@ module Terrestrial
           constraints.map { |k,v|
             if v.respond_to?(:to_sql)
               arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
+            elsif v.is_a?(Enumerable)
+              arel_table[k].in(v)
             else
               arel_table[k].eq(v)
             end

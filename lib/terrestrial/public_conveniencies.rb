@@ -140,13 +140,13 @@ module Terrestrial
           [:select_changed, ->(rs) { rs.select { |r| dirty_map.dirty?(r) } }],
           [:remove_unchanged_fields, ->(rs) { rs.map { |r| dirty_map.reject_unchanged_fields(r) } }],
           [:save_records, ->(rs) {
-            # datastore.transaction {
+            datastore.transaction {
                 rs.each { |r|
                   r.if_upsert(&datastore.method(:upsert))
                   r.if_delete(&datastore.method(:delete))
                 }
               }
-            # }
+            }
           ],
           [:add_new_records_to_dirty_map, ->(rs) { rs.map { |r| dirty_map.load_if_new(r) } }],
         ])

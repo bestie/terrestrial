@@ -70,6 +70,9 @@ RSpec.describe "Factory error handling" do
   end
 
   def seed_user(record)
-    datastore[:users].insert(record)
+    adapter_support.execute(
+      "INSERT INTO USERS (#{record.keys.map(&:to_s).join(",")}) " \
+      "VALUES ('#{record.values.join("','")}')"
+    )
   end
 end
