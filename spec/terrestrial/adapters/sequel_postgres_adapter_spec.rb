@@ -41,37 +41,6 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
     end
   end
 
-  describe "#schema" do
-    it "returns the column information for a given table" do
-      # let's just see the first two because it gets boring fast
-      expect(adapter.schema(:users).take(2)).to eq([
-        [:id, {
-          :oid=>25,
-          :db_type=>"text",
-          :default=>nil,
-          :allow_null=>false,
-          :primary_key=>true,
-          :generated=>false,
-          :type=>:string,
-          :auto_increment=>false,
-          :ruby_default=>nil,
-          }
-        ],
-        [:first_name, {
-           :oid=>25,
-           :db_type=>"text",
-           :default=>nil,
-           :allow_null=>true,
-           :primary_key=>false,
-           :generated=>false,
-           :type=>:string,
-           :ruby_default=>nil,
-          }
-        ]
-      ])
-    end
-  end
-
   describe "#unique_indexes" do
     before(:all) do
       adapter_support.create_tables(schema_with_unique_index.fetch(:tables))
@@ -122,6 +91,16 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
 
           expect(adapter[:unique_index_table].first.fetch(:text)).to eq("new value")
         end
+      end
+    end
+
+    describe "#upsert" do
+      let(:record) { create_record(field_one: "1", field_two: "2", text: "new value") }
+
+      it "triggers the mapping's post_save callback via the record's on_upsert callback" do
+        expect(mapping).to receive(:post_save)
+
+        adapter.upsert(record)
       end
     end
 

@@ -77,4 +77,5 @@ RSpec.configure do |config|
   end
 
   config.filter_run_excluding(backend: adapter_support.excluded_adapters)
+  config.example_status_persistence_file_path = "spec/examples.txt"
 end

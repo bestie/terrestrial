@@ -87,10 +87,6 @@ module Terrestrial
         database[relation_name].columns
       end
 
-      def schema(relation_name)
-        database.schema(relation_name)
-      end
-
       private
 
       def perform_upsert_returning_row(record)

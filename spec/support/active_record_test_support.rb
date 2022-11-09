@@ -6,6 +6,10 @@ module Terrestrial
       adapter_support.db_connection.execute("SELECT * FROM users").to_a
     end
 
+    module_function def execute(sql)
+      db_connection.execute(sql)
+    end
+
     module_function def adapter
       Adapters::ActiveRecordPostgresAdapter.new(db_connection)
     end
@@ -21,6 +25,7 @@ module Terrestrial
     module_function def before
       query_counter.reset!
       ActiveRecord::Base.logger = query_counter
+      ActiveSupport::LogSubscriber.colorize_logging = false
       clean_database
     end
 
@@ -127,9 +132,30 @@ module Terrestrial
       attr_hash.stringify_keys
     end
 
-    class QueryCounter
+    module_function def get_next_sequence_value(table_name)
+      execute("SELECT currval(pg_get_serial_sequence('#{table_name}', 'id'))")
+        .to_a
+        .fetch(0)
+        .fetch(:currval) + 1
+    rescue ActiveRecord::StatementInvalid => e
+      if /PG::ObjectNotInPrerequisiteState/.match?(e.message)
+        1
+      else
+        raise e
+      end
+    end
+
+    class QueryCounter < Logger
       def initialize
-        reset!
+        @io = StringIO.new
+        super(io, Logger::DEBUG)
+      end
+
+      attr_reader :io
+
+      def readlines
+        io.rewind
+        io.readlines
       end
 
       def read_count
@@ -175,9 +201,7 @@ module Terrestrial
       end
 
       def inserts
-        @info
-          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
-          .select { |query| query.start_with?("INSERT") }
+        readlines.grep(/SQL .+ INSERT/)
       end
 
       def show_queries

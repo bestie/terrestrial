@@ -12,6 +12,10 @@ module Terrestrial
       @value = val
     end
 
+    def to_sql
+      sql_literal(nil)
+    end
+
     def sql_literal(_dataset)
       @value.nil? ? "NULL" : "'" + @value.to_s + "'"
     end

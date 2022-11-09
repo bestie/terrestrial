@@ -53,17 +53,6 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "act
     end
   end
 
-  describe "#schema" do
-    it "returns the column information for a given table" do
-      expect(adapter.schema(:users)).to eq([
-        [:id, {:type=>String, :options=>{:primary_key=>true}}],
-        [:first_name, {:type=>String}],
-        [:last_name, {:type=>String}],
-        [:email, {:type=>String}],
-      ])
-    end
-  end
-
   describe "persistence" do
     def raw_insert
       quoted_attrs = attrs.values.map { |s| "'#{s}'" }.join(",")
@@ -114,9 +103,14 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "act
         expect(raw_select.to_a).to eq([attrs_with_string_keys])
       end
 
-      it "returns the id" do
-        insert_result = adapter.upsert(record)
-        expect(insert_result.to_a.first).to eq({ "id" => "users/1" })
+      it "returns nil" do
+        expect(adapter.upsert(record)).to be_nil
+      end
+
+      it "triggers the mapping's post_save callback via the record's on_upsert callback" do
+        expect(mapping).to receive(:post_save)
+
+        adapter.upsert(record)
       end
 
       context "when the record already exists" do
@@ -140,13 +134,22 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "act
   let(:attrs_with_string_keys) { attrs.transform_keys(&:to_s) }
 
   let(:record) {
+    Terrestrial::UpsertRecord.new(
+      mapping,
+      double(:object),
+      attrs,
+      0,
+    )
+  }
+
+  let(:mapping) {
     double(
-      :record,
-      identity_fields: [:id],
-      identity: attrs.slice(:id),
+      :mapping,
       namespace: :users,
-      to_h: attrs,
-      insertable: attrs,
+      primary_key: [],
+      database_owned_fields: [],
+      database_default_fields: [],
+      post_save: nil,
     )
   }
 

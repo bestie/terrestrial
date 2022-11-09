@@ -82,6 +82,7 @@ RSpec.describe "Database owned fields", backend: "sequel" do
 
     it "does not insert values for the database owned fields" do
       user_store.save(user_with_post)
+      puts query_counter.readlines
 
       posts_insert = query_counter
         .inserts

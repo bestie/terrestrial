@@ -26,7 +26,6 @@ module Terrestrial
       end
 
       def primary_key(table_name)
-        # schema_cache?
         Array(database.primary_key(table_name)).map(&:to_sym)
       end
 
@@ -39,7 +38,10 @@ module Terrestrial
 
       def upsert(record)
         sql = upsert_sql(record)
-        database.exec_query(sql)
+        result = database.exec_query(sql)
+        row = result.to_a.first.symbolize_keys
+        record.on_upsert(row)
+        nil
       rescue Object => e
         require "pry"; binding.pry # DEBUG @bestie
         raise UpsertError.new(record.namespace, record.to_h, e)
@@ -47,15 +49,25 @@ module Terrestrial
 
       def delete(record)
         table = arel_table(record.namespace)
-        identity = record.identity.map { |k,v| table[k].eq(v) }
+        constraints = map_to_arel_constraints(table, record.identity)
 
-        delete_manager = Arel::DeleteManager.new
-        delete_manager.from(table).where(identity)
+        delete_manager = Arel::DeleteManager.new.from(table)
+        constraints.each do |constraint|
+          delete_manager.where(constraint)
+        end
         database.exec_delete(delete_manager.to_sql)
+      rescue Object => e
+        raise UpsertError.new(record.namespace, record.to_h, e)
       end
 
       def upsert_sql(record)
-        insert = Insert.new(arel_table(record.namespace), record, database)
+        table_name = record.namespace
+        insert = Insert.new(
+          arel_table(table_name),
+          conflict_fields(table_name),
+          record,
+          database,
+        )
         database.build_insert_sql(insert)
       end
 
@@ -67,12 +79,11 @@ module Terrestrial
 
       def execute(sql)
         spec = caller.grep(/spec\/.*_spec.rb/)
-        puts "Executing `#{sql}`"
         lazy_symbolize_keys(database.execute(sql))
       end
 
       def conflict_fields(table_name)
-        primary_key(table_name)
+        primary_key(table_name) + unique_indexes(table_name)
       end
 
       def unique_indexes(table_name)
@@ -87,12 +98,6 @@ module Terrestrial
 
       def relation_fields(relation_name)
         database.columns(relation_name).map { |col| col.name.to_sym }
-      end
-
-      def schema(relation_name)
-        # Yep, private method, I don't give a damn.
-        database.send(:schema).fetch(:tables).fetch(relation_name)
-          .map { |col| [ col[:name], col.except(:name) ] }
       end
 
       private
@@ -111,6 +116,18 @@ module Terrestrial
 
       def lazy_symbolize_keys(db_result)
         db_result.lazy.map(&:symbolize_keys!)
+      end
+
+      def map_to_arel_constraints(arel_table, constraints)
+        constraints.map { |k,v|
+          if v.respond_to?(:to_sql)
+            arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
+          elsif v.is_a?(Enumerable)
+            arel_table[k].in(v)
+          else
+            arel_table[k].eq(v)
+          end
+        }
       end
 
       module WrapDelegate
@@ -172,11 +189,7 @@ module Terrestrial
         end
 
         def where(constraints)
-          puts ""
-          puts "+++++++++++++++++++++++++++++++++++++++++++++++++"
-          puts "Adding contraints #{constraints} #{arel_table.table_name}"
           new_select = arel_select.clone.where(map_to_arel_constraints(constraints))
-          puts "New select #{new_select.to_sql}"
           new(new_select)
         end
 
@@ -194,6 +207,10 @@ module Terrestrial
 
         def to_sql
           arel_select.to_sql
+        end
+
+        def order(fields)
+          require "pry"; binding.pry # DEBUG @bestie
         end
 
         private
@@ -220,54 +237,53 @@ module Terrestrial
       end
 
       class Insert
-        def initialize(arel_table, record, database)
+        def initialize(arel_table, conflict_fields, record, database)
           @arel_table = arel_table
+          @conflict_fields = conflict_fields
           @record = record
           @database = database
         end
 
         attr_reader :arel_table, :record, :database
 
-        def attributes
-          record.to_h
-        end
-
-        def arel_insert
-          @arel_insert ||= Arel::InsertManager
-            .new(arel_table)
-            .insert(attributes.transform_keys { |name| arel_table[name] })
-        end
-
         def into
           "INTO #{arel_table.name} (#{columns_list}) VALUES"
         end
 
         def columns_list
-          attributes.keys.join(",")
+          if primary_key_missing?
+            record.updatable_attributes.keys.join(",")
+          else
+            record.attributes.keys.join(",")
+          end
         end
 
         def values_list
+          if primary_key_missing?
+            values = record.updatable_attributes.values
+          else
+            values = record.attributes.values
+          end
+
           parens(
-            attributes
-              .values
-              .map { |v| database.type_cast(v) }
-              .map { |v| "'"+database.quote_string(v)+"'" }
+            values
+              .map { |v| database_type_cast(v) }
               .join(",")
           )
         end
 
         def conflict_target
-          parens(record.identity_fields.map(&:to_s).join(","))
-        end
-
-        def returning
-          if record.identity_fields.any?
-            parens(record.identity_fields.map(&:to_s).join(","))
+          if @conflict_fields.any?
+            parens(@conflict_fields.join(","))
           end
         end
 
+        def returning
+          "*"
+        end
+
         def skip_duplicates?
-          false
+          @conflict_fields.none?
         end
 
         def update_duplicates?
@@ -287,6 +303,22 @@ module Terrestrial
         end
 
         private
+
+        def primary_key_missing?
+          record.identity_values.all?(&:nil?)
+        end
+
+        def database_type_cast(value)
+          if value.respond_to?(:to_sql)
+            value.to_sql
+          else
+            cast_value = database.type_cast(value)
+            if cast_value.is_a?(String)
+              cast_value = "'" + database.quote_string(cast_value) + "'"
+            end
+            cast_value
+          end
+        end
 
         def parens(string)
           "(#{string})"

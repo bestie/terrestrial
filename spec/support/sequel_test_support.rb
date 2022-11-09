@@ -136,6 +136,19 @@ module Terrestrial
       attr_hash.stringify_keys
     end
 
+    module_function def get_next_sequence_value(table_name)
+      datastore["select currval(pg_get_serial_sequence('#{table_name}', 'id'))"]
+        .to_a
+        .fetch(0)
+        .fetch(:currval) + 1
+    rescue Sequel::DatabaseError => e
+      if /PG::ObjectNotInPrerequisiteState/.match?(e.message)
+        1
+      else
+        raise e
+      end
+    end
+
     class QueryCounter
       def initialize
         reset!
@@ -147,7 +160,6 @@ module Terrestrial
           .grep_v(list_tables_query_pattern)
           .grep_v(columns_query_pattern)
           .grep_v(pg_attribute_pattern)
-          .tap { |qs| puts "The qs";puts qs; puts "thems the qs" }
           .count
       end
 

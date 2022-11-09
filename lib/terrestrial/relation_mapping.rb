@@ -58,6 +58,7 @@ module Terrestrial
     end
 
     def post_save(object, record, new_attributes)
+      p new_attributes
       new_record = upsertable_record(object, new_attributes, 0, {})
 
       observers.each { |o| o.post_save(self, object, record, new_record) }

@@ -23,6 +23,7 @@ RSpec.shared_context "object store setup" do
   let(:clock) { Time }
 
   let(:mappings) {
+    puts "USing #{db_connection.class}"
     Terrestrial.config(db_connection, clock: clock)
       .setup_mapping(:users) { |users|
         users.has_many(:posts, foreign_key: :author_id)

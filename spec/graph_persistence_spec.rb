@@ -339,6 +339,7 @@ RSpec.describe "Graph persistence" do
           author: nil,
           subject: "Nils gonna getcha",
           body: "",
+
           created_at: Time.parse("2015-09-05T15:00:00+01:00"),
           updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
           categories: [],

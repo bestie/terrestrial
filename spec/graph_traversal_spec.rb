@@ -25,8 +25,12 @@ RSpec.describe "Graph traversal" do
     end
 
     it "maps the raw data from the store into domain objects" do
+      $TP.enable
       expect(user_query.first.id).to eq("users/1")
       expect(user_query.first.first_name).to eq("Hansel")
+      $TP.disable
+ENV["DISABLE_PRY"] = nil
+      require "pry"; binding.pry # DEBUG @bestie
     end
 
     it "handles has_many associations" do
