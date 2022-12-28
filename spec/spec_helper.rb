@@ -6,6 +6,11 @@ require "support/blog_schema"
 
 Warning[:deprecated] = false
 
+File.readlines(".env").each do |line|
+  _, var, value = /^export ([^=]+)="?([^"]+)"?/.match(line).to_a
+  ENV[var] = value
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
