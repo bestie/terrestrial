@@ -236,17 +236,19 @@ module Terrestrial
           constraints.map { |k,v|
             arel_field = name_to_arel_field(k)
 
-            case v
-            when String,Symbol
-              arel_field.eq(v)
-            when Enumerable
-              arel_field.in(v)
-            when Regexp
-              arel_field.matches_regexp(v)
-            when v.respond_to?(:to_sql)
+            if v.respond_to?(:to_sql)
               arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
             else
-              raise "Don't *really* know how to build where for that type"
+              case v
+              when String,Symbol
+                arel_field.eq(v)
+              when Enumerable
+                arel_field.in(v)
+              when Regexp
+                arel_field.matches_regexp(v.source, v.casefold?)
+              else
+                raise "Don't *really* know how to build where for that type #{v.class} #{v.inspect}"
+              end
             end
           }
         end
