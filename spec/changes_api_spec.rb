@@ -69,10 +69,10 @@ RSpec.describe "Changes API", backend: "sequel" do
 
         expect(user_store.changes_sql(user)).to eq(
           [
-            "INSERT INTO \"users\" (\"email\", \"id\") VALUES " \
-              "('hasel+modified@gmail.com', 'users/1') ON CONFLICT (\"id\") " \
-              "DO UPDATE SET \"email\" = 'hasel+modified@gmail.com' " \
-              "RETURNING *",
+            "INSERT INTO users (email,id) VALUES " \
+              "('hasel+modified@gmail.com','users/1') ON CONFLICT (id) " \
+              "DO UPDATE SET email=excluded.email,id=excluded.id " \
+              "RETURNING *"
           ]
         )
       end

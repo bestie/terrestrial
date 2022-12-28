@@ -132,7 +132,7 @@ module Terrestrial
       execute("SELECT currval(pg_get_serial_sequence('#{table_name}', 'id'))")
         .to_a
         .fetch(0)
-        .fetch(:currval) + 1
+        .fetch("currval") + 1
     rescue ActiveRecord::StatementInvalid => e
       if /PG::ObjectNotInPrerequisiteState/.match?(e.message)
         1

@@ -21,7 +21,10 @@ RSpec.describe "Ordered associations" do
 
     it "enumerates the objects in order specified in the config" do
       expect(posts.map(&:id)).to eq(
-        posts.to_a.sort_by(&:created_at).reverse.map(&:id)
+        posts
+        .to_a
+        .sort_by(&:created_at)
+        .reverse.map(&:id)
       )
     end
   end

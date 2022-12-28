@@ -1,3 +1,5 @@
+require "forwardable"
+
 require "terrestrial/adapters/abstract_adapter"
 require "terrestrial/inspection_string"
 
@@ -37,13 +39,12 @@ module Terrestrial
       end
 
       def upsert(record)
-        sql = upsert_sql(record)
+        sql = generate_upsert_sql(record)
         result = database.exec_query(sql)
         row = result.to_a.first.symbolize_keys
         record.on_upsert(row)
         nil
       rescue Object => e
-        require "pry"; binding.pry # DEBUG @bestie
         raise UpsertError.new(record.namespace, record.to_h, e)
       end
 
@@ -60,7 +61,13 @@ module Terrestrial
         raise UpsertError.new(record.namespace, record.to_h, e)
       end
 
-      def upsert_sql(record)
+      def changes_sql(record)
+        generate_upsert_sql(record)
+      rescue Object => e
+        raise UpsertError.new(record.namespace, record.to_h, e)
+      end
+
+      def generate_upsert_sql(record)
         table_name = record.namespace
         insert = Insert.new(
           arel_table(table_name),
@@ -69,12 +76,6 @@ module Terrestrial
           database,
         )
         database.build_insert_sql(insert)
-      end
-
-      def changes_sql(record)
-        generate_upsert_sql(record)
-      rescue Object => e
-        raise UpsertError.new(record.namespace, record.to_h, e)
       end
 
       def execute(sql)
@@ -167,7 +168,7 @@ module Terrestrial
         #   :clone,
         #   :order,
         # ]
-        #
+
         # def_delegators :dataset, *[
         #   :empty?,
         #   :delete,
@@ -178,19 +179,14 @@ module Terrestrial
 
         def select(*fields)
           field_list = fields.flatten(1)
-          new_arel_select = arel_select.clone
-          new_arel_select.projections = []
-          new_arel_select.project(map_to_arel_fields(field_list))
-          new(new_arel_select)
-        end
-
-        def map_to_arel_fields(fields)
-          fields.map { |f| arel_table[f] }
+          clone_select.projections = []
+          clone_select.project(map_to_arel_fields(field_list))
+          new(clone_select)
         end
 
         def where(constraints)
-          new_select = arel_select.clone.where(map_to_arel_constraints(constraints))
-          new(new_select)
+          clone_select.where(map_to_arel_constraints(constraints))
+          new(clone_select)
         end
 
         def wheres
@@ -205,30 +201,70 @@ module Terrestrial
           adapter.execute(to_sql).each(&block)
         end
 
+        QueryBuildError = Class.new(RuntimeError)
+
         def to_sql
           arel_select.to_sql
+        rescue => og_error
+          new_error = QueryBuildError.new(
+            "Error building query from Arel\n" \
+            "#{og_error.message}\n\n" \
+            # "#{arel_select.ast.inspect.gsub(/ @/, "\n  @")}\n" \
+          )
+          raise new_error
         end
 
-        def order(fields)
-          require "pry"; binding.pry # DEBUG @bestie
+        def order(*field_names)
+          direction = :asc
+          direction_method = direction.downcase.to_sym
+          arel_fields = map_to_arel_fields(field_names)
+
+          arel_fields.each do |af|
+            clone_select.order(af.public_send(direction_method))
+          end
+          new(clone_select)
+        end
+
+        def reverse
+          clone_select.orders.map!(&:reverse)
+          new(clone_select)
         end
 
         private
 
         def map_to_arel_constraints(constraints)
           constraints.map { |k,v|
-            if v.respond_to?(:to_sql)
+            arel_field = name_to_arel_field(k)
+
+            case v
+            when String,Symbol
+              arel_field.eq(v)
+            when Enumerable
+              arel_field.in(v)
+            when Regexp
+              arel_field.matches_regexp(v)
+            when v.respond_to?(:to_sql)
               arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
-            elsif v.is_a?(Enumerable)
-              arel_table[k].in(v)
             else
-              arel_table[k].eq(v)
+              raise "Don't *really* know how to build where for that type"
             end
           }
         end
 
+        def map_to_arel_fields(fields)
+          fields.map { |f| name_to_arel_field(f) }
+        end
+
+        def name_to_arel_field(field)
+          arel_table[field]
+        end
+
         def new(new_select)
           self.class.new(adapter, arel_table, new_select)
+        end
+
+        def clone_select
+          @clone_select ||= arel_select.clone
         end
 
         def arel_select

@@ -48,13 +48,6 @@ module Terrestrial
       @query_counter ||= QueryCounter.new
     end
 
-    module_function def before_suite(schema)
-      drop_tables
-      create_tables(schema.fetch(:tables))
-      add_unique_indexes(schema.fetch(:unique_indexes))
-      add_foreign_keys(schema.fetch(:foreign_keys))
-    end
-
     module_function def after_suite
       drop_tables
     end
