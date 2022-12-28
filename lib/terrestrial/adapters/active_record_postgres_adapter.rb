@@ -179,14 +179,16 @@ module Terrestrial
 
         def select(*fields)
           field_list = fields.flatten(1)
-          clone_select.projections = []
-          clone_select.project(map_to_arel_fields(field_list))
-          new(clone_select)
+          cs = clone_select
+          cs.projections = []
+          cs.project(map_to_arel_fields(field_list))
+          new(cs)
         end
 
         def where(constraints)
-          clone_select.where(map_to_arel_constraints(constraints))
-          new(clone_select)
+          cs = clone_select
+          cs.where(map_to_arel_constraints(constraints))
+          new(cs)
         end
 
         def wheres
@@ -219,15 +221,17 @@ module Terrestrial
           direction_method = direction.downcase.to_sym
           arel_fields = map_to_arel_fields(field_names)
 
+          cs = clone_select
           arel_fields.each do |af|
-            clone_select.order(af.public_send(direction_method))
+            cs.order(af.public_send(direction_method))
           end
-          new(clone_select)
+          new(cs)
         end
 
         def reverse
-          clone_select.orders.map!(&:reverse)
-          new(clone_select)
+          cs = clone_select
+          cs.orders.map!(&:reverse)
+          new(cs)
         end
 
         private
@@ -240,14 +244,15 @@ module Terrestrial
               arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
             else
               case v
-              when String,Symbol
+              when String,Symbol,Numeric
                 arel_field.eq(v)
               when Enumerable
                 arel_field.in(v)
               when Regexp
                 arel_field.matches_regexp(v.source, v.casefold?)
               else
-                raise "Don't *really* know how to build where for that type #{v.class} #{v.inspect}"
+                warn "Don't *really* know how to build a where clause for that type #{v.class} #{v.inspect}"
+                arel_field.eq(v)
               end
             end
           }
@@ -266,7 +271,7 @@ module Terrestrial
         end
 
         def clone_select
-          @clone_select ||= arel_select.clone
+          arel_select.clone
         end
 
         def arel_select
