@@ -8,7 +8,7 @@ Warning[:deprecated] = false
 
 File.readlines(".env").each do |line|
   _, var, value = /^export ([^=]+)="?([^"]+)"?/.match(line).to_a
-  ENV[var] = value
+  ENV[var] ||= value
 end
 
 RSpec.configure do |config|
