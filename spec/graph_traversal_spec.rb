@@ -91,14 +91,10 @@ RSpec.describe "Graph traversal" do
       # Some scoping problems here - Need to figure out why there's a where gone missing figure out why there's a where gone missing.
       # Would be nice to check if the Sequel adapter produces the SQL I was expecting
       # This isn't scoping categories to posts on the user's post id
-      puts "********************************************"
       puts ">>>>> user_query.first ============="
-      u = user_query.first
       puts ">>>>> post"
       u = u.posts.first
-      puts ">>>>> posts categories"
       u = u.categories
-
 
 
       expect(user_query.first.posts.first.categories.map(&:id))
