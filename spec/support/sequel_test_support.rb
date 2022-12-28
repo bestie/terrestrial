@@ -59,10 +59,6 @@ module Terrestrial
       drop_tables
     end
 
-    module_function def excluded_adapters
-      "memory"
-    end
-
     module_function def create_database
       `psql postgres --command "CREATE DATABASE $PGDATABASE;"`
     end

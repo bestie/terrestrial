@@ -45,10 +45,6 @@ module Terrestrial
       @@query_counter ||= QueryCounter.new
     end
 
-    module_function def excluded_adapters
-      "memory"
-    end
-
     module_function def create_database
       `psql postgres --command "CREATE DATABASE $PGDATABASE;"`
     end

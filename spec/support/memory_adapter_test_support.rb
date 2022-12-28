@@ -6,10 +6,6 @@ module Terrestrial
       Adapters::MemoryAdapter.build_from_schema(schema.fetch(:tables), raw_storage)
     end
 
-    module_function def excluded_adapters
-      "sequel"
-    end
-
     module_function def before_suite(_schema)
       # NOOP
     end

@@ -34,16 +34,16 @@ RSpec.configure do |config|
 
   # Kernel.srand config.seed
 
-  adapter_support = case ENV.fetch("ADAPTER", "sequel")
-  when "memory"
-    Terrestrial::MemoryAdapterTestSupport
-  when "sequel"
-    Terrestrial::SequelTestSupport
-  when "activerecord"
-    Terrestrial::ActiveRecordTestSupport
-  else
-    raise "Adapter `#{ENV["ADAPTER"]}` not found"
-  end
+  adapters = {
+    "memory" => Terrestrial::MemoryAdapterTestSupport,
+    "sequel" => Terrestrial::SequelTestSupport,
+    "activerecord" => Terrestrial::ActiveRecordTestSupport,
+  }
+
+  adapter = ENV.fetch("ADAPTER", "sequel")
+  adapter_support = adapters.fetch(adapter) {
+    raise "Adapter not found `#{adapter}`\nMust be one of #{adapters.join(",")}."
+  }
 
   def schema
     BLOG_SCHEMA
@@ -76,6 +76,9 @@ RSpec.configure do |config|
     adapter_support.after_suite
   end
 
-  config.filter_run_excluding(backend: adapter_support.excluded_adapters)
+  # exclude tests tagged for other adapters
+  other_adapters = adapters.keys - [adapter]
+  config.filter_run_excluding(backend: /#{other_adapters.join("|")}/)
+
   config.example_status_persistence_file_path = "spec/examples.txt"
 end
