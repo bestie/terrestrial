@@ -3,6 +3,11 @@ require "sequel"
 require "terrestrial"
 require_relative "../spec/support/sequel_test_support"
 
+File.readlines(".env").each do |line|
+  _, var, value = /^export ([^=]+)="?([^"]+)"?/.match(line).to_a
+  ENV[var] ||= value
+end
+
 module ExampleRunnerSupport
   def example_eval_concat(code_strings)
     example_eval(code_strings.join("\n"))

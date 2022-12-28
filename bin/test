@@ -12,11 +12,11 @@ module TerrestrialTesting
     puts "ADAPTER=#{adapter} bundle exec rspec"
     puts ""
 
-    system("ADAPTER=#{adapter} rspec")
+    system("ADAPTER=#{adapter} bundle exec rspec")
   end
 
   module_function def run_cucumber
-    system("cucumber")
+    system("ADAPTER='sequel' bundle exec cucumber")
   end
 end
 
