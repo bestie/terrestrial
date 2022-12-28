@@ -126,7 +126,7 @@ module Terrestrial
     end
 
     module_function def get_next_sequence_value(table_name)
-      datastore["select currval(pg_get_serial_sequence('#{table_name}', 'id'))"]
+      execute("select currval(pg_get_serial_sequence('#{table_name}', 'id'))")
         .to_a
         .fetch(0)
         .fetch(:currval) + 1

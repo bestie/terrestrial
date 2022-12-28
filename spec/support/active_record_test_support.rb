@@ -148,36 +148,13 @@ module Terrestrial
     class QueryCounter < Logger
       def initialize
         @io = StringIO.new
-        super(io, Logger::DEBUG)
+        super(@io, Logger::DEBUG)
       end
 
       attr_reader :io
 
-      def readlines
-        io.rewind
-        io.readlines
-      end
-
-      def read_count
-        read_count_with_describes -
-          list_tables_query_count -
-          describe_table_queries_count
-      end
-
-      def delete_count
-        @info.count { |query|
-          /\A\([0-9\.]+s\) DELETE/i === query
-        }
-      end
-
-      def read_count_with_describes
-        @info.count { |query|
-          /\A\([0-9\.]+s\) SELECT/i === query
-        }
-      end
-
       def write_count
-        upserts.count
+        insert_count + update_count
       end
 
       def update_count
@@ -188,16 +165,8 @@ module Terrestrial
         inserts.count
       end
 
-      def upserts
-        @info
-          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
-          .select { |query| query.start_with?("INSERT") && query.include?("ON CONFLICT") }
-      end
-
       def updates
-        @info
-          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
-          .select { |query| query.start_with?("UPDATE") }
+        readlines.grep(/SQL .+ UPDATE/)
       end
 
       def inserts
@@ -205,32 +174,20 @@ module Terrestrial
       end
 
       def show_queries
-        puts @info.join("\n")
-      end
-
-      def info(message)
-        @info.push(message)
-      end
-
-      def error(message)
-        @error.push(message)
-      end
-
-      def warn(message)
-        @warn.push(message)
+        puts readlines
       end
 
       def reset!
-        @described_table_queries = []
-        @info = []
-        @error = []
-        @warn = []
+        new_io = StringIO.new
+        @io.reopen(new_io)
+        nil
       end
 
       private
 
-      def list_tables_query_count
-        @info.count { |query| list_tables_query_pattern.match(query) }
+      def readlines
+        io.rewind
+        io.readlines
       end
 
       def describe_table_queries_count
@@ -250,7 +207,7 @@ module Terrestrial
       end
 
       def queries_without_table_list
-        @info
+        readlines
           .drop_while { |query|
             !list_tables_query_pattern.match(query)
           }

@@ -4,7 +4,7 @@ require "support/have_persisted_matcher"
 require "support/object_store_setup"
 require "support/seed_data_setup"
 
-RSpec.describe "Database default fields", backend: "sequel" do
+RSpec.describe "Database default fields" do
   include_context "object store setup"
 
   before(:all) do

@@ -5,7 +5,7 @@ require "support/seed_data_setup"
 require "support/have_persisted_matcher"
 require "terrestrial"
 
-RSpec.describe "Changes API", backend: "sequel" do
+RSpec.describe "Changes API" do
   include_context "object store setup"
   include_context "seed data setup"
 
@@ -64,7 +64,20 @@ RSpec.describe "Changes API", backend: "sequel" do
     context "when loading and modifying only the root node" do
       let(:modified_email) { "hasel+modified@gmail.com" }
 
-      it "returns the upsert statement for just that change" do
+      it "returns the upsert statement for just that change (Sequel)", backend: "sequel" do
+        user.email = modified_email
+
+        expect(user_store.changes_sql(user)).to eq(
+          [
+             "INSERT INTO \"users\" (\"email\", \"id\") VALUES " \
+               "('hasel+modified@gmail.com', 'users/1') ON CONFLICT (\"id\") " \
+               "DO UPDATE SET \"email\" = 'hasel+modified@gmail.com' " \
+               "RETURNING *",
+          ]
+        )
+      end
+
+      it "returns the upsert statement for just that change (ActiveRecord)", backend: "activerecord" do
         user.email = modified_email
 
         expect(user_store.changes_sql(user)).to eq(

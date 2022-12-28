@@ -56,7 +56,7 @@ RSpec.configure do |config|
 
   define_method(:adapter_support) { adapter_support }
 
-  RSpec.shared_context "adapter setup" do
+  AdapterSetup = Module.new do
     define_method(:datastore) do
       @datastore ||= adapter_support.adapter
     end
@@ -64,10 +64,12 @@ RSpec.configure do |config|
       @db_connection ||= adapter_support.db_connection
     end
 
-    let(:query_counter) { adapter_support.query_counter }
+    define_method(:query_counter) do
+      @query_counter ||= adapter_support.query_counter
+    end
   end
 
-  config.include_context "adapter setup"
+  config.include(AdapterSetup)
 
   config.before(:suite) do
     adapter_support.before_suite(schema)

@@ -8,7 +8,7 @@ require "support/seed_data_setup"
 # database level they are used as an example for field that the database owns.
 # This means the application layer should always read from and never write to
 # that field.
-RSpec.describe "Database owned fields", backend: "sequel" do
+RSpec.describe "Database owned fields" do
   include_context "object store setup"
 
   before(:all) do
@@ -82,7 +82,6 @@ RSpec.describe "Database owned fields", backend: "sequel" do
 
     it "does not insert values for the database owned fields" do
       user_store.save(user_with_post)
-      puts query_counter.readlines
 
       posts_insert = query_counter
         .inserts

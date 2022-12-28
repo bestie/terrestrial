@@ -91,8 +91,7 @@ RSpec.describe "Graph traversal" do
       # Some scoping problems here - Need to figure out why there's a where gone missing figure out why there's a where gone missing.
       # Would be nice to check if the Sequel adapter produces the SQL I was expecting
       # This isn't scoping categories to posts on the user's post id
-      puts ">>>>> user_query.first ============="
-      puts ">>>>> post"
+      u = user_query.first
       u = u.posts.first
       u = u.categories
 
@@ -100,8 +99,8 @@ RSpec.describe "Graph traversal" do
       expect(user_query.first.posts.first.categories.map(&:id))
         .to match_array(["categories/1", "categories/2"])
 
-      # expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
-      #   .to match_array(["posts/1", "posts/2", "posts/3"])
+      expect(user_query.first.posts.first.categories.to_a.last.posts.map(&:id))
+        .to match_array(["posts/1", "posts/2", "posts/3"])
     end
 
     describe "eager_loading" do

@@ -4,7 +4,7 @@ require "support/have_persisted_matcher"
 require "support/object_store_setup"
 require "support/seed_data_setup"
 
-RSpec.describe "Automatic timestamps", backend: "sequel" do
+RSpec.describe "Automatic timestamps" do
   include_context "object store setup"
 
   before(:all) do
