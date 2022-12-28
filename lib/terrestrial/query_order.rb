@@ -9,7 +9,7 @@ module Terrestrial
 
     def apply(dataset)
       if fields.any?
-        apply_direction(dataset.order(fields))
+        apply_direction(dataset.order(*fields))
       else
         dataset
       end

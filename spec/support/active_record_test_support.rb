@@ -73,6 +73,10 @@ module Terrestrial
       # end
     end
 
+    module_function def rename_table(old, new)
+      db_connection.rename_table(old, new)
+    end
+
     module_function def connection_pool
       @connection_pool ||= begin
         ActiveRecord::Base.establish_connection(
