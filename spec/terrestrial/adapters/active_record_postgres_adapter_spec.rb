@@ -72,29 +72,6 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "act
       end
     end
 
-    xdescribe "#upsert_sql" do
-      it "generates postgres compatible SQL using ActiveRecord's database adatper" do
-        attrs = { id: "posts/1", name: "a post", created_at: Time.now }
-      record = double(
-        :record,
-        identity_fields: [:id],
-        identity: "post/1",
-        namespace: :posts,
-        to_h: attrs,
-        insertable: attrs,
-      )
-# dw|| INSERT INTO posts (id,name,created_at) VALUES ('posts/1','a post','2022-09-11 10:26:10.260550') ON CONFLICT (id) DO UPDATE SET id=excluded.id,name=excluded.name,created_at=excluded.created_at RETURNING id
-      puts adapter.upsert_sql(record)
-        expect(adapter.upsert_sql(record)).to eq(
-          "INSERT INTO users (id,first_name,last_name,email) " \
-          "VALUES ('users/1','boop','snoot','bestie@gmail.com') "\
-          "ON CONFLICT (id) DO UPDATE SET " \
-          "id=excluded.id,first_name=excluded.first_name,last_name=excluded.last_name,email=excluded.email "\
-          "RETURNING id"
-        )
-      end
-    end
-
     describe "#upsert" do
       it "inserts a new record" do
         adapter.upsert(record)
