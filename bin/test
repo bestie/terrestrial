@@ -5,10 +5,14 @@ Bundler.setup
 
 ADAPTERS = ["activerecord", "sequel"]
 
+ORANGE_256 = "\e[38;5;202m"
+RESET = "\e[0m"
+
 module TerrestrialTesting
   module_function def run_rspec_with_adapter(adapter)
-    puts "Running RSpec suite for `#{adapter}` adapter"
+    puts "Running RSpec suite for #{ORANGE_256}`#{adapter}`#{RESET} adapter"
     puts "Run following command to replicate"
+    puts ""
     puts "ADAPTER=#{adapter} bundle exec rspec"
     puts ""
 
@@ -16,6 +20,7 @@ module TerrestrialTesting
   end
 
   module_function def run_cucumber
+    puts "Running Cucumber only for #{ORANGE_256}`sequel`#{RESET} adapter"
     system("ADAPTER='sequel' bundle exec cucumber")
   end
 end
