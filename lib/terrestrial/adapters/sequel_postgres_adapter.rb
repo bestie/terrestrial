@@ -46,6 +46,9 @@ module Terrestrial
       end
 
       def upsert(record)
+        if ENV["ADAPTER"] != "sequel"
+          raise "Using Sequel adapter when set to #{ENV['ADAPTER']}"
+        end
         row = perform_upsert_returning_row(record)
         record.on_upsert(row)
         nil

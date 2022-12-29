@@ -39,6 +39,9 @@ module Terrestrial
       end
 
       def upsert(record)
+        if ENV["ADAPTER"] != "activerecord"
+          raise "Using ActiveRecord adapter when set to #{ENV['ADAPTER']}"
+        end
         sql = generate_upsert_sql(record)
         result = database.exec_query(sql)
         row = result.to_a.first.symbolize_keys
@@ -251,6 +254,7 @@ module Terrestrial
               when Regexp
                 arel_field.matches_regexp(v.source, v.casefold?)
               else
+                require "pry"; binding.pry if ENV['ADAPTER'] != 'activerecord'
                 warn "Don't *really* know how to build a where clause for that type #{v.class} #{v.inspect}"
                 arel_field.eq(v)
               end
