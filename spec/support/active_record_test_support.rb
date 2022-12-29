@@ -2,10 +2,6 @@ require "active_record"
 
 module Terrestrial
   module ActiveRecordTestSupport
-    def all_users
-      adapter_support.db_connection.execute("SELECT * FROM users").to_a
-    end
-
     module_function def execute(sql)
       db_connection.execute(sql)
     end
@@ -68,9 +64,6 @@ module Terrestrial
 
     module_function def clean_tables(names)
       db_connection.truncate_tables(*names)
-      # names.each do |name|
-      #   clean_table(name)
-      # end
     end
 
     module_function def rename_table(old, new)

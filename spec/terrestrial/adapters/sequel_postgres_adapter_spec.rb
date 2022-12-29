@@ -4,9 +4,7 @@ require "terrestrial/adapters/sequel_postgres_adapter"
 require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" do
-
-  let(:db_connection) { Terrestrial::SequelTestSupport.db_connection }
-  let(:adapter) { Terrestrial::Adapters::SequelPostgresAdapter.new(db_connection) }
+  let(:adapter) { described_class.new(adapter_support.db_connection) }
 
   describe "#tables" do
     it "returns all table names as symbols" do
@@ -133,10 +131,6 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
       it "returns an empty array" do
         expect(adapter.unique_indexes(table_name)).to eq([])
       end
-    end
-
-    def adapter_support
-      Terrestrial::ActiveRecordTestSupport
     end
 
     def schema_with_unique_index

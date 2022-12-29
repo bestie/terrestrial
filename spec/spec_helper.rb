@@ -60,9 +60,6 @@ RSpec.configure do |config|
     define_method(:datastore) do
       @datastore ||= adapter_support.adapter
     end
-    define_method(:db_connection) do
-      @db_connection ||= adapter_support.db_connection
-    end
 
     define_method(:query_counter) do
       @query_counter ||= adapter_support.query_counter

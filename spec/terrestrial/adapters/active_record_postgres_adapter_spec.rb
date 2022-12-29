@@ -5,8 +5,7 @@ require "terrestrial/adapters/active_record_postgres_adapter"
 require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "activerecord" do
-  let(:db_connection) { Terrestrial::ActiveRecordTestSupport.db_connection }
-  let(:adapter) { Terrestrial::Adapters::ActiveRecordPostgresAdapter.new(db_connection) }
+  let(:adapter) { described_class.new(adapter_support.db_connection) }
 
   describe "#execute" do
     context "simple select" do
@@ -56,11 +55,11 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "act
   describe "persistence" do
     def raw_insert
       quoted_attrs = attrs.values.map { |s| "'#{s}'" }.join(",")
-      db_connection.execute("INSERT INTO users (#{attrs.keys.join(",")}) VALUES (#{quoted_attrs})")
+      adapter_support.execute("INSERT INTO users (#{attrs.keys.join(",")}) VALUES (#{quoted_attrs})")
     end
 
     def raw_select
-      db_connection.execute("SELECT * FROM users").to_a
+      adapter_support.execute("SELECT * FROM users").to_a
     end
 
     describe "#delete" do
@@ -155,10 +154,10 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter, backend: "act
 
   def raw_insert
     quoted_attrs = attrs.values.map { |s| "'#{s}'" }.join(",")
-    db_connection.execute("INSERT INTO users (#{attrs.keys.join(",")}) VALUES (#{quoted_attrs})")
+    adapter_support.execute("INSERT INTO users (#{attrs.keys.join(",")}) VALUES (#{quoted_attrs})")
   end
 
   def raw_select
-    db_connection.execute("SELECT * FROM users").to_a
+    adapter_support.execute("SELECT * FROM users").to_a
   end
 end
