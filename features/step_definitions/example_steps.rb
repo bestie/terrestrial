@@ -34,13 +34,13 @@ When(/^the following query is executed$/) do |code_sample|
 end
 
 Then(/^the persisted user object is returned with lazy associations$/) do |expected_inspection_string|
-  expect(normalise_inspection_string(@result.inspect))
-    .to eq(normalise_inspection_string(expected_inspection_string))
+  expect(normalize_inspection_string(@result.inspect))
+    .to eq(normalize_inspection_string(expected_inspection_string))
 end
 
 Then(/^the user's posts will be loaded once the association proxy receives an Enumerable message$/) do |expected_inspection_string|
   posts = @result.posts.to_a
 
-  expect(normalise_inspection_string(posts.inspect))
-    .to eq(normalise_inspection_string(expected_inspection_string))
+  expect(normalize_inspection_string(posts.inspect))
+    .to eq(normalize_inspection_string(expected_inspection_string))
 end

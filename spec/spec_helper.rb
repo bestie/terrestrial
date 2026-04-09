@@ -1,4 +1,5 @@
-require "pry"
+require "debug"
+require "amazing_print"
 require "support/sequel_test_support"
 require "support/memory_adapter_test_support"
 require "support/blog_schema"

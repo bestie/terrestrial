@@ -1,4 +1,5 @@
-require "pry"
+require "debug"
+require "amazing_print"
 require "sequel"
 require "terrestrial"
 require_relative "../spec/support/sequel_test_support"
@@ -11,7 +12,7 @@ module ExampleRunnerSupport
   def example_eval(code_string)
     example_module.module_eval(code_string)
   rescue Object => e
-    binding.pry if ENV["DEBUG"]
+    binding.irb if ENV["DEBUG"]
     raise e
   end
 
@@ -23,12 +24,13 @@ module ExampleRunnerSupport
     @example_module ||= Module.new
   end
 
-  def normalise_inspection_string(string)
+  def normalize_inspection_string(string)
     string
       .strip
       .gsub(/[\n\s]+/, " ")
       .gsub(/ \>/, ">")
       .gsub(/\:0x[0-9a-f]{14,}/, ":<<object id removed>>")
+      .force_encoding(Encoding::UTF_8)
   end
 
   def parse_schema_table(string)

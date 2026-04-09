@@ -24,7 +24,7 @@ RSpec.describe "README examples", backend: "sequel" do
         Module.new.module_eval(code_sample)
       rescue => e
         File.open("./example#{i}.rb", "w") { |f| f.puts(code_sample) }
-        binding.pry if ENV["DEBUG"]
+        binding.irb if ENV["DEBUG"]
         raise e
       end
     end
