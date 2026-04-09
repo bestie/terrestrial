@@ -234,28 +234,20 @@ RSpec.describe "Graph persistence" do
     context "duplicate a node" do
       let(:post_with_one_category) { user.posts.to_a.last }
 
-      # Spoiler alert: it does mutate the graph
+      # This is a bit of a sharp edge with and tricky to solve in way that
+      # meets all expectaions. It's not really practical to reject the object
+      # from the collection without loading the entire collection first which
+      # isn't something safe / performant enough to do from a library.
       #
-      # Feature?: The posts <=> category relationship because unique when persisted
-      # because there are no indexes on the `categories_to_posts` table making
-      # the combination of foreign keys a de facto primary key.
-      #
-      # If there was an additional primary key id field without a unique index
-      # this would not be the case.
-      #
-      # It would be nice if the collection proxy for posts <=> categories was a
-      # variant that behaved like set. Unfortunately uniqueness can only be
-      # determined by the user-defind objects' identities as the proxy would
-      # not have access to datastore ids.
-      #
-      # Mappings are available when the proxy is constructed so this is
-      # possible but awkward.
-      xit "does not mutate the graph" do
+      # If you want this behavior then you should wrap you collection in a Set
+      # like object and explicitly trigger loading the on adding, since you
+      # know if the collection size is managable.
+      it "mutates the graph, adding a duplicate object" do
         existing_category = post_with_one_category.categories.first
         post_with_one_category.categories.push(existing_category)
 
         expect(post_with_one_category.categories.map(&:id))
-          .to eq(["categories/2"])
+          .to eq(["categories/2"] * 2)
       end
 
       it "does not persist the change" do
