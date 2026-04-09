@@ -331,6 +331,7 @@ RSpec.describe "Graph persistence" do
           author: nil,
           subject: "Nils gonna getcha",
           body: "",
+
           created_at: Time.parse("2015-09-05T15:00:00+01:00"),
           updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
           categories: [],
@@ -377,15 +378,12 @@ RSpec.describe "Graph persistence" do
     it "rolls back the transaction" do
       pre_change = datastore[:users].to_a.map(&:to_a).sort
 
-      begin
+      expect {
         user.first_name = "this will be rolled back"
-        user.posts.first.subject = unpersistable_object
+        user.posts.first.subject = Object.new
 
         user_store.save(user)
-      rescue Object => e
-      end
-
-      expect(e).to be_a(Terrestrial::Error)
+      }.to raise_error(Terrestrial::Error)
 
       post_change = datastore[:users].to_a.map(&:to_a).sort
 

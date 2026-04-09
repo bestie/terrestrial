@@ -48,7 +48,7 @@ module Terrestrial
         extract_associations(object_attributes)
       ]
     rescue => e
-      raise SerializationError.new(name, serializer, object, e)
+      raise SerializationError.new(name, serializer, object, fields, e)
     end
 
     def delete(object, depth)
@@ -87,9 +87,17 @@ module Terrestrial
     def extract_associations(attributes)
       Hash[
         associations.map { |name, _association|
-          [ name, attributes.fetch(name) ]
+          [ name, attributes.fetch(name) { raise missing_association(attributes, name) } ]
         }
       ]
+    end
+
+    def missing_association(attributes, name)
+      # TODO: add SerializationError or specific error type
+      RuntimeError.new(
+        "Missing association field: `#{name}` not found in `#{attributes}`.\n" \
+        "Expected to find all of these fields `#{fields}`"
+      )
     end
 
     def select_mapped_fields(attributes)

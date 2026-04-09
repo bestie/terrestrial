@@ -5,10 +5,15 @@ RSpec.shared_context "seed data setup" do
   include_context "object graph setup"
 
   before {
-    seeded_records.each do |(namespace, record)|
-      datastore[namespace].insert(record)
+    seeded_records.each do |(table_name, attributes)|
+      raw_insert(table_name, attributes)
     end
   }
+
+  def raw_insert(table_name, attrs)
+    quoted_attrs = attrs.values.map { |s| "'#{s}'" }.join(",")
+    adapter_support.db_connection.execute("INSERT INTO #{table_name} (#{attrs.keys.join(",")}) VALUES (#{quoted_attrs})")
+  end
 
   let(:seeded_records) {
     [

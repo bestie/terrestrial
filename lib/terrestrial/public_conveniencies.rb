@@ -1,3 +1,5 @@
+require "terrestrial/adapters/sequel_postgres_adapter"
+require "terrestrial/adapters/active_record_postgres_adapter"
 require "terrestrial/identity_map"
 require "terrestrial/dirty_map"
 require "terrestrial/upsert_record"
@@ -5,7 +7,6 @@ require "terrestrial/relational_store"
 require "terrestrial/configurations/conventional_configuration"
 require "terrestrial/inspection_string"
 require "terrestrial/functional_pipeline"
-require "terrestrial/adapters/sequel_postgres_adapter"
 
 module Terrestrial
   class ObjectStore
@@ -105,6 +106,8 @@ module Terrestrial
         case datastore.class.name
         when "Sequel::Postgres::Database"
           Adapters::SequelPostgresAdapter.new(datastore)
+        when "ActiveRecord::ConnectionAdapters::PostgreSQLAdapter"
+          Adapters::ActiveRecordPostgresAdapter.new(datastore)
         else
           raise "No adapter found for #{datastore.inspect}"
         end
@@ -131,6 +134,7 @@ module Terrestrial
 
       def build_dump_pipeline(dirty_map:, datastore:, clock:)
         Terrestrial::FunctionalPipeline.from_array([
+          [:remove_nils, :compact.to_proc], # TODO: if a user object returns a nil instead of anempty array for an association then there are nils in the record list
           [:dedup, :uniq.to_proc],
           [:sort_by_depth, ->(rs) { rs.sort_by(&:depth) }],
           [:select_changed, ->(rs) { rs.select { |r| dirty_map.dirty?(r) } }],

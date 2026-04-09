@@ -20,13 +20,23 @@ RSpec.describe "Serialization error handling" do
       rescue Terrestrial::SerializationError => error
       end
 
-      expect(error.message).to eq(
-        [
-          "Error serializing object with mapping `users` `#{user.inspect}`.",
-          "Using serializer: `#{incompatible_custom_serializer.inspect}`.",
-          "Check the specified serializer can transform objects into a Hash.",
-          "Got Error: RuntimeError I am incompatible",
-        ].join("\n")
+      expect(error.message).to eq(<<~MESSAGE
+        RuntimeError I am incompatible
+
+        Terrestrial couldn't serialize object `#{user.inspect}`.
+        Terrestrial attempted to serialize it as part of mapping `users` with `#{incompatible_custom_serializer.inspect}`.
+
+        Suggested actions:
+
+          - Check that mapping `users` is supposed to handle objects with class `#{user.class}`.
+            If not you may have put an object in the wrong field e.g. `user.apples = oranges`.
+
+          - Check that the serializer returns a hash-like object with following keys:
+            `[:id, :first_name, :last_name, :email]`
+
+        Serialzation is where Terrestrial attempts to convert your object into a hash of database-friendly values before writing them to the database.
+        A typical serialzer will take a domain object and return a hash with a key for each column of the database table.
+        MESSAGE
       )
     end
 

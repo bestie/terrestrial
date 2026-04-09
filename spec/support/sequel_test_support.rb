@@ -2,19 +2,34 @@ require "sequel"
 
 module Terrestrial
   module SequelTestSupport
-    module_function def build_datastore(_schema)
-      db_connection.tap { |db|
-        clean_database
+    module_function def rename_table(old, new)
+      db_connection.rename_table(old, new)
+    end
 
-        # The query_counter will let us make assertions about how efficiently
-        # the database is being used
-        reset_query_counter
+    module_function def execute(sql)
+      db_connection[sql].to_a
+    end
+
+    module_function def adapter
+      @adapter ||= Terrestrial::Adapters::SequelPostgresAdapter.new(db_connection)
+    end
+
+    module_function def db_connection
+      @db_connection ||= Sequel.postgres(
+        host: ENV.fetch("PGHOST"),
+        user: ENV.fetch("PGUSER"),
+        database: ENV.fetch("PGDATABASE"),
+      ).tap { |db|
         db.loggers << query_counter
+        db["SET TIME ZONE 'UTC'"].to_a
+        Sequel.default_timezone = :utc
+        Sequel.database_timezone = :utc
       }
     end
 
-    module_function def query_counter
-      @@query_counter ||= QueryCounter.new
+    module_function def before
+      query_counter.reset!
+      clean_database
     end
 
     module_function def before_suite(schema)
@@ -24,12 +39,17 @@ module Terrestrial
       add_foreign_keys(schema.fetch(:foreign_keys))
     end
 
-    module_function def excluded_adapters
-      "memory"
+    module_function def after_suite
+      drop_tables
+      connection_pool.checkin(db_connection)
     end
 
-    module_function def reset_query_counter
-      @@query_counter = nil
+    module_function def query_counter
+      @query_counter ||= QueryCounter.new
+    end
+
+    module_function def after_suite
+      drop_tables
     end
 
     module_function def create_database
@@ -112,26 +132,40 @@ module Terrestrial
       end
     end
 
+    module_function def convert_to_adapter_keys(attr_hash)
+      attr_hash.stringify_keys
+    end
+
+    module_function def get_next_sequence_value(table_name)
+      execute("select currval(pg_get_serial_sequence('#{table_name}', 'id'))")
+        .to_a
+        .fetch(0)
+        .fetch(:currval) + 1
+    rescue Sequel::DatabaseError => e
+      if /PG::ObjectNotInPrerequisiteState/.match?(e.message)
+        1
+      else
+        raise e
+      end
+    end
+
     class QueryCounter
       def initialize
-        reset
+        reset!
       end
 
       def read_count
-        read_count_with_describes -
-          list_tables_query_count -
-          describe_table_queries_count
+        @info
+          .grep(/SELECT/)
+          .grep_v(list_tables_query_pattern)
+          .grep_v(columns_query_pattern)
+          .grep_v(pg_attribute_pattern)
+          .count
       end
 
       def delete_count
         @info.count { |query|
           /\A\([0-9\.]+s\) DELETE/i === query
-        }
-      end
-
-      def read_count_with_describes
-        @info.count { |query|
-          /\A\([0-9\.]+s\) SELECT/i === query
         }
       end
 
@@ -148,21 +182,15 @@ module Terrestrial
       end
 
       def upserts
-        @info
-          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
-          .select { |query| query.start_with?("INSERT") && query.include?("ON CONFLICT") }
+        @info.grep(/INSERT .+ ON CONFLICT/)
       end
 
       def updates
-        @info
-          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
-          .select { |query| query.start_with?("UPDATE") }
+        @info.grep(/\A\([0-9\.]+s\) UPDATE/)
       end
 
       def inserts
-        @info
-          .map { |query| query.gsub(/\A\([0-9\.]+s\) /, "") }
-          .select { |query| query.start_with?("INSERT") }
+        @info.grep(/\A\([0-9\.]+s\) INSERT/)
       end
 
       def show_queries
@@ -181,8 +209,7 @@ module Terrestrial
         @warn.push(message)
       end
 
-      def reset
-        @described_table_queries = []
+      def reset!
         @info = []
         @error = []
         @warn = []
@@ -190,43 +217,16 @@ module Terrestrial
 
       private
 
-      def list_tables_query_count
-        @info.count { |query| list_tables_query_pattern.match(query) }
-      end
-
-      def describe_table_queries_count
-        describe_table_queries.count
-      end
-
-      def describe_table_queries
-        # TODO this could probably be better solved with finite automata
-        described_table_queries = []
-
-        queries_without_table_list
-          .take_while { |query|
-            described_table_queries.push(query)
-            described_table_query_pattern.match(query) &&
-              described_table_queries.length == described_table_queries.uniq.length
-          }
-      end
-
-      def queries_without_table_list
-        @info
-          .drop_while { |query|
-            !list_tables_query_pattern.match(query)
-          }
-          .drop_while { |query|
-            list_tables_query_pattern.match(query)
-          }
-      end
-
-
       def list_tables_query_pattern
-        /\A\([0-9\.]+s\) SELECT "relname" FROM "pg_class"/
+        /SELECT "relname" FROM "pg_class"/
       end
 
-      def described_table_query_pattern
-        /\A\([0-9\.]+s\) SELECT \* FROM "[^"]+" LIMIT 1/i
+      def pg_attribute_pattern
+        /SELECT pg_attribute.attname AS/
+      end
+
+      def columns_query_pattern
+        /SELECT \* FROM .+ LIMIT 0/
       end
     end
   end

@@ -3,10 +3,9 @@ require "terrestrial/dataset"
 
 module Terrestrial
   class ManyToManyAssociation
-    def initialize(mapping_name:, join_mapping_name:, join_dataset:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, order:)
+    def initialize(mapping_name:, join_mapping_name:, foreign_key:, key:, proxy_factory:, association_foreign_key:, association_key:, order:)
       @mapping_name = mapping_name
       @join_mapping_name = join_mapping_name
-      @join_dataset = join_dataset
       @foreign_key = foreign_key
       @key = key
       @proxy_factory = proxy_factory
@@ -29,8 +28,8 @@ module Terrestrial
 
     attr_reader :mapping_name, :join_mapping_name
 
-    attr_reader :join_dataset, :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
-    private     :join_dataset, :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
+    attr_reader :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
+    private     :foreign_key, :key, :proxy_factory, :association_key, :association_foreign_key, :order
 
     def build_proxy(data_superset:, loader:, record:)
       proxy_factory.call(

@@ -4,7 +4,7 @@ require "support/have_persisted_matcher"
 require "support/object_store_setup"
 require "support/seed_data_setup"
 
-RSpec.describe "Database default fields", backend: "sequel" do
+RSpec.describe "Database default fields" do
   include_context "object store setup"
 
   before(:all) do
@@ -116,9 +116,7 @@ RSpec.describe "Database default fields", backend: "sequel" do
 
     context "when the value changes in the database (e.g. a trigger)" do
       before do
-        datastore[:timestamped_posts]
-          .where(id: post.id)
-          .update("created_at" => party_time)
+        adapter_support.execute("UPDATE timestamped_posts SET created_at='#{party_time}' WHERE id='#{post.id}'")
       end
 
       it "regardless, updates the object with the returned value" do

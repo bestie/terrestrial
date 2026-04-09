@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{A data mapper ORM for Ruby. Persists POROs, enables DDD and fast tests. Makes your objects less alien.}
   spec.homepage      = "https://github.com/bestie/terrestrial"
   spec.license       = "MIT"
+  spec.required_ruby_version = "> 3.7"
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }

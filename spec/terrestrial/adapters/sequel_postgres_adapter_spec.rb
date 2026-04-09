@@ -4,8 +4,7 @@ require "terrestrial/adapters/sequel_postgres_adapter"
 require "terrestrial/upsert_record"
 
 RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" do
-
-  let(:adapter) { Terrestrial::Adapters::SequelPostgresAdapter.new(datastore) }
+  let(:adapter) { described_class.new(adapter_support.db_connection) }
 
   describe "#tables" do
     it "returns all table names as symbols" do
@@ -32,6 +31,14 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
     end
   end
 
+  describe "#relation_fields" do
+    it "returns all available fields for a table" do
+      expect(adapter.relation_fields(:users)).to eq(
+        [:id, :first_name, :last_name, :email]
+      )
+    end
+  end
+
   describe "#unique_indexes" do
     before(:all) do
       adapter_support.create_tables(schema_with_unique_index.fetch(:tables))
@@ -42,7 +49,7 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
       adapter_support.drop_tables(schema_with_unique_index.fetch(:tables).keys)
     end
 
-    before(:each) { adapter_support.clean_table(:unique_index_table) }
+    before(:each) { adapter_support.clean_tables([:unique_index_table]) }
 
     context "when the table has no primary key" do
       let(:table_name) { :unique_index_table }
@@ -85,6 +92,16 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
       end
     end
 
+    describe "#upsert" do
+      let(:record) { create_record(field_one: "1", field_two: "2", text: "new value") }
+
+      it "triggers the mapping's post_save callback via the record's on_upsert callback" do
+        expect(mapping).to receive(:post_save)
+
+        adapter.upsert(record)
+      end
+    end
+
     def create_record(values)
       Terrestrial::UpsertRecord.new(
         mapping,
@@ -114,10 +131,6 @@ RSpec.describe Terrestrial::Adapters::SequelPostgresAdapter, backend: "sequel" d
       it "returns an empty array" do
         expect(adapter.unique_indexes(table_name)).to eq([])
       end
-    end
-
-    def adapter_support
-      Terrestrial::SequelTestSupport
     end
 
     def schema_with_unique_index

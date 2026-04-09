@@ -9,7 +9,9 @@ RSpec.describe "Graph traversal" do
   include_context "seed data setup"
 
   describe "associations" do
-    subject(:user_store) { object_store[:users] }
+    subject(:user_store) {
+      object_store[:users]
+    }
 
     let(:user_query) {
       user_store.where(id: "users/1")
@@ -18,6 +20,7 @@ RSpec.describe "Graph traversal" do
     let(:user) { user_query.first }
 
     it "finds data via the storage adapter" do
+      dataset = user_query.send(:dataset)
       expect(user_query.count).to eq(1)
     end
 
@@ -43,7 +46,7 @@ RSpec.describe "Graph traversal" do
 
     context "when a many to one association foreign key is nil" do
       before do
-        datastore[:comments].update(commenter_id: nil)
+        adapter_support.execute("UPDATE comments SET commenter_id=NULL")
       end
 
       it "populates that association with a nil" do
@@ -84,6 +87,14 @@ RSpec.describe "Graph traversal" do
     end
 
     it "maps has many to many associations as has many through" do
+      # Some scoping problems here - Need to figure out why there's a where gone missing figure out why there's a where gone missing.
+      # Would be nice to check if the Sequel adapter produces the SQL I was expecting
+      # This isn't scoping categories to posts on the user's post id
+      u = user_query.first
+      u = u.posts.first
+      u = u.categories
+
+
       expect(user_query.first.posts.first.categories.map(&:id))
         .to match_array(["categories/1", "categories/2"])
 

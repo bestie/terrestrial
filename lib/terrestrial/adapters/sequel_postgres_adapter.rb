@@ -1,3 +1,4 @@
+require "sequel"
 require "forwardable"
 require "terrestrial/adapters/abstract_adapter"
 
@@ -45,6 +46,9 @@ module Terrestrial
       end
 
       def upsert(record)
+        if ENV["ADAPTER"] != "sequel"
+          raise "Using Sequel adapter when set to #{ENV['ADAPTER']}"
+        end
         row = perform_upsert_returning_row(record)
         record.on_upsert(row)
         nil
@@ -73,9 +77,9 @@ module Terrestrial
       end
 
       def unique_indexes(table_name)
-        database.indexes(table_name).map { |_name, data|
-          data.fetch(:columns)
-        }
+        database.indexes(table_name)
+          .select { |_name, properties| properties.fetch(:unique, false) }
+          .map { |_name, properties| properties.fetch(:columns) }
       end
 
       def relations
@@ -84,10 +88,6 @@ module Terrestrial
 
       def relation_fields(relation_name)
         database[relation_name].columns
-      end
-
-      def schema(relation_name)
-        database.schema(relation_name)
       end
 
       private
