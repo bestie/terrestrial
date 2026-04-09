@@ -1,4 +1,4 @@
-require "pry"
+require "debug"
 require "sequel"
 require "terrestrial"
 require_relative "../spec/support/sequel_test_support"
@@ -16,7 +16,7 @@ module ExampleRunnerSupport
   def example_eval(code_string)
     example_module.module_eval(code_string)
   rescue Object => e
-    binding.pry if ENV["DEBUG"]
+    binding.irb if ENV["DEBUG"]
     raise e
   end
 

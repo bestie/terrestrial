@@ -1,4 +1,13 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in terrestrial.gemspec
 gemspec
+
+gem "rake", "~> 13.0"
+gem "debug"
+gem "amazing_print"
+gem "ruby-lsp"
+gem "rspec"
+gem "ostruct"
+gem "cucumber"
+gem "pg"
+gem "activerecord"

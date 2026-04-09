@@ -1,4 +1,5 @@
-require "pry-byebug"
+require "debug"
+require "amazing_print"
 require "support/sequel_test_support"
 require "support/active_record_test_support"
 require "support/memory_adapter_test_support"
@@ -7,7 +8,7 @@ require "support/blog_schema"
 Warning[:deprecated] = false
 
 File.readlines(".env").each do |line|
-  _, var, value = /^export ([^=]+)="?([^"]+)"?/.match(line).to_a
+  _, var, value = /^([^=]+)="?([^"]+)"?/.match(line).to_a
   ENV[var] ||= value
 end
 

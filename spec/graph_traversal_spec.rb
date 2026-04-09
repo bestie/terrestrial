@@ -87,7 +87,6 @@ RSpec.describe "Graph traversal" do
     end
 
     it "maps has many to many associations as has many through" do
-      # require "pry"; binding.pry # DEBUG @bestie
       # Some scoping problems here - Need to figure out why there's a where gone missing figure out why there's a where gone missing.
       # Would be nice to check if the Sequel adapter produces the SQL I was expecting
       # This isn't scoping categories to posts on the user's post id
