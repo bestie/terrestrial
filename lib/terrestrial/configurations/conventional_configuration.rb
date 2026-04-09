@@ -115,10 +115,10 @@ module Terrestrial
         # seems totally bananas!
         @associations_by_mapping.each do |mapping_name, association_data|
           association_data.each do |(assoc_type, assoc_args)|
-            association = association_configurator(mappings, mapping_name)
-              .public_send(assoc_type, *assoc_args)
-
             name = assoc_args.fetch(0)
+            kwargs = assoc_args.length > 1 ? assoc_args.last : {}
+            association = association_configurator(mappings, mapping_name)
+              .public_send(assoc_type, name, **kwargs)
             mappings.fetch(mapping_name).add_association(name, association)
             associated_mapping = mappings.fetch(association.mapping_name)
 

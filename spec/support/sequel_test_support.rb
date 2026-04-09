@@ -68,6 +68,7 @@ module Terrestrial
          Sequel.postgres(
            host: ENV.fetch("PGHOST"),
            user: ENV.fetch("PGUSER"),
+           password: ENV.fetch("PGPASSWORD"),
            database: ENV.fetch("PGDATABASE"),
          ).tap { Sequel.default_timezone = :utc }
        end
