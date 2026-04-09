@@ -108,18 +108,14 @@ module Terrestrial
         }
       end
 
-      def generate_associations_config(mappings)
-        # TODO: the ConventionalAssociationConfiguration takes all the mappings
-        # as a dependency and then sends mutating messages to them.
-        # This mutation based approach was originally a spike but now just
-        # seems totally bananas!
-        @associations_by_mapping.each do |mapping_name, association_data|
-          association_data.each do |(assoc_type, assoc_args)|
-            association = association_configurator(mappings, mapping_name)
-              .public_send(assoc_type, *assoc_args)
 
-            name = assoc_args.fetch(0)
-            mappings.fetch(mapping_name).add_association(name, association)
+      def generate_associations_config(mappings)
+        @associations_by_mapping.each do |mapping_name, association_data|
+          association_data.each do |(assoc_type, (assoc_name, assoc_kwargs))|
+            association = association_configurator(mappings, mapping_name)
+              .public_send(assoc_type, assoc_name, **assoc_kwargs)
+
+            mappings.fetch(mapping_name).add_association(assoc_name, association)
             associated_mapping = mappings.fetch(association.mapping_name)
 
             associated_mapping.register_foreign_key(association.outgoing_foreign_keys)

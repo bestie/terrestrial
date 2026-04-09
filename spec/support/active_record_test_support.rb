@@ -89,7 +89,7 @@ module Terrestrial
             name = field.fetch(:name)
             options = field.fetch(:options, {})
 
-            table.column(name, type, options)
+            table.column(name, type, **options)
           end
         end
       end
