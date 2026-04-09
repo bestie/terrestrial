@@ -114,12 +114,10 @@ module Terrestrial
         # This mutation based approach was originally a spike but now just
         # seems totally bananas!
         @associations_by_mapping.each do |mapping_name, association_data|
-          association_data.each do |(assoc_type, assoc_args)|
-            name = assoc_args.fetch(0)
-            kwargs = assoc_args.length > 1 ? assoc_args.last : {}
+          association_data.each do |(assoc_type, (assoc_name, assoc_kwargs))|
             association = association_configurator(mappings, mapping_name)
-              .public_send(assoc_type, name, **kwargs)
-            mappings.fetch(mapping_name).add_association(name, association)
+              .public_send(assoc_type, assoc_name, **assoc_kwargs)
+            mappings.fetch(mapping_name).add_association(assoc_name, association)
             associated_mapping = mappings.fetch(association.mapping_name)
 
             associated_mapping.register_foreign_key(association.outgoing_foreign_keys)
