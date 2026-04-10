@@ -8,7 +8,7 @@ require "support/blog_schema"
 Warning[:deprecated] = false
 
 File.readlines(".env").each do |line|
-  _, var, value = /^([^=]+)="?([^"]+)"?/.match(line).to_a
+  _, var, value = /^([^=]+)="?([^"\n]+)"?/.match(line).to_a
   ENV[var] ||= value
 end
 
@@ -48,7 +48,7 @@ RSpec.configure do |config|
 
   adapter = ENV.fetch("ADAPTER", "sequel")
   adapter_support = adapters.fetch(adapter) {
-    raise "Adapter not found `#{adapter}`\nMust be one of #{adapters.join(",")}."
+    raise "Adapter not found `#{adapter}`\nMust be one of #{adapters.keys.join(",")}."
   }
 
   def schema

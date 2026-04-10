@@ -14,19 +14,6 @@ module Terrestrial
       @adapter ||= Terrestrial::Adapters::SequelPostgresAdapter.new(db_connection)
     end
 
-    module_function def db_connection
-      @db_connection ||= Sequel.postgres(
-        host: ENV.fetch("PGHOST"),
-        user: ENV.fetch("PGUSER"),
-        database: ENV.fetch("PGDATABASE"),
-      ).tap { |db|
-        db.loggers << query_counter
-        db["SET TIME ZONE 'UTC'"].to_a
-        Sequel.default_timezone = :utc
-        Sequel.database_timezone = :utc
-      }
-    end
-
     module_function def before
       query_counter.reset!
       clean_database
@@ -37,11 +24,6 @@ module Terrestrial
       create_tables(schema.fetch(:tables))
       add_unique_indexes(schema.fetch(:unique_indexes))
       add_foreign_keys(schema.fetch(:foreign_keys))
-    end
-
-    module_function def after_suite
-      drop_tables
-      connection_pool.checkin(db_connection)
     end
 
     module_function def query_counter
@@ -84,14 +66,17 @@ module Terrestrial
     end
 
     module_function def db_connection
-      @db_connection ||= begin
-         Sequel.postgres(
-           host: ENV.fetch("PGHOST"),
-           user: ENV.fetch("PGUSER"),
-           password: ENV.fetch("PGPASSWORD"),
-           database: ENV.fetch("PGDATABASE"),
-         ).tap { Sequel.default_timezone = :utc }
-       end
+      @db_connection ||= Sequel.postgres(
+        host: ENV.fetch("PGHOST"),
+        user: ENV.fetch("PGUSER"),
+        password: ENV.fetch("PGPASSWORD"),
+        database: ENV.fetch("PGDATABASE"),
+      ).tap { |db|
+        db.loggers << query_counter
+        db["SET TIME ZONE 'UTC'"].to_a
+        Sequel.default_timezone = :utc
+        Sequel.database_timezone = :utc
+      }
     end
 
     module_function def create_tables(tables)
