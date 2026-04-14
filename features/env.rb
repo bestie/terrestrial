@@ -6,7 +6,7 @@ require "terrestrial"
 require_relative "../spec/support/sequel_test_support"
 
 File.readlines(".env").each do |line|
-  _, var, value = /^([^=]+)="?([^"]+)"?/.match(line).to_a
+  _, var, value = /^([^=]+)="?([^"\n]+)"?/.match(line).to_a
   ENV[var] ||= value
 end
 
