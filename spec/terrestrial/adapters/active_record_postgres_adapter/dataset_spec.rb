@@ -111,6 +111,8 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter::Dataset, back
         bool_true_field: true,
         bool_false_field: false,
         in_range_time_field: (Time.parse(xmas_22)..Time.parse(xmas_23)),
+        not_before_field: (Time.parse(xmas_22)..),
+        not_after_field: (..Time.parse(xmas_23)),
       )
 
       aggregate_failures do
@@ -128,6 +130,8 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter::Dataset, back
         expect(filtered.to_sql).to include(%@"bool_true_field" = TRUE@)
         expect(filtered.to_sql).to include(%@"bool_false_field" = FALSE@)
         expect(filtered.to_sql).to include(%@"in_range_time_field" BETWEEN '2022-12-25 00:00:00' AND '2023-12-25 00:00:00'@)
+        expect(filtered.to_sql).to include(%@"not_before_field" >= '2022-12-25 00:00:00'@)
+        expect(filtered.to_sql).to include(%@"not_after_field" <= '2023-12-25 00:00:00'@)
       end
     end
   end

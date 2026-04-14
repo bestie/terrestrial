@@ -47,6 +47,7 @@ RSpec.describe "Database default fields" do
       categories: [],
       created_at: nil,
       updated_at: nil,
+      published: true,
     )
   }
 

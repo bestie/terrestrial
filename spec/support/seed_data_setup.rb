@@ -11,7 +11,14 @@ RSpec.shared_context "seed data setup" do
   }
 
   def raw_insert(table_name, attrs)
-    quoted_attrs = attrs.values.map { |s| "'#{s}'" }.join(",")
+    quoted_attrs = attrs.values.map { |v|
+      case v
+      when nil then "NULL"
+      when true then "TRUE"
+      when false then "FALSE"
+      else "'#{v}'"
+      end
+    }.join(",")
     adapter_support.db_connection.execute("INSERT INTO #{table_name} (#{attrs.keys.join(",")}) VALUES (#{quoted_attrs})")
   end
 

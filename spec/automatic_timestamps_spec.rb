@@ -47,6 +47,7 @@ RSpec.describe "Automatic timestamps" do
       categories: [],
       updated_at: nil,
       created_at: nil,
+      published: true,
     )
   }
 

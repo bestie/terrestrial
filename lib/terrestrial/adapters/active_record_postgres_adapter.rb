@@ -262,8 +262,10 @@ module Terrestrial
               when TrueClass, FalseClass
                 arel_field.eq(v)
               else
-                binding.irb if ENV['ADAPTER'] != 'activerecord'
-                warn "Don't *really* know how to build a where clause for that type #{v.class} #{v.inspect}"
+                warn "Warning: Terrestrial doesn't know how to convert object to constraint for #{arel_table.name}.#{k}.\n" \
+                  "  Passing through to `#{arel_field.class.name}#eq`. \n" \
+                  "  Object: `#{v.inspect}`"
+
                 arel_field.eq(v)
               end
             end

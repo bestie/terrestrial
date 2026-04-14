@@ -93,6 +93,7 @@ RSpec.describe "Database generated IDs" do
         categories: [],
         created_at: Time.parse("2015-09-05T15:00:00+01:00"),
         updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
+        published: true,
       }
     }
 

@@ -13,6 +13,7 @@ BLOG_SCHEMA = {
       { name: :author_id, type: String},
       { name: :created_at, type: DateTime },
       { name: :updated_at, type: DateTime },
+      { name: :published, type: :boolean },
     ],
     comments: [
       { name: :id, type: String, options: { primary_key: true } },

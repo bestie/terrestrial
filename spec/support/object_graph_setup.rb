@@ -58,7 +58,7 @@ RSpec.shared_context "object graph setup" do
   end
 
   User ||= PlainObject.with_members(:id, :first_name, :last_name, :email, :posts)
-  Post ||= PlainObject.with_members(:id, :author, :subject, :body, :comments, :categories, :created_at, :updated_at)
+  Post ||= PlainObject.with_members(:id, :author, :subject, :body, :comments, :categories, :created_at, :updated_at, :published)
   Comment ||= PlainObject.with_members(:id, :commenter, :body)
   Category ||= PlainObject.with_members(:id, :name, :posts)
 
@@ -86,6 +86,7 @@ RSpec.shared_context "object graph setup" do
       ],
       created_at: Time.parse("2015-09-05T15:00:00+01:00"),
       updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
+      published: true,
     )
   }
 
@@ -101,6 +102,7 @@ RSpec.shared_context "object graph setup" do
       ],
       created_at: Time.parse("2015-09-02T15:00:00+01:00"),
       updated_at: Time.parse("2015-09-02T15:00:00+01:00"),
+      published: false,
     )
   }
 

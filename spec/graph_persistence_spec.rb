@@ -104,6 +104,7 @@ RSpec.describe "Graph persistence" do
         categories: [],
         created_at: Time.now,
         updated_at: Time.now,
+        published: true,
       }
     }
 
@@ -336,6 +337,7 @@ RSpec.describe "Graph persistence" do
           updated_at: Time.parse("2015-09-05T15:00:00+01:00"),
           categories: [],
           comments: [],
+          published: false,
         )
 
         object_store[:posts].save(post)
