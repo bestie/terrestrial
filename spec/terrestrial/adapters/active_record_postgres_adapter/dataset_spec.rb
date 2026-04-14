@@ -88,6 +88,7 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter::Dataset, back
 
       expect(dataset.to_sql).to eq(base_sql)
       expect(d_id1.to_sql).to eq(base_sql + ' WHERE "users"."id" = 1')
+      expect(d_sfn.to_sql).to eq('SELECT "users"."first_name" FROM "users"')
       expect(d_id1_sfn.to_sql).to eq('SELECT "users"."email" FROM "users" WHERE "users"."id" = 1')
     end
 
@@ -106,13 +107,16 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter::Dataset, back
         time_field: Time.parse(xmas_22),
         date_field: Date.parse(xmas_22),
         date_time_field: DateTime.parse(xmas_22),
-        # in_range_time_field: (Time.parse(xmas_22)..Time.parse(xmas_23)),
+        nil_field: nil,
+        bool_true_field: true,
+        bool_false_field: false,
+        in_range_time_field: (Time.parse(xmas_22)..Time.parse(xmas_23)),
       )
 
       aggregate_failures do
         expect(filtered.to_sql).to include(%@"int_field" = 1@)
         expect(filtered.to_sql).to include(%@"float_field" = 3.2@)
-        expect(filtered.to_sql).to include(%@"in_range_field" IN (5, 6, 7, 8)@)
+        expect(filtered.to_sql).to include(%@"in_range_field" BETWEEN 5 AND 8@)
         expect(filtered.to_sql).to include(%@"string_field" = 'string'@)
         expect(filtered.to_sql).to include(%@"string_field" = 'string'@)
         expect(filtered.to_sql).to include(%@"string_field_matched" ~* 'string regex'@)
@@ -120,8 +124,11 @@ RSpec.describe Terrestrial::Adapters::ActiveRecordPostgresAdapter::Dataset, back
         expect(filtered.to_sql).to include(%@"time_field" = '2022-12-25 00:00:00'@)
         expect(filtered.to_sql).to include(%@"date_field" = '2022-12-25'@)
         expect(filtered.to_sql).to include(%@"date_time_field" = '2022-12-25 00:00:00'@)
+        expect(filtered.to_sql).to include(%@"nil_field" IS NULL@)
+        expect(filtered.to_sql).to include(%@"bool_true_field" = TRUE@)
+        expect(filtered.to_sql).to include(%@"bool_false_field" = FALSE@)
+        expect(filtered.to_sql).to include(%@"in_range_time_field" BETWEEN '2022-12-25 00:00:00' AND '2023-12-25 00:00:00'@)
       end
-      # expect(filtered.to_sql).to include(%@"in_range_time_field" = '2022-12-25 00:00:00'@)
     end
   end
 end

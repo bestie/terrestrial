@@ -247,12 +247,20 @@ module Terrestrial
               arel_table[k].in(Arel::Nodes::SqlLiteral.new(v.to_sql))
             else
               case v
+              when Time,Date
+                arel_field.eq(v)
               when String,Symbol,Numeric
                 arel_field.eq(v)
+              when Range
+                arel_field.between(v)
               when Enumerable
                 arel_field.in(v)
               when Regexp
                 arel_field.matches_regexp(v.source, v.casefold?)
+              when NilClass
+                arel_field.eq(nil)
+              when TrueClass, FalseClass
+                arel_field.eq(v)
               else
                 binding.irb if ENV['ADAPTER'] != 'activerecord'
                 warn "Don't *really* know how to build a where clause for that type #{v.class} #{v.inspect}"
